@@ -1,0 +1,3251 @@
+<title>BTC 戰士</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nosifer&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /*
+    Layout: one centered trading panel on a full-bleed mood gradient.
+    The page swings between two worlds — cute rally (pink/peach, round,
+    bouncy) and crash horror (near-black/blood red, sharp, shaking) —
+    driven by the latest candle. The mood is the theme, so the design
+    commits to this dual identity instead of the viewer's light/dark.
+  */
+  :root {
+    --bg1: #ffd6e8; --bg2: #ffe9c9; --bg3: #ffc2dd;
+    --panel: rgba(255,255,255,.8); --panel-border: rgba(255,111,165,.55);
+    --ink: #5c2f49; --ink-soft: #8a5a73;
+    --accent: #ff5fa0; --accent2: #ffb648;
+    --up: #e83e82; --down: #3d8fe6; --liq: #d11f3a;
+    --grid: rgba(255,95,160,.16);
+    --shadow: 0 18px 50px -12px rgba(255,95,160,.35);
+    --radius: 28px;
+    --display: "Baloo 2", "Noto Sans TC", sans-serif;
+    --body: "Noto Sans TC", "Baloo 2", sans-serif;
+    --scream: "Nosifer", "Noto Sans TC", serif;
+    color-scheme: light;
+  }
+  body.scary {
+    /* only frames and accents change in the scary mood; backgrounds,
+       panels and text stay put so the eyes don't get tired */
+    --panel-border: rgba(225,20,40,.9);
+    --accent: #e0182f; --accent2: #ff8a3d;
+    --grid: rgba(225,20,40,.18);
+    --shadow: 0 0 0 1px rgba(225,20,40,.25), 0 0 26px -6px rgba(225,20,40,.6);
+  }
+  body.scary .panel, body.scary #rank, body.scary #muteBtn { animation: framePulse 1.2s ease-in-out infinite; }
+  body.scary #dock { border-top-color: rgba(225,20,40,.9); }
+  @keyframes framePulse {
+    0%, 100% { border-color: rgba(225,20,40,.95); }
+    50% { border-color: rgba(225,20,40,.35); }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; min-height: 100%;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 24px 80px;
+    font-family: var(--body); color: var(--ink);
+    background:
+      radial-gradient(circle at 18% 12%, var(--bg3), transparent 55%),
+      linear-gradient(160deg, var(--bg1), var(--bg2));
+    background-attachment: fixed;
+    transition: background 1.1s ease, color 1.1s ease;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    position: relative; z-index: 3;
+    width: 100%; max-width: 640px; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  body.scary .wrap { animation: shake .42s infinite; }
+  @keyframes shake {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    25% { transform: translate(-1.5px,1.5px) rotate(-.1deg); }
+    50% { transform: translate(1.5px,-1px) rotate(.1deg); }
+    75% { transform: translate(-1px,-1.5px) rotate(-.08deg); }
+  }
+
+  .eyebrow { font-size: 12px; letter-spacing: .14em; color: var(--ink-soft); text-align: center; }
+  h1 {
+    margin: 0; text-align: center; font-family: var(--display);
+    font-weight: 800; font-size: clamp(22px, 6vw, 30px);
+    letter-spacing: .04em; color: var(--accent); text-wrap: balance;
+    transition: color 1.1s ease;
+  }
+  body.scary h1 { font-family: var(--scream); font-weight: 400; letter-spacing: .06em; text-shadow: 0 0 14px rgba(255,20,20,.6); }
+
+  #rank {
+    font-family: var(--display); font-weight: 700; font-size: 14px;
+    padding: 5px 14px; border-radius: 999px; border: 2px solid var(--panel-border);
+    background: var(--panel); color: var(--ink);
+    transition: background 1.1s ease, color 1.1s ease, border-color 1.1s ease;
+  }
+  #rank.bump { animation: bump .6s cubic-bezier(.2,1.6,.3,1); }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+  .panel {
+    width: 100%; padding: 18px; background: var(--panel);
+    border: 2px solid var(--panel-border); border-radius: var(--radius);
+    box-shadow: var(--shadow); backdrop-filter: blur(6px);
+    transition: background 1.1s ease, border-color 1.1s ease, border-radius 1.1s ease, box-shadow 1.1s ease;
+  }
+  body.scary .panel { border-radius: 6px; }
+
+  .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .price-block { min-width: 0; }
+  .pair { font-size: 12px; letter-spacing: .1em; color: var(--ink-soft); }
+  #price {
+    font-family: var(--display); font-variant-numeric: tabular-nums;
+    font-size: clamp(30px, 8vw, 42px); font-weight: 800; color: var(--accent);
+    line-height: 1.1; transition: color 1.1s ease;
+  }
+  #change { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink-soft); margin-top: 2px; }
+  #streak {
+    display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent);
+  }
+  #streak:empty { visibility: hidden; }
+  #mood { font-size: 48px; flex-shrink: 0; }
+  body:not(.scary) #mood { animation: bounce 1s ease-in-out infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-9px) rotate(-6deg); } }
+  body.scary #mood { animation: twitch .3s steps(2) infinite; }
+  @keyframes twitch { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2px) scale(1.05); } }
+
+  .chart-wrap { margin-top: 14px; overflow: hidden; border-radius: 16px; }
+  canvas { width: 100%; height: 290px; display: block; }
+
+  #indicator {
+    margin-top: 12px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 10px; padding: 9px 14px; border-radius: 14px;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    font-size: 13px; color: var(--ink-soft);
+  }
+  #indicator .dir { font-family: var(--display); font-weight: 800; font-size: 14px; }
+  #indicator .dir.long { color: var(--up); }
+  #indicator .dir.short { color: var(--down); }
+  #indicator .bar { width: 64px; height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
+  #indicator .bar > span { display: block; height: 100%; width: 20%; border-radius: inherit; transition: width .4s ease, background .4s ease; }
+
+  #msg { margin-top: 10px; font-size: 15px; min-height: 22px; text-align: center; color: var(--ink-soft); font-weight: 500; }
+  body.scary #msg { color: var(--accent); font-family: var(--scream); font-size: 13px; letter-spacing: .04em; }
+
+  /* 2000-million goal: the heroine's target, shown against the player's
+     tiny balance so the absurd gap is the joke */
+  .goal { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .goal-head { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-soft); flex-wrap: wrap; }
+  .goal-head b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .goal-bar { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 12%, transparent); overflow: hidden; }
+  #goalFill { display: block; height: 100%; width: 1%; border-radius: inherit; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .5s ease; }
+
+  .trade { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--panel-border); display: flex; flex-direction: column; gap: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 14px; }
+  .stat { min-width: 0; font-size: 12px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+  .stat b { font-variant-numeric: tabular-nums; color: var(--ink); font-size: 15px; font-family: var(--display); }
+  .stat b.pos { color: var(--up); }
+  .stat b.neg { color: var(--down); }
+  #posBadge {
+    align-self: flex-start; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink-soft);
+  }
+  #posBadge.long { background: color-mix(in srgb, var(--up) 18%, transparent); color: var(--up); }
+  #posBadge.short { background: color-mix(in srgb, var(--down) 18%, transparent); color: var(--down); }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .actions button, #btnBorrow {
+    flex: 1 1 110px; appearance: none; cursor: pointer; border-radius: 14px; padding: 13px 10px;
+    font-family: var(--display); font-weight: 700; font-size: 15px;
+    border: 2px solid transparent; transition: transform .12s ease, opacity .2s ease;
+  }
+  .actions button:active, #btnBorrow:active { transform: scale(.95); }
+  .actions button:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .actions button:focus-visible, #btnBorrow:focus-visible, #muteBtn:focus-visible, #enterBtn:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  #btnLong { background: var(--up); color: #fff; }
+  #btnShort { background: var(--down); color: #fff; }
+  #btnClose { background: transparent; border-color: var(--panel-border); color: var(--ink); }
+  #btnBorrow {
+    width: 100%; background: transparent; color: var(--accent);
+    border: 2px dashed var(--accent); animation: beg 1.6s ease-in-out infinite;
+  }
+  @keyframes beg { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-.8deg); } 75% { transform: rotate(.8deg); } }
+
+  .note { font-size: 12px; color: var(--ink-soft); text-align: center; text-wrap: balance; }
+
+  /* ---------- overlays ---------- */
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 4;
+    background: radial-gradient(circle, transparent 45%, rgba(255,20,20,.55) 100%);
+    transition: opacity 1s ease;
+  }
+  /* the full-screen red vignette is gone; the frames carry the mood */
+  @keyframes pulse { 0%,100% { opacity: .45; } 50% { opacity: .95; } }
+
+  #crashFlash {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 8;
+    background: radial-gradient(circle, rgba(255,255,255,.92), rgba(255,20,20,.88) 38%, rgba(0,0,0,.97) 100%);
+  }
+  body.crash-flash #crashFlash { animation: crashFlashAnim .6s ease-out; }
+  @keyframes crashFlashAnim { 0% { opacity: 0; } 6% { opacity: 1; } 100% { opacity: 0; } }
+  #crashText {
+    position: fixed; top: 50%; left: 50%; z-index: 9; pointer-events: none;
+    transform: translate(-50%, -50%) scale(.4); opacity: 0;
+    font-family: var(--scream); color: #ff2a2a; text-align: center; white-space: nowrap;
+    font-size: clamp(30px, 9vw, 58px);
+    text-shadow: 0 0 18px rgba(255,20,20,.9), 0 0 36px rgba(0,0,0,.85);
+  }
+  body.crash-flash #crashText { animation: crashTextAnim 1.1s cubic-bezier(.2,1.5,.3,1) forwards; }
+  @keyframes crashTextAnim {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(.35) rotate(-5deg); }
+    16%  { opacity: 1; transform: translate(-50%,-50%) scale(1.3) rotate(3deg); }
+    32%  { transform: translate(-50%,-50%) scale(1) rotate(-1deg); }
+    78%  { opacity: 1; transform: translate(-50%,-50%) scale(1.04) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.1) rotate(0); }
+  }
+  body.crash-flash .wrap { animation: crashShake .6s ease-out !important; }
+  body.crash-flash .panel { animation: crashZoom .6s ease-out; }
+  @keyframes crashShake {
+    0%   { transform: translate(0,0) rotate(0); }
+    10%  { transform: translate(-10px,7px) rotate(-1.5deg); }
+    20%  { transform: translate(9px,-8px) rotate(1.4deg); }
+    30%  { transform: translate(-8px,-5px) rotate(-1deg); }
+    40%  { transform: translate(7px,5px) rotate(1deg); }
+    55%  { transform: translate(-4px,3px) rotate(-.6deg); }
+    70%  { transform: translate(3px,-2px) rotate(.4deg); }
+    100% { transform: translate(0,0) rotate(0); }
+  }
+  @keyframes crashZoom { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(.97); } 100% { transform: scale(1); } }
+
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+  .particle { position: absolute; will-change: transform, opacity; }
+  @keyframes floatUp { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(-75vh) rotate(25deg); opacity: 0; } }
+  @keyframes floatDown { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(75vh) rotate(-20deg); opacity: 0; } }
+
+  #newsBanner {
+    position: fixed; left: 50%; top: max(14px, env(safe-area-inset-top, 0px)); z-index: 10;
+    transform: translate(-50%, -160%); max-width: min(92vw, 560px);
+    background: var(--panel); border: 2px solid var(--accent2); border-radius: 999px;
+    padding: 8px 18px; font-size: 13px; font-weight: 700; color: var(--ink);
+    box-shadow: var(--shadow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: transform .4s cubic-bezier(.2,1.3,.3,1);
+  }
+  #newsBanner.show { transform: translate(-50%, 0); }
+
+  /* top of the screen, so they never cover the trade buttons */
+  #toasts {
+    position: fixed; z-index: 11; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(var(--dock-h, 210px) + 10px);
+    width: min(340px, calc(100vw - 32px));
+  }
+  .toast {
+    background: var(--panel); border: 2px solid var(--accent2); border-radius: 16px;
+    padding: 10px 14px; box-shadow: var(--shadow); color: var(--ink); font-size: 13px;
+    display: flex; flex-direction: column; gap: 2px;
+    animation: toastIn .45s cubic-bezier(.2,1.4,.3,1);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .toast b { font-family: var(--display); font-size: 15px; color: var(--accent); }
+  .toast.out { opacity: 0; transform: translateY(-14px); }
+  @keyframes toastIn { 0% { opacity: 0; transform: translateY(-20px) scale(.92); } 100% { opacity: 1; transform: none; } }
+
+  /* sound control, three states:
+     playing  → small round 🔊 (tap to mute)
+     muted    → small round 🔇, dimmed (tap to unmute)
+     blocked  → the browser hasn't allowed audio yet: the button widens
+                into a pulsing "點我開聲音" pill so it's impossible to miss */
+  #muteBtn {
+    position: fixed; z-index: 30; /* above every overlay, always reachable */
+    right: calc(14px + env(safe-area-inset-right, 0px));
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    min-width: 42px; height: 42px; border-radius: 999px; cursor: pointer;
+    border: 2px solid var(--panel-border); background: var(--panel); color: var(--ink);
+    font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px;
+    box-shadow: var(--shadow); transition: opacity .2s ease, transform .12s ease, background .3s ease;
+  }
+  #muteBtn:active { transform: scale(.92); }
+  #muteBtn.muted { opacity: .6; }
+  #muteBtn.blocked {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    font-size: 14px; padding: 0 16px; animation: needSound 1.2s ease-in-out infinite;
+  }
+  @keyframes needSound { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  /* ---------- 偷爸爸的錢包 ---------- */
+  .side-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  #btnSteal {
+    flex: 1 1 160px; appearance: none; cursor: pointer; border-radius: 14px; padding: 12px 10px;
+    font-family: var(--display); font-weight: 700; font-size: 14px;
+    background: color-mix(in srgb, var(--ink) 85%, transparent); color: var(--bg2);
+    border: 2px solid transparent; transition: transform .12s ease, opacity .2s ease;
+  }
+  #btnSteal:active { transform: scale(.95); }
+  #btnSteal:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  #btnSteal:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+    background: color-mix(in srgb, var(--accent2) 22%, transparent); color: var(--ink);
+  }
+  .chip.danger { background: color-mix(in srgb, var(--liq) 20%, transparent); color: var(--liq); animation: pulse 1.1s ease-in-out infinite; }
+
+  #dadAlert {
+    position: fixed; inset: 0; z-index: 19; display: grid; place-items: center;
+    padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(10, 0, 0, .78); backdrop-filter: blur(4px);
+  }
+  .dad-card {
+    width: 100%; max-width: 400px; background: #1b0b0b; color: #f3e6e6;
+    border: 3px solid #d11f3a; border-radius: 18px; padding: 22px 20px;
+    display: flex; flex-direction: column; gap: 12px; text-align: center;
+    box-shadow: 0 0 60px -6px rgba(209,31,58,.7);
+    animation: dadIn .5s cubic-bezier(.2,1.6,.3,1);
+  }
+  @keyframes dadIn { 0% { transform: scale(.6) rotate(-3deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  .dad-face { font-size: 64px; line-height: 1; animation: twitch .3s steps(2) infinite; }
+  .dad-line { font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.35; text-wrap: balance; }
+  .dad-penalty { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; text-align: left; }
+  .dad-penalty li { background: rgba(209,31,58,.18); border-radius: 10px; padding: 8px 12px; }
+  #dadOk {
+    appearance: none; cursor: pointer; border: 0; border-radius: 14px; padding: 13px;
+    font-family: var(--display); font-weight: 800; font-size: 16px; background: #d11f3a; color: #fff;
+  }
+  #dadOk:focus-visible { outline: 3px solid #ffb648; outline-offset: 2px; }
+
+  /* opening risk-warning screen — a nod to the running joke that the
+     show's on-air warning is longer than a horror game's */
+  #splash {
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto;
+    display: grid; place-items: center;
+    padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(40, 10, 25, .55); backdrop-filter: blur(8px);
+  }
+  .splash-card {
+    width: 100%; max-width: 460px; background: #fff7fb; color: #5c2f49;
+    border: 3px solid #ff5fa0; border-radius: 24px; padding: 22px 20px;
+    box-shadow: 0 24px 60px -10px rgba(0,0,0,.45);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .splash-badge {
+    align-self: flex-start; font-size: 12px; font-weight: 900; letter-spacing: .1em;
+    background: #d11f3a; color: #fff; padding: 4px 10px; border-radius: 6px;
+  }
+  .splash-card h2 { margin: 0; font-family: var(--display); font-size: 21px; line-height: 1.3; text-wrap: balance; }
+  .warn-list { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.55; }
+  .warn-list li::marker { color: #d11f3a; font-weight: 700; }
+  #enterBtn {
+    margin-top: 4px; appearance: none; cursor: pointer; border: 0; border-radius: 16px;
+    padding: 14px; font-family: var(--display); font-weight: 800; font-size: 17px;
+    background: #ff5fa0; color: #fff; box-shadow: 0 10px 24px -8px rgba(255,95,160,.7);
+    transition: transform .12s ease;
+  }
+  #enterBtn:active { transform: scale(.96); }
+  .splash-foot { margin: 0; font-size: 12px; color: #8a5a73; text-align: center; }
+
+  /* ---------- compact layout + bottom trading dock ----------
+     The chart sits near the top and the trading controls are pinned to
+     the bottom edge, so on a phone both are on screen at once. The body's
+     bottom padding tracks the dock's real height (--dock-h, set in JS). */
+  body { padding-block: 12px calc(var(--dock-h, 210px) + 16px); }
+  .wrap { gap: 10px; }
+  .head { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 12px; }
+  h1 { font-size: clamp(20px, 5.4vw, 28px); }
+  #rank { font-size: 13px; padding: 4px 12px; }
+  .panel { padding: 14px 14px 12px; }
+  #price { font-size: clamp(26px, 7vw, 38px); }
+  .change-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 2px; }
+  #change { margin-top: 0; font-size: 13px; }
+  #streak { margin-top: 0; }
+  #mood { font-size: 40px; }
+  .chart-wrap { margin-top: 10px; }
+  canvas { height: clamp(190px, 36vh, 360px); touch-action: pan-y; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #indicator { margin-top: 10px; padding: 7px 12px; font-size: 12px; }
+  #msg { margin-top: 8px; font-size: 14px; min-height: 20px; }
+  .goal { width: 100%; margin-top: 0; padding: 0 4px; }
+
+  #dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 2px solid var(--panel-border);
+    box-shadow: 0 -10px 30px -12px rgba(0,0,0,.25);
+    transition: background 1.1s ease, border-color 1.1s ease;
+  }
+  .dock-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+  #dock .stats { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px 10px; }
+  #dock .stat { font-size: 11px; gap: 2px; }
+  #dock .stat b { font-size: 14px; }
+
+  #posBadge { font-size: 11px; padding: 2px 8px; }
+  .chips:empty { display: none; }
+  .chip { font-size: 11px; padding: 4px 9px; }
+  .actions { flex-wrap: nowrap; }
+  .actions button { flex: 1 1 0; padding: 11px 6px; font-size: 15px; }
+  .side-actions { flex-wrap: nowrap; }
+  #btnSteal, #btnBorrow { flex: 1 1 0; width: auto; padding: 9px 6px; font-size: 13px; }
+
+  /* casino-style meters: balance and unrealized P&L are the two numbers
+     that matter most, so they get big LED-like counters in a gold frame.
+     Colours are fixed (not mood-driven) so they never flicker. */
+  .meters { display: grid; grid-template-columns: 1fr 1fr 1.12fr; gap: 6px; }
+  .meter {
+    position: relative; overflow: hidden; min-width: 0;
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 6px 12px 7px; border-radius: 14px;
+    background: linear-gradient(180deg, #2c1022, #14060f);
+    border: 2px solid #ffc83a;
+    box-shadow: inset 0 0 12px rgba(255,200,58,.22), 0 4px 12px -6px rgba(0,0,0,.5);
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .meter-k { font-size: 11px; font-weight: 700; color: #ffd98a; letter-spacing: .04em; white-space: nowrap; }
+  .meter-v {
+    font-family: var(--display); font-weight: 800; font-size: clamp(18px, 5.6vw, 27px); line-height: 1.12;
+    color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap;
+    text-shadow: 0 0 10px rgba(255,255,255,.3);
+  }
+  #pnlRoi { margin-left: 6px; font-weight: 800; }
+  .meter.pnl.idle .meter-v { color: #8e7685; text-shadow: none; }
+  .meter { padding: 6px 9px 7px; }
+  .meter-k { font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; }
+  /* the invested amount: purple frame, turns hot when it's a big share of your money */
+  .meter.inv { border-color: #b98cff; box-shadow: inset 0 0 14px rgba(185,140,255,.35), 0 4px 12px -6px rgba(0,0,0,.5); }
+  .meter.inv .meter-v { color: #e2cfff; }
+  .meter.inv.idle .meter-v { color: #b7a6cf; }
+  .meter.inv.heavy { border-color: #ff8a3d; box-shadow: inset 0 0 16px rgba(255,138,61,.45), 0 0 16px -4px rgba(255,138,61,.8); }
+  .meter.inv.heavy .meter-v { color: #ffc29a; }
+  /* holding: the frame and label say which way you bet */
+  .meter.inv.is-long { border-color: #e83e82; box-shadow: inset 0 0 14px rgba(232,62,130,.4), 0 0 14px -4px rgba(232,62,130,.7); }
+  .meter.inv.is-long .meter-k { color: #ff86b0; font-weight: 800; }
+  .meter.inv.is-short { border-color: #3d8fe6; box-shadow: inset 0 0 14px rgba(61,143,230,.4), 0 0 14px -4px rgba(61,143,230,.7); }
+  .meter.inv.is-short .meter-k { color: #86c2ff; font-weight: 800; }
+  .meter.pnl.win { border-color: #ff4d8d; box-shadow: inset 0 0 16px rgba(255,77,141,.45), 0 0 18px -4px rgba(255,77,141,.85); }
+  .meter.pnl.win .meter-v, .meter.pnl.win #pnlRoi { color: #ff86b0; }
+  .meter.pnl.lose { border-color: #4da3ff; box-shadow: inset 0 0 16px rgba(77,163,255,.4), 0 0 18px -4px rgba(77,163,255,.75); }
+  .meter.pnl.lose .meter-v, .meter.pnl.lose #pnlRoi { color: #86c2ff; }
+  .meter.pnl.danger { animation: meterAlarm .5s steps(2) infinite; }
+  @keyframes meterAlarm { 0% { border-color: #ff2a2a; } 50% { border-color: #ffc83a; } }
+  .meter.flash-up { animation: flashUp .7s ease-out; }
+  .meter.flash-down { animation: flashDown .7s ease-out; }
+  @keyframes flashUp { 0% { background: #ffc83a; } 100% { background: linear-gradient(180deg, #2c1022, #14060f); } }
+  @keyframes flashDown { 0% { background: #5a0f22; } 100% { background: linear-gradient(180deg, #2c1022, #14060f); } }
+  .delta {
+    position: absolute; right: 10px; top: 4px; pointer-events: none;
+    font-family: var(--display); font-weight: 800; font-size: 14px; white-space: nowrap;
+    animation: deltaUp 1.3s ease-out forwards;
+  }
+  .delta.up { color: #ffd84a; text-shadow: 0 0 8px rgba(255,216,74,.8); }
+  .delta.down { color: #ff7b7b; }
+  @keyframes deltaUp { 0% { transform: translateY(10px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-24px); opacity: 0; } }
+  .substats { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 11px; color: var(--ink-soft); }
+  .substats b { color: var(--liq); font-variant-numeric: tabular-nums; }
+
+  #bigWin {
+    position: fixed; top: 42%; left: 50%; z-index: 9; pointer-events: none; opacity: 0;
+    transform: translate(-50%, -50%) scale(.4); white-space: nowrap; text-align: center;
+    font-family: var(--display); font-weight: 800; font-size: clamp(34px, 11vw, 64px); line-height: 1;
+    color: #ffd84a; -webkit-text-stroke: 2px #b8001f;
+    text-shadow: 0 0 20px rgba(255,200,58,.95), 0 6px 0 #b8001f;
+  }
+  #bigWin small { display: block; font-size: .42em; -webkit-text-stroke: 0; color: #fff; text-shadow: 0 0 10px rgba(255,90,140,.9); margin-top: 6px; }
+  #bigWin.show { animation: bigWinAnim 1.8s cubic-bezier(.2,1.5,.3,1) forwards; }
+  @keyframes bigWinAnim {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(.3) rotate(-6deg); }
+    18% { opacity: 1; transform: translate(-50%,-50%) scale(1.25) rotate(3deg); }
+    30% { transform: translate(-50%,-50%) scale(1) rotate(-1deg); }
+    80% { opacity: 1; transform: translate(-50%,-50%) scale(1.05) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.15) rotate(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .meter.pnl.danger, .meter.flash-up, .meter.flash-down, .delta, #bigWin.show { animation: none !important; }
+    #bigWin.show { opacity: 1; transform: translate(-50%,-50%); }
+  }
+
+  /* ---- goals: short (mission strip), mid (next rank), long (2000 萬) ---- */
+  .mission {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+    padding: 6px 10px; border-radius: 12px;
+    background: linear-gradient(90deg, rgba(255,200,58,.22), rgba(255,95,160,.14));
+    border: 1px dashed #e0a52a; font-size: 12px; color: var(--ink);
+  }
+  .m-tag { font-weight: 800; white-space: nowrap; color: #c47f00; }
+  .m-text { flex: 1 1 auto; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-bar { flex: 0 0 52px; height: 6px; border-radius: 999px; background: rgba(128,128,128,.25); overflow: hidden; }
+  #mFill { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffc83a, #ff5fa0); transition: width .4s ease; }
+  .m-reward { font-weight: 800; white-space: nowrap; color: #c47f00; }
+  .mission.done { animation: missionDone .9s ease-out; }
+  @keyframes missionDone { 0% { background: #ffc83a; transform: scale(1.04); } 100% { transform: scale(1); } }
+
+  #rank { display: inline-flex; flex-direction: column; align-items: stretch; gap: 3px; cursor: pointer; appearance: none; font: inherit; font-family: var(--display); font-weight: 700; }
+  #rankName::after { content: ' ›'; opacity: .6; }
+
+  /* rank page */
+  .rank-now {
+    background: linear-gradient(180deg, #2c1022, #14060f); border: 2px solid #ffc83a; border-radius: 16px;
+    padding: 12px 14px; color: #fff; display: flex; flex-direction: column; gap: 6px;
+  }
+  .rank-now .rn-name { font-family: var(--display); font-weight: 800; font-size: 24px; }
+  .rank-now .rn-sub { font-size: 12px; color: #ffd98a; }
+  .rank-now .rn-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.15); overflow: hidden; }
+  .rank-now .rn-bar span { display: block; height: 100%; background: linear-gradient(90deg, #ffc83a, #ff5fa0); }
+  .perk-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .perk { font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: #fde8f1; color: #8a3a63; }
+  .perk.off { background: #f1eef0; color: #a99aa2; }
+  .ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ladder li {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
+    padding: 9px 12px; border-radius: 12px; background: #fff; border: 2px solid #f0d6e2;
+  }
+  .ladder .ln { font-family: var(--display); font-weight: 800; font-size: 15px; }
+  .ladder .lt { font-size: 11px; color: #8a5a73; font-variant-numeric: tabular-nums; }
+  .ladder .lp { grid-column: 1 / -1; font-size: 12px; color: #5c2f49; }
+  .ladder .ls { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .ladder li.now { border-color: #ffc83a; background: #fff6dc; box-shadow: 0 0 0 3px rgba(255,200,58,.3); }
+  .ladder li.now .ls { background: #ffc83a; color: #5c2f49; }
+  .ladder li.done .ls { background: #ffe0ec; color: #d42a6e; }
+  .ladder li.locked { opacity: .78; }
+  .ladder li.locked .ls { background: #f1eef0; color: #8a7a83; }
+  .ladder li.goal { border-color: #d11f3a; border-style: dashed; }
+
+  /* share card */
+  .end-card { max-width: 400px; }
+  .share-img { width: 100%; max-height: 56vh; object-fit: contain; border-radius: 14px; background: #fde8f1; min-height: 120px; }
+  .share-hint { margin: 0; font-size: 12px; color: #8a5a73; text-align: center; }
+  #shareDl { background: #5c2f49; color: #fff; }
+  .rank-bar { height: 4px; border-radius: 999px; background: rgba(128,128,128,.25); overflow: hidden; }
+  #rankBarFill { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffc83a, #ff5fa0); transition: width .5s ease; }
+
+  .goals { width: 100%; display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
+  .goal-reward { font-size: 11px; color: var(--ink-soft); }
+  #rankFill { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #ffc83a, #ff5fa0); transition: width .5s ease; }
+
+  .rescue {
+    display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px;
+    background: rgba(209,31,58,.12); border: 2px dashed #d11f3a;
+    animation: rescueIn .5s cubic-bezier(.2,1.5,.3,1);
+  }
+  .rescue-head { font-size: 12px; font-weight: 800; color: #d11f3a; text-align: center; }
+  @keyframes rescueIn { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  .seg button.locked { opacity: .45; }
+
+  .mood-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+  #histBtn {
+    appearance: none; cursor: pointer; border-radius: 999px; padding: 4px 11px;
+    font-family: var(--display); font-weight: 700; font-size: 12px; white-space: nowrap;
+    border: 2px solid var(--panel-border); background: var(--panel); color: var(--ink);
+  }
+  #histBtn:focus-visible, #histClose:focus-visible, .xbtn:focus-visible, #rank:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  #overModal {
+    position: fixed; inset: 0; z-index: 21; display: grid; place-items: center;
+    padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
+  }
+  #overRestart { background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; }
+  #overStay { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
+  #btnHome {
+    flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
+    font-family: var(--display); font-weight: 700; font-size: 13px; background: #fff; color: #5c2f49; border: 2px solid #c9a7b8;
+  }
+  #btnBorrow:disabled { opacity: .45; cursor: not-allowed; animation: none; }
+  .clear-btn {
+    appearance: none; cursor: pointer; border: 0; border-radius: 999px; padding: 6px 12px;
+    font-family: var(--display); font-weight: 800; font-size: 12px; white-space: nowrap;
+    background: linear-gradient(135deg, #ffc83a, #ff5fa0); color: #fff; align-self: flex-start;
+  }
+  .clear-btn:focus-visible, #btnHome:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  .hist-top .clear-btn { margin-left: auto; }
+  #histModal, #rankModal {
+    position: fixed; inset: 0; z-index: 22; overflow-y: auto;
+    padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .6); backdrop-filter: blur(5px);
+  }
+  .hist-card {
+    width: 100%; max-width: 620px; margin: 0 auto; background: #fff7fb; color: #5c2f49;
+    border: 3px solid #ffc83a; border-radius: 22px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .hist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  #histClose, .xbtn {
+    appearance: none; cursor: pointer; width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid #e8c7d6; background: #fff; color: #5c2f49; font-size: 16px; font-weight: 800;
+  }
+  .hist-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+  .hs {
+    background: linear-gradient(180deg, #2c1022, #14060f); border: 2px solid #ffc83a; border-radius: 12px;
+    padding: 7px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  }
+  .hs span { font-size: 11px; color: #ffd98a; font-weight: 700; }
+  .hs b { font-family: var(--display); font-size: 20px; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hs i { font-style: normal; font-size: 11px; color: #c9b3c0; }
+  .hs b.pos { color: #ff86b0; } .hs b.neg { color: #86c2ff; }
+  .hist-sub { font-size: 12px; font-weight: 800; color: #8a5a73; margin-top: 4px; }
+  #eqChart { width: 100%; height: 150px; cursor: default; touch-action: auto; border-radius: 12px; background: #fff; border: 1px solid #f0d6e2; }
+  .hist-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #f0d6e2; }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; background: #fff; }
+  .hist-table th { text-align: left; padding: 7px 8px; background: #fde8f1; color: #8a5a73; font-weight: 800; position: sticky; top: 0; }
+  .hist-table td { padding: 6px 8px; border-top: 1px solid #f6e3ec; }
+  .hist-table .pos { color: #d42a6e; font-weight: 800; }
+  .hist-table .neg { color: #2a78d4; font-weight: 800; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+  .tag.win { background: #ffe0ec; color: #d42a6e; }
+  .tag.loss { background: #e2efff; color: #2a78d4; }
+  .tag.liq { background: #d11f3a; color: #fff; }
+  .tag.saved { background: #fff1c9; color: #9a5b00; }
+  /* ---- chart overlays + compact phone layout ---- */
+  .chart-wrap { position: relative; }
+  #indicator {
+    position: absolute; left: 8px; right: 8px; bottom: 8px; margin: 0;
+    padding: 5px 10px; font-size: 11px; gap: 8px;
+    background: rgba(255,255,255,.78); backdrop-filter: blur(4px); border-radius: 999px;
+  }
+  #msg {
+    position: absolute; left: 10px; right: 10px; bottom: 44px; margin: 0; min-height: 0;
+    font-size: 12.5px; text-align: center; pointer-events: none;
+    text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 0 6px rgba(255,255,255,.9);
+  }
+  body.scary #msg { font-size: 12px; }
+  .substats { display: none; }
+  @media (max-width: 600px) {
+    body { padding-block: 8px calc(var(--dock-h, 210px) + 8px); }
+    .wrap { gap: 8px; }
+    .head h1 { display: none; }               /* the app bar already shows the name */
+    .head { justify-content: flex-start; padding-right: 50px; }
+    .panel { padding: 10px 10px 10px; border-radius: 20px; }
+    .row { gap: 6px; flex-wrap: nowrap; align-items: flex-start; }
+    .price-block { flex: 1 1 auto; }
+    .mood-col { flex-direction: column; gap: 4px; }
+    #histBtn { padding: 3px 9px; font-size: 11px; }
+    .pair { font-size: 10.5px; letter-spacing: .04em; }
+    #price { font-size: 28px; }
+    #change { font-size: 12px; }
+    #mood { font-size: 30px; }
+    .chart-wrap { margin-top: 8px; }
+    #dock { padding-top: 7px; padding-bottom: calc(7px + env(safe-area-inset-bottom, 0px)); }
+    .dock-inner { gap: 6px; }
+    .mission { padding: 5px 9px; font-size: 11.5px; }
+    .meter { padding: 5px 8px 6px; border-radius: 12px; }
+    .meter-k { font-size: 10px; }
+    .meter-v { font-size: clamp(16px, 5vw, 22px); }
+    .seg button { padding: 4px 2px; font-size: 11px; }
+    .actions button { padding: 10px 6px; font-size: 14px; }
+    #toasts { width: min(320px, calc(100vw - 24px)); }
+    .toast { padding: 7px 11px; font-size: 12px; }
+    .toast b { font-size: 13px; }
+  }
+
+  /* ratings */
+  .vote-slot { width: 100%; }
+  .vote-box {
+    display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px;
+    background: #fff; border: 2px dashed #ffc83a; color: #5c2f49;
+  }
+  .vote-q { font-family: var(--display); font-weight: 800; font-size: 14px; text-align: center; }
+  .vote-btns { display: flex; gap: 8px; }
+  .vote-btn {
+    flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 10px 6px;
+    display: block; text-align: center; text-decoration: none;
+    font-family: var(--display); font-weight: 800; font-size: 13px; line-height: 1.3;
+    border: 2px solid transparent; transition: transform .12s ease;
+  }
+  .vote-btn.up { background: #ffe0ec; color: #d42a6e; }
+  .vote-btn.down { background: #e2efff; color: #2a78d4; }
+  .vote-btn.up.on { background: #e83e82; color: #fff; border-color: #b8205e; }
+  .vote-btn.down.on { background: #3d8fe6; color: #fff; border-color: #1f62b0; }
+  .vote-btn:active { transform: scale(.96); }
+  .vote-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .vote-btn:focus-visible { outline: 3px solid #ffb648; outline-offset: 2px; }
+  .vote-stats { display: flex; align-items: center; gap: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .vs-bar { flex: 1 1 auto; height: 10px; border-radius: 999px; background: #3d8fe6; overflow: hidden; }
+  .vs-up { display: block; height: 100%; width: 50%; background: #e83e82; transition: width .4s ease; }
+  .vs-bar.empty { background: #eee3e9; } .vs-bar.empty .vs-up { width: 0; }
+  .vote-count { white-space: nowrap; font-weight: 700; }
+  .vote-note { font-size: 11px; color: #8a5a73; text-align: center; min-height: 1em; }
+  .page-vote { margin-top: 4px; }
+  .hist-empty { margin: 0; font-size: 13px; color: #8a5a73; text-align: center; }
+
+  #endModal {
+    position: fixed; inset: 0; z-index: 21; display: grid; place-items: center;
+    padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
+  }
+  .end-stats li { background: rgba(255,182,72,.18); color: #5c2f49; }
+  #endOk { background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; }
+  @media (prefers-reduced-motion: reduce) { .mission.done, .rescue { animation: none; } }
+
+  /* stake + leverage selectors */
+  .opts { display: flex; flex-wrap: nowrap; gap: 6px; }
+  .seg {
+    display: inline-flex; align-items: center; gap: 1px; padding: 2px;
+    border-radius: 999px; background: rgba(128,128,128,.16); flex: 1 1 0; min-width: 0;
+  }
+  .seg:last-child { flex-grow: 1.3; }
+  .seg-label { font-size: 10px; font-weight: 700; color: var(--ink-soft); padding: 0 3px 0 6px; white-space: nowrap; }
+  .seg button {
+    flex: 1 1 0; min-width: 0; appearance: none; border: 0; cursor: pointer; border-radius: 999px;
+    padding: 5px 2px; font-family: var(--display); font-weight: 700; font-size: 11.5px;
+    background: transparent; color: var(--ink); white-space: nowrap;
+  }
+  .seg button.on { background: #5c2f49; color: #fff; }
+  .seg button[data-lev="102"].on { background: #d11f3a; }
+  .seg button:disabled { opacity: .4; cursor: not-allowed; }
+  .seg button:focus-visible { outline: 2px solid var(--accent2); outline-offset: 1px; }
+  /* long / short keep their colour in every mood; a disabled one only fades */
+  #btnLong { background: #e83e82 !important; color: #fff; }
+  #btnShort { background: #3d8fe6 !important; color: #fff; }
+  .actions button:disabled { opacity: .4; }
+  #btnWheel {
+    flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; border: 0;
+  }
+  #btnWheel:disabled { opacity: .35; cursor: not-allowed; }
+  #btnWheel.ready { animation: beg 1.4s ease-in-out infinite; }
+  #btnWheel:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+
+  /* lucky wheel */
+  #wheelModal {
+    position: fixed; inset: 0; z-index: 19; display: grid; place-items: center;
+    padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .7); backdrop-filter: blur(5px);
+  }
+  .wheel-card {
+    width: 100%; max-width: 340px; background: #fff7fb; color: #5c2f49;
+    border: 3px solid #ffb648; border-radius: 24px; padding: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    box-shadow: 0 0 60px -6px rgba(255,182,72,.7);
+  }
+  .wheel-title { font-family: var(--display); font-weight: 800; font-size: 20px; }
+  .wheel-box { position: relative; width: 250px; height: 250px; max-width: 100%; }
+  .wheel {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 6px solid #fff; box-shadow: 0 0 0 3px #ffb648, 0 10px 24px -8px rgba(0,0,0,.4);
+    transition: transform 3.6s cubic-bezier(.12,.75,.15,1);
+  }
+  .wseg {
+    position: absolute; left: 50%; top: 50%; transform-origin: 50% 50%;
+    font-family: var(--display); font-weight: 800; font-size: 12px; color: #fff; white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  }
+  .wheel-pointer {
+    position: absolute; left: 50%; top: -14px; transform: translateX(-50%); z-index: 2;
+    font-size: 26px; color: #d11f3a; text-shadow: 0 2px 2px rgba(0,0,0,.25);
+  }
+  .wheel-hub {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
+    width: 46px; height: 46px; border-radius: 50%; background: #fff; border: 3px solid #ffb648;
+    display: grid; place-items: center; font-family: var(--display); font-weight: 800; color: #d11f3a;
+  }
+  .wheel-result { min-height: 40px; text-align: center; font-weight: 700; font-size: 15px; text-wrap: balance; }
+  .wheel-btns { display: flex; gap: 10px; width: 100%; }
+  .wheel-btns button {
+    flex: 1; appearance: none; cursor: pointer; border-radius: 14px; padding: 12px; border: 0;
+    font-family: var(--display); font-weight: 800; font-size: 16px;
+  }
+  #wheelSpin { background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; }
+  #wheelSpin:disabled { opacity: .45; cursor: not-allowed; }
+  #wheelClose { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
+  .wheel-btns button:focus-visible { outline: 3px solid #d11f3a; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .wheel { transition: none; } #btnWheel.ready { animation: none; } }
+
+  @media (max-width: 700px) {
+    .head { justify-content: flex-start; padding-right: 46px; }
+  }
+
+  #muteBtn {
+    bottom: auto; top: calc(10px + env(safe-area-inset-top, 0px));
+    right: calc(10px + env(safe-area-inset-right, 0px));
+    min-width: 36px; height: 36px; font-size: 15px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.scary .wrap, body:not(.scary) #mood, body.scary #mood, #vignette,
+    body.crash-flash .wrap, body.crash-flash .panel, #crashFlash, #crashText,
+    .particle, #btnBorrow, #rank.bump, .toast, body.scary .panel, body.scary #rank, body.scary #muteBtn, #muteBtn.blocked, .chip.danger,
+    .dad-card, .dad-face { animation: none !important; }
+  }
+  /* ===== two-section layout: 3D stage on top, controls below ===== */
+  html, body { height: 100%; }
+  body { padding: 0 !important; overflow: hidden; }
+  .app { height: 100%; display: flex; flex-direction: column; }
+  .stage {
+    position: relative; flex: 1 1 auto; min-height: 220px; overflow: hidden;
+    background: linear-gradient(180deg, #ffcde4, #fff3e4);
+  }
+  .stage #chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  body.scary .stage { box-shadow: inset 0 0 0 3px rgba(225,20,40,.9); animation: stagePulse 1.2s ease-in-out infinite; }
+  @keyframes stagePulse { 0%,100% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.95); } 50% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.3); } }
+  body.crash-flash .stage { animation: crashShake .6s ease-out; }
+  .hud-tl {
+    position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    top: 10px; left: max(10px, env(safe-area-inset-left, 0px));
+  }
+  .hud-price {
+    display: flex; flex-direction: column; padding: 4px 11px 5px; border-radius: 14px;
+    background: rgba(255,255,255,.8); backdrop-filter: blur(4px);
+  }
+  .hud-price #price { font-family: var(--display); font-weight: 800; font-size: 24px; line-height: 1.1; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .hud-price #change { font-size: 11px; margin: 0; }
+  #histBtn {
+    position: absolute; z-index: 2; top: 10px; right: calc(56px + env(safe-area-inset-right, 0px));
+    width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 16px;
+    display: grid; place-items: center;
+  }
+  #muteBtn { top: calc(10px + env(safe-area-inset-top, 0px)); }
+  #dock {
+    position: relative; left: auto; right: auto; bottom: auto; flex: 0 0 auto; z-index: 6;
+    box-shadow: 0 -8px 24px -12px rgba(0,0,0,.25);
+  }
+  .goal2000 { display: flex; flex-direction: column; gap: 4px; }
+  .g-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .g-title { font-family: var(--display); font-weight: 800; font-size: 15px; color: #c47f00; white-space: nowrap; }
+  .g-now { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .g-now b { color: var(--ink); font-size: 14px; }
+  .g-bar {
+    position: relative; height: 14px; border-radius: 999px; overflow: visible;
+    background: rgba(128,128,128,.18); box-shadow: inset 0 1px 2px rgba(0,0,0,.15);
+  }
+  #goalFill {
+    display: block; height: 100%; width: 10%; border-radius: 999px;
+    background: linear-gradient(90deg, #ffc83a, #ff5fa0, #e83e82);
+    box-shadow: 0 0 10px rgba(255,95,160,.55); transition: width .5s ease;
+  }
+  .g-tick {
+    position: absolute; top: 50%; transform: translate(-50%, -50%); font-style: normal; font-size: 11px; line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(255,255,255,.9));
+  }
+  .g-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-soft); min-height: 14px; }
+  .stage #indicator { left: 50%; right: auto; transform: translateX(-50%); width: min(420px, calc(100% - 16px)); }
+  .stage #msg { left: 50%; right: auto; transform: translateX(-50%); width: min(520px, calc(100% - 20px)); }
+  @media (max-width: 600px) {
+    .dock-inner { gap: 6px; }
+  }
+  /* quiet notifications + less text */
+  #toasts, #newsBanner, .stage #msg { display: none !important; }
+  #ticker {
+    position: absolute; z-index: 3; left: 50%; bottom: 46px; transform: translate(-50%, 8px); opacity: 0;
+    max-width: min(460px, calc(100% - 24px)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 5px 14px; border-radius: 999px; background: rgba(50, 15, 35, .8); color: #fff;
+    font-size: 12.5px; font-weight: 700; pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  #ticker.show { opacity: 1; transform: translate(-50%, 0); }
+  .stage #indicator { width: auto; padding: 4px 12px; bottom: 10px; }
+  #goalLeft { display: none; }
+  .deny-btn {
+    position: absolute; top: 4px; right: 5px; appearance: none; cursor: pointer;
+    padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; font-family: var(--display);
+    background: rgba(255,255,255,.16); color: #fff; border: 1px solid rgba(255,255,255,.35);
+  }
+  .deny-btn:focus-visible { outline: 2px solid #ffb648; outline-offset: 1px; }
+  .meter.pnl .meter-k { padding-right: 46px; }
+  .meter.pnl.deny { border-color: #8e7685; box-shadow: none; }
+  .meter.pnl.deny .meter-v { color: #d9c7d0; font-size: clamp(14px, 4.2vw, 18px); text-shadow: none; }
+  .dad-aside { margin: 0; font-size: 12px; color: #c9a7b0; text-align: center; }
+  /* pop-up pages scroll on short screens: content starts at the top when it
+     doesn't fit and is centred when it does, so the buttons are always reachable */
+  #splash, #dadAlert, #wheelModal, #endModal, #overModal {
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    place-items: start center;
+  }
+  #splash > *, #dadAlert > *, #wheelModal > *, #endModal > *, #overModal > * { margin-block: auto; }
+  .share-img { max-height: 42vh; }
+  .end-top { width: 100%; }
+  .end-top .wheel-title { font-size: 17px; }
+  /* the close ✕ stays in reach while the page scrolls */
+  #endX { position: sticky; top: 0; flex-shrink: 0; }
+  .g-sub { min-height: 0; }
+  .g-sub:has(#clearBtn2[hidden]) { display: none; }
+  .ev-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; max-height: 180px; overflow-y: auto; }
+  .ev-list li { display: flex; gap: 8px; padding: 5px 8px; background: #fff; border-radius: 8px; border: 1px solid #f6e3ec; }
+  .ev-t { color: #a07890; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+  @media (prefers-reduced-motion: reduce) { #ticker { transition: none; } }
+</style>
+
+<div id="vignette"></div>
+<div id="crashFlash"></div>
+<div id="crashText"></div>
+<div id="bigWin" aria-hidden="true"></div>
+<div id="particles"></div>
+<div id="newsBanner" role="status"></div>
+<div id="toasts" aria-live="polite"></div>
+<button id="muteBtn" type="button" aria-label="開啟聲音">🔈 點我開聲音</button>
+
+<div id="splash">
+  <div class="splash-card">
+    <div class="splash-badge">⚠️ 投資風險警語</div>
+    <h2>「2000 萬而已，我一定能輕鬆賺回來！」<br>……進場前，請先讀完這份很長的警語</h2>
+    <ol class="warn-list">
+      <li>本頁所有價格都是隨機模擬，跟真實比特幣行情無關。</li>
+      <li>槓桿會同時放大獲利和虧損，本遊戲最高 102 倍（久留美模式）。</li>
+      <li>保證金賠光時會被強制平倉，系統不會先問你。</li>
+      <li>「沒賣就不算賠」是帳面虧損最常見的藉口。</li>
+      <li>越跌越加碼，通常不叫攤平，叫越陷越深。</li>
+      <li>連賺三次不代表你是天才，只代表你還沒賠。</li>
+      <li>跟朋友借來的錢，不是「額外的錢」。爸爸錢包裡的更不是。</li>
+      <li>小賺大賠是常態，不是意外。</li>
+      <li>人物是虛構的，但 K 線是真的（網友說的）。</li>
+      <li>這不是恐怖片。雖然大家都這樣說。</li>
+    </ol>
+    <button id="enterBtn" type="button">🔊 我已了解風險，開聲音進入戰場</button>
+    <p class="splash-foot">右下角的小按鈕可以隨時靜音。iPhone 沒聲音時，請把音量調大。</p>
+  </div>
+</div>
+
+<div id="dadAlert" hidden>
+  <div class="dad-card" role="alertdialog" aria-labelledby="dadLine">
+    <div class="dad-face">👨</div>
+    <div class="dad-line" id="dadLine">錢包裡的錢呢？給我解釋清楚！</div>
+    <ul class="dad-penalty" id="dadPenalty"></ul>
+    <p class="dad-aside">網友：「最可憐的人是爸爸。」</p>
+    <button id="dadOk" type="button">對不起……我不會再拿了</button>
+  </div>
+</div>
+
+<div id="endModal" hidden>
+  <div class="wheel-card end-card" role="dialog" aria-labelledby="endTitle">
+    <div class="hist-top end-top">
+      <div class="wheel-title" id="endTitle">🏁 通關！2000 萬回來了</div>
+      <button id="endX" class="xbtn" type="button" aria-label="關閉">✕</button>
+    </div>
+    <img id="shareImg" class="share-img" alt="通關戰績圖">
+    <p class="share-hint" id="shareHint">戰績圖產生中……</p>
+    <div class="vote-slot"></div>
+    <div class="wheel-btns">
+      <button id="shareDl" type="button" hidden>⬇️ 下載戰績圖</button>
+      <button id="endOk" type="button">繼續當鐮刀</button>
+    </div>
+  </div>
+</div>
+
+<div id="overModal" hidden>
+  <div class="wheel-card" role="dialog" aria-labelledby="overTitle">
+    <div class="wheel-title" id="overTitle">🏠 沒錢了，回家吃自己</div>
+    <div class="wheel-result">「……明天再來一次就好。」</div>
+    <ul class="dad-penalty end-stats" id="overStats"></ul>
+    <div class="vote-slot"></div>
+    <div class="wheel-btns">
+      <button id="overRestart" type="button">重新開始（200 萬）</button>
+      <button id="overStay" type="button">再撐一下</button>
+    </div>
+  </div>
+</div>
+
+<div id="rankModal" hidden>
+  <div class="hist-card" role="dialog" aria-labelledby="rankTitle">
+    <div class="hist-top">
+      <div class="wheel-title" id="rankTitle">🏅 我的等級</div>
+      <button id="rankClose" class="xbtn" type="button" aria-label="關閉">✕</button>
+    </div>
+    <div class="rank-now" id="rankNow"></div>
+    <div class="hist-sub">目前生效的福利</div>
+    <div class="perk-list" id="perkList"></div>
+    <div class="hist-sub">等級一覽（由高到低）</div>
+    <ol class="ladder" id="ladder"></ol>
+  </div>
+</div>
+
+<div id="histModal" hidden>
+  <div class="hist-card" role="dialog" aria-labelledby="histTitle">
+    <div class="hist-top">
+      <div class="wheel-title" id="histTitle">📜 投資紀錄</div>
+      <button id="clearBtn" class="clear-btn" type="button" hidden>🏁 通關成就</button>
+      <button id="histClose" type="button" aria-label="關閉">✕</button>
+    </div>
+    <div class="vote-slot"></div>
+    <div class="hist-stats" id="histStats"></div>
+    <div class="hist-sub">淨值走勢（虛線是起始資金）</div>
+    <canvas id="eqChart"></canvas>
+    <div class="hist-sub">最近動態</div>
+    <ul class="ev-list" id="evList"></ul>
+    <div class="hist-sub">交易明細（最新在上）</div>
+    <div class="hist-table-wrap">
+      <table class="hist-table">
+        <thead><tr><th>#</th><th>時間</th><th>方向</th><th>投入</th><th>進場→出場</th><th>損益</th><th>結果</th></tr></thead>
+        <tbody id="histRows"></tbody>
+      </table>
+    </div>
+    <p class="hist-empty" id="histEmpty">還沒有交易紀錄。平倉或爆倉後，每一筆都會記在這裡。</p>
+    <p class="hist-empty">人物是虛構的，K 線是模擬的。轉盤和紅包都是假的錢。僅供娛樂，非投資建議。</p>
+  </div>
+</div>
+
+<div id="wheelModal" hidden>
+  <div class="wheel-card" role="dialog" aria-labelledby="wheelTitle">
+    <div class="wheel-title" id="wheelTitle">🎡 命運轉盤</div>
+    <div class="wheel-box">
+      <div class="wheel-pointer" aria-hidden="true">▼</div>
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-hub" aria-hidden="true">轉</div>
+    </div>
+    <div class="wheel-result" id="wheelResult">破產時可以轉動一次</div>
+    <div class="wheel-btns">
+      <button id="wheelSpin" type="button">轉動！</button>
+      <button id="wheelClose" type="button">先不要</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- top: the 3D chart, with only the essentials floating on it -->
+  <section class="stage" aria-label="3D K 線">
+    <canvas id="chart"></canvas>
+    <div class="hud-tl">
+      <button id="rank" type="button" aria-label="查看我的等級與福利"><span id="rankName">Lv.1 ⚔️ 新手 FX 戰士</span><span class="rank-bar" aria-hidden="true"><span id="rankBarFill"></span></span></button>
+      <div class="hud-price"><b id="price">--</b><span id="change">等待進場…</span></div>
+    </div>
+    <button id="histBtn" type="button" aria-label="投資紀錄">📜</button>
+    <div id="msg"></div>
+    <div id="ticker" role="status" aria-live="polite"></div>
+    <div id="indicator">
+      <span>趨勢</span>
+      <span class="bar"><span id="indicatorBar"></span></span>
+      <span class="dir" id="indicatorDir">--</span>
+    </div>
+    <!-- values the game still updates but the simplified screen no longer shows -->
+    <div hidden>
+      <h1 id="title"></h1><span id="clock"></span><span id="streak"></span><span id="mood"></span>
+      <b id="nextRankName"></b><b id="nextRankLeft"></b><span id="rankFill"></span><span id="nextRankReward"></span><span id="bestRecord"></span>
+    </div>
+  </section>
+
+  <!-- bottom: everything you do -->
+  <section id="dock">
+    <div class="dock-inner">
+      <div class="goal2000">
+        <div class="g-head">
+          <span class="g-title">🏁 目標 2000 萬</span>
+          <span class="g-now"><b id="goalNow">200萬</b> ／ 2000萬・<b id="goalPct">10%</b></span>
+        </div>
+        <div class="g-bar">
+          <span id="goalFill"></span>
+          <i class="g-tick" style="left:10%" title="起始 200萬">🚩</i>
+          <i class="g-tick" style="left:20%" title="Lv.2 400萬">🔥</i>
+          <i class="g-tick" style="left:40%" title="Lv.3 800萬">🗡️</i>
+          <i class="g-tick" style="left:75%" title="Lv.4 1500萬">👑</i>
+        </div>
+        <div class="g-sub"><span id="goalLeft">還差 1800萬</span><button id="clearBtn2" class="clear-btn" type="button" hidden>🏁 通關成就</button></div>
+      </div>
+      <div class="mission" id="mission">
+        <span class="m-tag">🎯 任務</span>
+        <span class="m-text" id="mText">開一張單，正式進場</span>
+        <span class="m-bar" aria-hidden="true"><span id="mFill"></span></span>
+        <span class="m-reward" id="mReward">🎁 +4萬</span>
+      </div>
+      <div class="meters">
+        <div class="meter" id="balMeter">
+          <span class="meter-k">💰 餘額</span>
+          <b class="meter-v" id="balance">200萬</b>
+        </div>
+        <div class="meter inv idle" id="invMeter">
+          <span class="meter-k" id="invLabel">🎲 下一注</span>
+          <b class="meter-v" id="invested">10萬</b>
+        </div>
+        <div class="meter pnl idle" id="pnlMeter">
+          <span class="meter-k">📈 未實現<span id="pnlRoi"></span></span>
+          <button id="denyBtn" class="deny-btn" type="button" hidden>🙈 不看</button>
+          <b class="meter-v" id="livePnl">--</b>
+        </div>
+      </div>
+      <div class="substats">
+        <span>持倉 <span id="posBadge">空手</span></span>
+        <span id="debtStat" hidden>欠朋友 <b id="debt">NT$0</b></span>
+        <span id="dadDebtStat" hidden>欠爸爸 <b id="dadDebt">NT$0</b></span>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="opts">
+        <div class="seg" role="group" aria-label="每次下注金額">
+          <span class="seg-label">下注</span>
+          <button type="button" data-stake="0.05">5%</button>
+          <button type="button" data-stake="0.1">10%</button>
+          <button type="button" data-stake="0.3">30%</button>
+          <button type="button" data-stake="all">梭哈</button>
+        </div>
+        <div class="seg" role="group" aria-label="槓桿倍數">
+          <span class="seg-label">槓桿</span>
+          <button type="button" data-lev="10">10x</button>
+          <button type="button" data-lev="25">25x</button>
+          <button type="button" data-lev="50">50x</button>
+          <button type="button" data-lev="102">102x</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnLong" type="button">做多</button>
+        <button id="btnShort" type="button">做空</button>
+        <button id="btnClose" type="button" disabled>平倉</button>
+      </div>
+      <!-- rescue options only appear once you're broke -->
+      <div class="rescue" id="rescue" hidden>
+        <div class="rescue-head">💸 沒錢了……要怎麼翻身？</div>
+        <div class="side-actions">
+          <button id="btnWheel" type="button">🎡 救命轉盤・轉動</button>
+          <button id="btnSteal" type="button">👛 偷爸爸錢包</button>
+          <button id="btnBorrow" type="button">🙏 借 10萬</button>
+          <button id="btnHome" type="button">🏠 回家吃自己</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<template id="voteTpl">
+  <div class="vote-box">
+    <div class="vote-q">這遊戲好玩嗎？發一篇 Threads 就算一票</div>
+    <div class="vote-btns">
+      <a class="vote-btn up" data-vote="up" href="https://www.threads.net/" target="_blank" rel="noopener">👍 好玩！<br>今天我也是 BTC 戰士</a>
+      <a class="vote-btn down" data-vote="down" href="https://www.threads.net/" target="_blank" rel="noopener">👎 不好玩<br>我沒這個命</a>
+    </div>
+    <div class="vote-note">看大家怎麼說：在 Threads 搜尋 #BTC戰士好玩、#BTC戰士沒這個命</div>
+  </div>
+</template>
+
+<script>
+(function () {
+  const $ = function (id) { return document.getElementById(id); };
+  const canvas = $('chart');
+  const ctx = canvas.getContext('2d');
+  const MAX = 34;
+  const LEVERAGE = 25;
+  // 起始資金 200 萬. All in-game money (rewards, red packets, steals,
+  // ranks) scales from this, so changing START rebalances everything.
+  const START = 2000000;
+  const K = START / 100000;
+  const STAKE = START * 0.05;        // below this with no position = broke
+  const BIG_P = 0.35;                // chance of a big move on any candle
+  let trend = 1;                     // trends persist, so the indicator means something
+  const GOAL = 20000000;
+
+  let candles = [];
+  let started = false;
+  let timer = null;
+
+  // lines written in the show's voice: the heroine's cheerful
+  // overconfidence on the way up, denial and bargaining on the way down
+  const cuteMsgs = [
+    '看吧！我就說會漲！', '照這個速度，2000 萬很快就回來了～', '我果然有 FX 的天分！',
+    '帳面獲利好舒服喔～', '今天就收工！……再一單就好。', '這根陽線是我的了！',
+    '只要不貪心，FX 其實很簡單嘛～'
+  ];
+  const scaryMsgs = [
+    '沒事……只是回檔而已……', '沒賣就不算賠……沒賣就不算賠……', '拜託……反彈一下就好……',
+    '為什麼……我明明看對方向的……', '停損？停損就真的賠了啊……', '心跳好快……手一直在抖……',
+    '不要看……不要看圖……'
+  ];
+  const crashMsgs = ['保證金不足！！', '追繳保證金！！', '我的 2000 萬……', '腦袋一片空白……'];
+  let lastCrashAt = 0;
+
+  function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+  function fmtUsd(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function fmtTwd(n) { return 'NT$' + Math.round(n).toLocaleString('en-US'); }
+  function fmtSigned(n) { return (n >= 0 ? '+' : '-') + fmtTwd(Math.abs(n)); }
+  // compact Taiwanese money: 2,000,000 → 200萬, 35,000 → 3.5萬
+  function fmtShort(n) {
+    const a = Math.abs(n), sg = n < 0 ? '-' : '';
+    if (a >= 1e8) return sg + (a / 1e8).toFixed(2).replace(/\.?0+$/, '') + '億';
+    if (a >= 1e4) return sg + (a / 1e4).toFixed(a >= 1e7 ? 0 : 1).replace(/\.0$/, '') + '萬';
+    return sg + Math.round(a).toLocaleString('en-US');
+  }
+  function fmtShortSigned(n) { return (n >= 0 ? '+' : '') + fmtShort(n); }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  /* ================= sound =================
+     All synthesized with Web Audio (no audio files). Why it was silent
+     and what this does about each cause:
+     1. Browsers keep an AudioContext suspended until a real user
+        activation. Touch "pointerdown" doesn't count on phones, so the
+        engine is now started only from click / touchend / keydown.
+     2. iPhone routes Web Audio through the ringer channel, so the
+        silent switch mutes it. Setting navigator.audioSession to
+        "playback" and looping a silent <audio> element moves it onto
+        the media channel, which plays even in silent mode.
+     3. Some browsers need a sound actually started inside the gesture;
+        a one-sample silent buffer is played on every unlock.
+     The corner button shows the real engine state, so if the browser
+     still refuses, it turns into a pulsing "點我開聲音" pill. */
+  let audioCtx = null, masterGain = null, reverbNode = null;
+  let soundOn = true;
+  const muteBtn = $('muteBtn');
+
+  function silentWavUri() {
+    const sr = 8000, n = 4000;
+    const buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+    function str(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+    str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    str(36, 'data'); v.setUint32(40, n, true);
+    for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+    const u = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < u.length; i++) bin += String.fromCharCode(u[i]);
+    return 'data:audio/wav;base64,' + btoa(bin);
+  }
+  let keepAlive = null;
+  try {
+    keepAlive = new Audio(silentWavUri());
+    keepAlive.loop = true;
+    keepAlive.setAttribute('playsinline', '');
+  } catch (e) { keepAlive = null; }
+
+  function buildReverb(c, seconds, decay) {
+    const len = Math.max(1, Math.floor(c.sampleRate * seconds));
+    const buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    const node = c.createConvolver();
+    node.buffer = buf;
+    return node;
+  }
+
+  // must be called from inside a click / touchend / keydown handler
+  function ensureAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.85;
+        const comp = audioCtx.createDynamicsCompressor();
+        masterGain.connect(comp).connect(audioCtx.destination);
+        reverbNode = buildReverb(audioCtx, 1.6, 2.2);
+        const rg = audioCtx.createGain();
+        rg.gain.value = 0.35;
+        reverbNode.connect(rg).connect(masterGain);
+        audioCtx.onstatechange = setMuteUI;
+      }
+      if (keepAlive) { const p = keepAlive.play(); if (p && p.catch) p.catch(function () {}); }
+      const s = audioCtx.createBufferSource();
+      s.buffer = audioCtx.createBuffer(1, 1, 22050);
+      s.connect(audioCtx.destination);
+      s.start(0);
+      const r = audioCtx.state !== 'running' ? audioCtx.resume() : Promise.resolve();
+      return r.then(function () { setMuteUI(); });
+    } catch (e) { setMuteUI(); return Promise.reject(e); }
+  }
+  function running() { return !!audioCtx && audioCtx.state === 'running'; }
+  function canPlay() { return soundOn && running(); }
+
+  function setMuteUI() {
+    const blocked = soundOn && !running();
+    muteBtn.classList.toggle('blocked', blocked);
+    muteBtn.classList.toggle('muted', !soundOn);
+    muteBtn.setAttribute('aria-pressed', soundOn ? 'false' : 'true');
+    if (blocked) { muteBtn.textContent = '🔈 點我開聲音'; muteBtn.setAttribute('aria-label', '開啟聲音'); }
+    else if (soundOn) { muteBtn.textContent = '🔊'; muteBtn.setAttribute('aria-label', '靜音'); }
+    else { muteBtn.textContent = '🔇'; muteBtn.setAttribute('aria-label', '取消靜音'); }
+  }
+
+  muteBtn.addEventListener('click', function () {
+    if (soundOn && !running()) {
+      // blocked state: this tap is the unlock, not a toggle
+      ensureAudio().then(function () { playClick(); }).catch(function () {});
+      return;
+    }
+    soundOn = !soundOn;
+    if (soundOn) {
+      ensureAudio().then(function () { playClick(); }).catch(function () {});
+    } else if (keepAlive) {
+      keepAlive.pause();
+    }
+    setMuteUI();
+  });
+
+  // any later tap or key (re)starts the engine if sound is on but the
+  // browser suspended it — uses activation-granting events only
+  function wake() { if (soundOn && !running()) ensureAudio().catch(function () {}); }
+  document.addEventListener('click', wake, true);
+  document.addEventListener('touchend', wake, { capture: true, passive: true });
+  document.addEventListener('keydown', wake, true);
+
+  // pause when the page is hidden, resume when it comes back
+  document.addEventListener('visibilitychange', function () {
+    if (!audioCtx) return;
+    if (document.hidden) {
+      audioCtx.suspend().catch(function () {});
+      if (keepAlive) keepAlive.pause();
+    } else if (soundOn) {
+      audioCtx.resume().then(setMuteUI).catch(setMuteUI);
+      if (keepAlive) { const p = keepAlive.play(); if (p && p.catch) p.catch(function () {}); }
+    }
+  });
+  setMuteUI();
+
+  function bell(freq, start, duration, peak) {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + start;
+    const o1 = audioCtx.createOscillator(), o2 = audioCtx.createOscillator();
+    const filt = audioCtx.createBiquadFilter(), g = audioCtx.createGain(), g2 = audioCtx.createGain();
+    o1.type = 'sine'; o2.type = 'triangle';
+    o1.frequency.setValueAtTime(freq, t0); o2.frequency.setValueAtTime(freq * 2, t0);
+    filt.type = 'lowpass'; filt.frequency.setValueAtTime(5200, t0);
+    g2.gain.value = 0.22;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0008, t0 + duration);
+    o1.connect(filt); o2.connect(g2).connect(filt); filt.connect(g);
+    g.connect(masterGain); g.connect(reverbNode);
+    o1.start(t0); o1.stop(t0 + duration + 0.05);
+    o2.start(t0); o2.stop(t0 + duration + 0.05);
+  }
+
+  function playCute() {
+    if (!canPlay()) return;
+    [1046.5, 1318.5, 1568.0, 2093.0].forEach(function (f, i) { bell(f, i * 0.07, 0.5, 0.15 - i * 0.015); });
+  }
+  function playCoin() {
+    if (!canPlay()) return;
+    bell(1975.5, 0, 0.18, 0.16); bell(2637, 0.08, 0.6, 0.16);
+  }
+  function playClick() {
+    if (!canPlay()) return;
+    bell(1318.5, 0, 0.16, 0.12);
+  }
+  function playFanfare() {
+    if (!canPlay()) return;
+    [1046.5, 1318.5, 1568, 2093, 2637].forEach(function (f, i) { bell(f, i * 0.09, 0.7, 0.13); });
+  }
+  // tiptoe: two soft, low, minor notes
+  function playSneak() {
+    if (!canPlay()) return;
+    bell(392, 0, 0.22, 0.12); bell(466.2, 0.18, 0.22, 0.1); bell(392, 0.36, 0.4, 0.08);
+  }
+  // dad finds out: heavy low thump, then the scary drone
+  function playThud() {
+    if (!canPlay()) return;
+    const t0 = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(140, t0);
+    o.frequency.exponentialRampToValueAtTime(38, t0 + 0.5);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.7, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.6);
+    o.connect(g); g.connect(masterGain); g.connect(reverbNode);
+    o.start(t0); o.stop(t0 + 0.65);
+    noiseBurst(0, 0.12, 0.25, 800, 120);
+    setTimeout(playScary, 260);
+  }
+
+  function noiseBurst(start, duration, peak, hzA, hzB) {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + start;
+    const len = Math.floor(audioCtx.sampleRate * duration);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.Q.value = 0.7;
+    bp.frequency.setValueAtTime(hzA, t0);
+    bp.frequency.exponentialRampToValueAtTime(hzB, t0 + duration);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(peak, t0);
+    g.gain.exponentialRampToValueAtTime(0.0008, t0 + duration);
+    src.connect(bp).connect(g); g.connect(masterGain); g.connect(reverbNode);
+    src.start(t0); src.stop(t0 + duration);
+  }
+
+  function distortion(amount) {
+    const s = audioCtx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) { const x = (i / 255) * 2 - 1; curve[i] = Math.tanh(x * amount); }
+    s.curve = curve; s.oversample = '4x';
+    return s;
+  }
+
+  function playScary() {
+    if (!canPlay()) return;
+    const t0 = audioCtx.currentTime, dur = 0.9;
+    const shaper = distortion(3.2);
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1800, t0);
+    lp.frequency.exponentialRampToValueAtTime(220, t0 + dur);
+    const bus = audioCtx.createGain();
+    bus.gain.setValueAtTime(0.0001, t0);
+    bus.gain.linearRampToValueAtTime(0.18, t0 + 0.03);
+    bus.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+    bus.connect(shaper).connect(lp).connect(masterGain);
+    lp.connect(reverbNode);
+    [116.5, 123.5, 61.7].forEach(function (f) {
+      const o = audioCtx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f, t0);
+      o.frequency.exponentialRampToValueAtTime(f * 0.55, t0 + dur);
+      o.connect(bus); o.start(t0); o.stop(t0 + dur + 0.05);
+    });
+    noiseBurst(0, 0.2, 0.16, 3000, 500);
+  }
+
+  // synthesized shriek: resonant noise sweep + leaping sawtooth through
+  // heavy distortion (no recorded voice)
+  function playScream() {
+    if (!canPlay()) return;
+    const t0 = audioCtx.currentTime, dur = 0.8;
+    const shaper = distortion(5);
+    shaper.connect(masterGain); shaper.connect(reverbNode);
+
+    const len = Math.floor(audioCtx.sampleRate * dur);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource(); noise.buffer = buf;
+    const bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.Q.value = 7;
+    bp.frequency.setValueAtTime(650, t0);
+    bp.frequency.exponentialRampToValueAtTime(2600, t0 + 0.16);
+    bp.frequency.exponentialRampToValueAtTime(320, t0 + dur);
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0.0001, t0);
+    ng.gain.linearRampToValueAtTime(0.5, t0 + 0.05);
+    ng.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+    noise.connect(bp).connect(ng).connect(shaper);
+    noise.start(t0); noise.stop(t0 + dur);
+
+    const o = audioCtx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(380, t0);
+    o.frequency.exponentialRampToValueAtTime(1150, t0 + 0.12);
+    o.frequency.exponentialRampToValueAtTime(170, t0 + dur);
+    const og = audioCtx.createGain();
+    og.gain.setValueAtTime(0.0001, t0);
+    og.gain.linearRampToValueAtTime(0.28, t0 + 0.05);
+    og.gain.exponentialRampToValueAtTime(0.0006, t0 + dur);
+    o.connect(og).connect(shaper);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+
+  /* ================= market ================= */
+  let volMult = 1, volTicksLeft = 0;
+  const newsPool = [
+    { text: '📰 快訊：某央行意外升息', mult: 2.4 },
+    { text: '📰 快訊：巨鯨帳戶大額異動', mult: 2.6 },
+    { text: '📰 快訊：交易所傳出系統故障', mult: 2.2 },
+    { text: '📰 快訊：散戶信心大爆發', mult: 2.3 },
+    { text: '📰 快訊：監理機關即將發表談話', mult: 2.0 },
+    { text: '📰 快訊：知名網紅宣布全倉梭哈', mult: 2.5 }
+  ];
+  const newsBanner = $('newsBanner');
+  function maybeTriggerNews() {
+    if (volTicksLeft > 0 || Math.random() > 1 / 22) return;
+    const ev = pick(newsPool);
+    volMult = ev.mult; volTicksLeft = 5;
+    toast(ev.text.replace('📰 快訊：', '📰 '), '接下來幾根波動變大');
+  }
+
+  function newCandle(prevClose, mult, live) {
+    mult = mult || 1;
+    if (live && Math.random() < 0.12) trend = -trend;
+    const drift = live ? trend * 180 : 0;
+    const open = prevClose;
+    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3000 * mult : 0;
+    const close = open + (Math.random() - 0.5) * 900 * mult + drift + big;
+    return {
+      open: open, close: close,
+      high: Math.max(open, close) + Math.random() * 300 * mult,
+      low: Math.min(open, close) - Math.random() * 300 * mult
+    };
+  }
+  function seed() {
+    candles = [];
+    let p = 68000;
+    for (let i = 0; i < MAX; i++) { const c = newCandle(p); candles.push(c); p = c.close; }
+  }
+  function lastClose() { return candles[candles.length - 1].close; }
+
+  /* ================= streak ================= */
+  let streakDir = 0, streakLen = 0;
+  const streakEl = $('streak');
+  function streakLabel(dir, len) {
+    if (len < 2) return '';
+    if (dir > 0) return len >= 6 ? '🔥 ' + len + ' 連漲・小富婆模式！' : len >= 4 ? '✨ ' + len + ' 連漲，手感正熱' : len + ' 連漲';
+    return len >= 6 ? '💧 ' + len + ' 連跌・心理素質考驗中' : len >= 4 ? '😓 ' + len + ' 連跌，穩住……' : len + ' 連跌';
+  }
+
+  /* ================= indicator =================
+     Short vs long moving average of this page's own random series. It
+     gives the game a signal light; it can't predict a random walk. */
+  const SHORT_N = 5, LONG_N = 16;
+  function sma(n) {
+    const s = candles.slice(Math.max(0, candles.length - n));
+    return s.reduce(function (a, c) { return a + c.close; }, 0) / s.length;
+  }
+  function updateIndicator() {
+    if (candles.length < LONG_N) return;
+    const s = sma(SHORT_N), l = sma(LONG_N);
+    const spread = (s - l) / l * 100;
+    const long = spread >= 0;
+    const strength = Math.min(1, Math.abs(spread) / 1.2);
+    const dirEl = $('indicatorDir');
+    dirEl.textContent = long ? '偏多 ▲' : '偏空 ▼';
+    dirEl.className = 'dir ' + (long ? 'long' : 'short');
+    const bar = $('indicatorBar');
+    bar.style.width = Math.round(20 + strength * 80) + '%';
+    bar.style.background = long ? cssVar('--up') : cssVar('--down');
+  }
+
+  /* ================= toasts & achievements ================= */
+  const toastsEl = $('toasts');
+  // Events show as one short line at the bottom of the 3D view for a
+  // moment (a new one simply replaces the old), and are kept in the
+  // history page's 最近動態 list.
+  const eventLog = [];
+  let tickerTimer = null;
+  function toast(title, body) {
+    const text = title + (body ? '  ' + body : '');
+    eventLog.unshift({ t: started && startAt ? mmss(gameSecs()) : '', text: text });
+    if (eventLog.length > 60) eventLog.pop();
+    const el = $('ticker');
+    el.textContent = title;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    clearTimeout(tickerTimer);
+    tickerTimer = setTimeout(function () { el.classList.remove('show'); }, 2500);
+  }
+
+  // achievements named after the investor psychology traps people point
+  // out in the show: loss aversion, overconfidence, mental accounting
+  const ACH = {
+    firstTrade: ['歡迎來到戰場', '第一筆單送出去了，回不去了。'],
+    lossAversion: ['損失厭惡', '帳面虧損還加碼，這叫攤平還是越陷越深？'],
+    allIn: ['梭哈', '一把全押，膽子比本金還大。'],
+    kurumi: ['久留美模式', '開了 102 倍槓桿，價格動 1% 就是天堂或地獄。'],
+    gold: ['撿到紅包', '走在 K 線上，撿到黃金 K 線紅包。'],
+    wheel: ['轉盤初體驗', '第一次轉命運轉盤。小心，會上癮。'],
+    saved: ['免死金牌', '爆倉的瞬間，金牌救回一半保證金。'],
+    overconfidence: ['過度自信', '連續三次獲利出場，開始覺得自己是天才了吧。'],
+    firstLiq: ['人生第一次爆倉', '保證金歸零，市場沒有在等你。'],
+    borrow: ['心理帳戶', '借來的錢也是錢，不是額外的錢。'],
+    doubled: ['翻倍了！', '淨值翻倍到 400 萬，該收手了吧？（不會）'],
+    diamond: ['抱緊處理', '虧損中撐過 10 根 K 線還不認賠。'],
+    thief: ['家賊難防', '從爸爸的錢包「借」了一點，他應該不會發現吧？'],
+    luckyThief: ['僥倖', '爸爸沒發現。這種事通常不會一直好運下去。'],
+    caught: ['家庭革命', '被爸爸抓包，手機也被沒收了。'],
+    smallWinBigLoss: ['小賺大賠', '明明賺過一筆，最後還是賠著出場。'],
+    aq: ['阿 Q', '嘴硬模式撐過 10 根 K 線：沒賣就不算賠。'],
+    heirloom: ['傳家寶', '套牢 30 根 K 線，這單可以傳給下一代了。'],
+    valueInvest: ['價值投資', '越跌越買，你說這叫價值投資。'],
+    aqDeath: ['嘴硬到最後一刻', '在不看的時候被強制平倉。']
+  };
+  let achieved = {};
+  function achieve(key) {
+    if (achieved[key]) return;
+    achieved[key] = true;
+    toast('🏆 ' + ACH[key][0], ACH[key][1]);
+    playFanfare();
+  }
+
+  /* ================= trading ================= */
+  let position = null;  // { dir, avgEntry, margin, redTicks, lev }
+  let balance = START, debt = 0, winStreak = 0;
+  // 精神勝利法: denial hides the loss (and fades the liquidation line) but
+  // changes nothing underneath; hold names get grander the longer you're stuck
+  let denial = false, denialTicks = 0;
+  function holdName(pos) {
+    const r = pos.redTicks || 0;
+    let name = r >= 30 ? '傳家寶' : r >= 20 ? '存股' : r >= 10 ? '長期投資' : r >= 5 ? '波段' : '短線';
+    if (pos.avgDown && (name === '波段' || name === '長期投資')) name = '價值投資';
+    return name;
+  }
+  function endDenial() { denial = false; denialTicks = 0; }
+  let stakeMode = 0.05;   // share of balance per click: 0.05 | 0.1 | 0.3 | 'all'
+  let lev = 25;
+  // gambling-style extras: lucky wheel spins and buffs it hands out
+  let spins = 0, shields = 0, doubleNext = false, tickCount = 0, wasBroke = false;
+  // 偷爸爸的錢包: each grab adds cash now, and dad checks his wallet a few
+  // candles later. The more often you've stolen, the likelier he notices.
+  // Caught = repay everything taken since the last time, doubled (into
+  // debt to dad if you can't cover it), and the phone is confiscated:
+  // no trading for 12 candles while any open position keeps running.
+  let dadDebt = 0, stealCount = 0, stolenAtRisk = 0, dadCheckIn = 0, grounded = 0;
+  const GROUND_TICKS = 12;
+  const posBadge = $('posBadge'), livePnlEl = $('livePnl');
+  const btnLong = $('btnLong'), btnShort = $('btnShort'), btnClose = $('btnClose'), btnBorrow = $('btnBorrow'), btnSteal = $('btnSteal');
+
+  function positionPnl(p) {
+    if (!position) return 0;
+    return (p - position.avgEntry) / position.avgEntry * position.dir * position.margin * (position.lev || LEVERAGE);
+  }
+  function liqPrice() { return position.avgEntry * (1 - position.dir / (position.lev || LEVERAGE)); }
+  function stakeAmt() {
+    const b = Math.max(0, balance);
+    return Math.floor((stakeMode === 'all' ? b : b * stakeMode) / 100) * 100;
+  }
+  function stakeLabel() { return stakeMode === 'all' ? '梭哈' : '+' + fmtShort(stakeAmt()); }
+  function liveEquity() { return balance - debt - dadDebt + (position ? position.margin + positionPnl(lastClose()) : 0); }
+  function realizedEquity() { return balance - debt - dadDebt + (position ? position.margin : 0); }
+  function catchChance() { return Math.min(0.9, 0.25 + 0.2 * (stealCount - 1)); }
+
+  const RANKS = [
+    [-Infinity, '🥀 負債韭菜'],
+    [1, '🌱 被割到見底的韭菜'],
+    [START * 0.25, '🌿 正在被割的韭菜'],
+    [START * 0.75, '⚔️ 新手 FX 戰士'],   // start (200萬) sits inside 150萬–400萬
+    [START * 2, '🔥 手感正熱的戰士'],
+    [START * 4, '🗡️ 鐮刀見習生'],
+    [START * 7.5, '👑 傳說中的鐮刀']
+  ];
+  // mid-term goals: reaching a rank for the first time pays a reward and
+  // unlocks higher leverage
+  const RANK_REWARDS = {
+    4: { text: '解鎖 50x 槓桿＋獲利翻倍', give: function () { doubleNext = true; } },
+    5: { text: '解鎖 102x 久留美模式＋免死金牌', give: function () { shields++; } },
+    6: { text: '免死金牌 ×2＋紅包 100 萬', give: function () { shields += 2; balance += START / 2; } }
+  };
+  const LEV_UNLOCK = { 10: 0, 25: 0, 50: 4, 102: 5 };
+  // 等級 follows your net worth both ways: lose money and you drop, and
+  // the leverage it unlocked locks again (沒錢就回家吃自己). A level-up
+  // gift is paid only the first time you reach a level (bestRank).
+  let rankIdx = null, bestRank = 3;
+  function curRank() { return rankIdx === null ? 3 : rankIdx; }
+  function levelName(i) { return i >= 3 ? 'Lv.' + (i - 2) + ' ' + RANKS[i][1] : RANKS[i][1]; }
+  function updateRank() {
+    const eq = liveEquity();
+    let idx = 0;
+    for (let i = 0; i < RANKS.length; i++) if (eq >= RANKS[i][0]) idx = i;
+    const el = $('rank');
+    if (rankIdx !== null && idx !== rankIdx) {
+      if (idx > rankIdx) toast('⬆️ 升級', '你現在是「' + levelName(idx) + '」');
+      else toast('⬇️ 降級', '掉到「' + levelName(idx) + '」' + (idx < 4 && rankIdx >= 4 ? '，高倍槓桿鎖回去了。' : '。'));
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    }
+    if (idx > bestRank) {
+      for (let r = bestRank + 1; r <= idx; r++) {
+        const rw = RANK_REWARDS[r];
+        if (rw) {
+          rw.give();
+          setTimeout(function () { toast('🎁 升級禮（只送一次）', levelName(r) + '：' + rw.text); bigWinText('LEVEL UP!', levelName(r)); }, 400);
+        }
+      }
+      bestRank = idx;
+    }
+    rankIdx = idx;
+    // a dropped level takes its leverage with it (an open position keeps its own)
+    if (!position && curRank() < LEV_UNLOCK[lev]) lev = curRank() >= 4 ? 50 : 25;
+    $('rankName').textContent = levelName(idx);
+    const next = RANKS[idx + 1];
+    if (next) {
+      const base = Math.max(0, RANKS[idx][0] === -Infinity ? 0 : RANKS[idx][0]);
+      const pct = Math.max(0, Math.min(100, (eq - base) / (next[0] - base) * 100));
+      $('rankBarFill').style.width = pct + '%';
+      $('rankFill').style.width = pct + '%';
+      $('nextRankName').textContent = levelName(idx + 1);
+      $('nextRankLeft').textContent = fmtTwd(Math.max(0, next[0] - eq));
+      const rw = RANK_REWARDS[idx + 1];
+      $('nextRankReward').textContent = rw ? (idx + 1 > bestRank ? '升級禮：' + rw.text : '升級禮已領過；回到這級可再用它的槓桿') : '';
+    } else {
+      $('rankBarFill').style.width = '100%';
+      $('rankFill').style.width = '100%';
+      $('nextRankName').textContent = '已經是最高等級';
+      $('nextRankLeft').textContent = '—';
+      $('nextRankReward').textContent = '剩下的目標：2000 萬';
+    }
+  }
+
+  let bestEquity = START, cleared = false;
+  try { bestEquity = Math.max(bestEquity, +localStorage.getItem('btcWarriorBest200') || 0); } catch (e) {}
+  function updateGoal() {
+    const eq = Math.max(0, liveEquity());
+    const pct = eq / GOAL * 100;
+    $('goalNow').textContent = fmtShort(eq);
+    $('goalPct').textContent = (pct < 10 ? pct.toFixed(1) : Math.floor(pct)) + '%';
+    $('goalFill').style.width = Math.max(1, Math.min(100, pct)) + '%';
+    if (eq > bestEquity) {
+      bestEquity = eq;
+      try { localStorage.setItem('btcWarriorBest200', String(Math.round(eq))); } catch (e) {}
+    }
+    $('bestRecord').textContent = '最高淨值紀錄：' + fmtTwd(bestEquity);
+    $('goalLeft').textContent = eq >= GOAL ? '🎉 已達成！' : '還差 ' + fmtShort(GOAL - eq) + '・最高紀錄 ' + fmtShort(bestEquity);
+    if (!cleared && started && eq >= GOAL) showEnding();
+  }
+  let stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+  // settlement: an achievement page with a shareable PNG of the run
+  let shareBlob = null, downloadsApi = null, clearImg = null;
+  (function () {
+    try {
+      if (window.claude && window.claude.use) {
+        window.claude.use('downloads').then(function (d) { downloadsApi = d; }).catch(function () { downloadsApi = null; });
+      }
+    } catch (e) { downloadsApi = null; }
+  })();
+  function shareStats() {
+    const n = trades.length;
+    const wins = trades.filter(function (t) { return t.pnl > 0; }).length;
+    const maxW = trades.reduce(function (a, t) { return Math.max(a, t.pnl); }, 0);
+    return {
+      time: mmss(gameSecs()), n: n, winRate: n ? Math.round(wins / n * 100) + '%' : '--',
+      maxW: fmtShortSigned(maxW), liqs: stats.liqs, steals: stats.steals, caught: stats.caught,
+      eq: liveEquity(), rank: levelName(curRank()),
+      ach: Object.keys(achieved).length + '／' + Object.keys(ACH).length
+    };
+  }
+  function rr(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h);
+  }
+  function drawShareCard() {
+    const st = shareStats();
+    const W = 1080, H = 1350;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+    const F = '"Baloo 2", "Noto Sans TC", sans-serif';
+    let g = c.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#ffd6e8'); g.addColorStop(1, '#ffe9c9');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    rr(c, 50, 50, W - 100, H - 100, 48); c.fillStyle = '#fff7fb'; c.fill();
+    c.lineWidth = 8; c.strokeStyle = '#ff5fa0'; c.stroke();
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.fillStyle = '#ff5fa0'; c.font = '800 54px ' + F; c.fillText('🌸 BTC 戰士 🌸', W / 2, 150);
+    c.fillStyle = '#5c2f49'; c.font = '900 72px ' + F; c.fillText('通關！2000 萬回來了', W / 2, 250);
+    c.font = '900 120px ' + F; c.lineWidth = 10; c.strokeStyle = '#b8001f';
+    c.strokeText('NT$' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
+    c.fillStyle = '#ffc83a'; c.fillText('NT$' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
+    c.fillStyle = '#8a5a73'; c.font = '700 36px ' + F;
+    c.fillText('起始 200 萬 → ×' + (st.eq / START).toFixed(1) + '・用時 ' + st.time, W / 2, 465);
+    const tiles = [
+      ['交易次數', st.n + ' 筆'], ['勝率', st.winRate], ['最大單筆獲利', st.maxW],
+      ['爆倉次數', st.liqs + ' 次'], ['偷爸爸錢包', st.steals + ' 次（被抓 ' + st.caught + '）'], ['成就', st.ach]
+    ];
+    const tw = 280, th = 150, gx = 30, x0 = (W - (tw * 3 + gx * 2)) / 2, y0 = 520;
+    tiles.forEach(function (t, i) {
+      const x = x0 + (i % 3) * (tw + gx), y = y0 + Math.floor(i / 3) * (th + 26);
+      const tg = c.createLinearGradient(0, y, 0, y + th);
+      tg.addColorStop(0, '#2c1022'); tg.addColorStop(1, '#14060f');
+      rr(c, x, y, tw, th, 24); c.fillStyle = tg; c.fill();
+      c.lineWidth = 5; c.strokeStyle = '#ffc83a'; c.stroke();
+      c.textAlign = 'left';
+      c.fillStyle = '#ffd98a'; c.font = '700 30px ' + F; c.fillText(t[0], x + 24, y + 50);
+      c.fillStyle = '#ffffff'; c.font = '800 ' + (t[1].length > 8 ? 34 : 48) + 'px ' + F; c.fillText(t[1], x + 24, y + 115);
+    });
+    // equity curve
+    const cx = 90, cy = 900, cw = W - 180, ch = 230;
+    rr(c, cx, cy, cw, ch, 24); c.fillStyle = '#ffffff'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#f0d6e2'; c.stroke();
+    const data = equityLog.length > 1 ? equityLog : [START, st.eq];
+    let hi = Math.max.apply(null, data.concat([START])), lo = Math.min.apply(null, data.concat([START]));
+    if (hi === lo) hi += 1;
+    const X = function (i) { return cx + 30 + i / (data.length - 1) * (cw - 60); };
+    const Y = function (v) { return cy + 30 + (hi - v) / (hi - lo) * (ch - 60); };
+    c.beginPath(); data.forEach(function (v, i) { if (i) c.lineTo(X(i), Y(v)); else c.moveTo(X(i), Y(v)); });
+    c.lineTo(X(data.length - 1), cy + ch - 20); c.lineTo(X(0), cy + ch - 20); c.closePath();
+    g = c.createLinearGradient(0, cy, 0, cy + ch); g.addColorStop(0, 'rgba(255,95,160,.4)'); g.addColorStop(1, 'rgba(255,95,160,0)');
+    c.fillStyle = g; c.fill();
+    c.beginPath(); data.forEach(function (v, i) { if (i) c.lineTo(X(i), Y(v)); else c.moveTo(X(i), Y(v)); });
+    c.lineWidth = 6; c.strokeStyle = '#e83e82'; c.stroke();
+    c.textAlign = 'left'; c.fillStyle = '#8a5a73'; c.font = '700 26px ' + F; c.fillText('淨值走勢', cx + 24, cy + 40);
+    // footer
+    c.textAlign = 'center';
+    c.fillStyle = '#5c2f49'; c.font = '800 40px ' + F; c.fillText('最終等級：' + st.rank, W / 2, 1200);
+    c.fillStyle = '#a07890'; c.font = '600 26px ' + F;
+    c.fillText('人物是虛構的，K 線是模擬的・僅供娛樂，非投資建議', W / 2, 1245);
+    c.fillStyle = '#e83e82'; c.font = '700 24px ' + F;
+    c.fillText('來玩 ▸ claude.ai/artifact/KST77twsVmJom7YqTx9pkS', W / 2, 1285);
+    return cv;
+  }
+  function openClearPage() {
+    $('endModal').hidden = false;
+    if (clearImg) {
+      $('shareImg').src = clearImg;
+      $('shareDl').hidden = !(downloadsApi && shareBlob);
+      $('shareHint').textContent = downloadsApi ? '按下載存成圖片，分享給網友吧！' : '長按（手機）或右鍵（電腦）圖片即可儲存分享。';
+    } else {
+      buildClearImage();
+    }
+  }
+  function showEnding() {
+    cleared = true;
+    bigWinText('通關！', '2000 萬回來了');
+    $('endModal').hidden = false;
+    buildClearImage();
+  }
+  function buildClearImage() {
+    $('shareHint').textContent = '戰績圖產生中……';
+    $('shareDl').hidden = true;
+    const ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    ready.catch(function () {}).then(function () {
+      const cv = drawShareCard();
+      const st = shareStats();
+      clearImg = cv.toDataURL('image/png');
+      $('shareImg').src = clearImg;
+      refreshTradeUI();
+      $('shareImg').alt = '通關戰績：淨值 ' + fmtShort(st.eq) + '，用時 ' + st.time + '，勝率 ' + st.winRate + '，交易 ' + st.n + ' 筆';
+      cv.toBlob(function (b) {
+        shareBlob = b;
+        $('shareDl').hidden = !(downloadsApi && b);
+        $('shareHint').textContent = downloadsApi ? '按下載存成圖片，分享給網友吧！' : '長按（手機）或右鍵（電腦）圖片即可儲存分享。';
+      }, 'image/png');
+    });
+  }
+  $('shareDl').addEventListener('click', function () {
+    if (!downloadsApi || !shareBlob) return;
+    downloadsApi.save({ filename: 'BTC戰士_通關戰績.png', data: shareBlob }).then(function () {
+      $('shareHint').textContent = '已存好，快去炫耀吧！';
+    }).catch(function (err) {
+      const code = err && err.code;
+      if (code === 'declined') return;
+      if (code === 'rate_limited') { $('shareHint').textContent = '稍等一下再按一次。'; return; }
+      $('shareDl').hidden = true;
+      $('shareHint').textContent = '這裡無法下載，請長按或右鍵圖片儲存。';
+    });
+  });
+  $('endOk').addEventListener('click', function () { $('endModal').hidden = true; });
+  $('endX').addEventListener('click', function () { $('endModal').hidden = true; });
+  $('endModal').addEventListener('click', function (e) { if (e.target === $('endModal')) $('endModal').hidden = true; });
+
+  /* ---------- rank page: tap the rank chip ---------- */
+  const RANK_PERKS = [
+    '負債中：只剩救援區能翻身',
+    '幾乎見底：下一單請三思',
+    '本金腰斬：還有機會翻盤',
+    '起始等級：可用 10x、25x 槓桿',
+    '可用 50x 槓桿・升級禮：獲利翻倍',
+    '可用 102x 久留美模式・升級禮：免死金牌',
+    '可用全部槓桿・升級禮：免死金牌 ×2＋紅包 100 萬'
+  ];
+  function rankThresholdText(i) {
+    const t = RANKS[i][0], up = RANKS[i + 1];
+    if (t === -Infinity) return '淨值 < 0';
+    if (t === 1) return '淨值 0～' + fmtShort(up[0]);
+    return up ? '淨值 ' + fmtShort(t) + '～' + fmtShort(up[0]) : '淨值 ≥ ' + fmtShort(t);
+  }
+  function perk(text, on) {
+    const el = document.createElement('span');
+    el.className = 'perk' + (on ? '' : ' off');
+    el.textContent = text;
+    $('perkList').appendChild(el);
+  }
+  function renderRankPage() {
+    const eq = liveEquity(), cur = curRank();
+    const now = $('rankNow'); now.textContent = '';
+    const nm = document.createElement('div'); nm.className = 'rn-name'; nm.textContent = levelName(cur);
+    const sub = document.createElement('div'); sub.className = 'rn-sub';
+    sub.textContent = '淨值 ' + fmtShort(eq) + '（起始的 ×' + (eq / START).toFixed(2) + '）・最高到過 ' + levelName(bestRank);
+    now.appendChild(nm); now.appendChild(sub);
+    const next = RANKS[cur + 1];
+    const bar = document.createElement('div'); bar.className = 'rn-bar';
+    const fill = document.createElement('span');
+    const nxt = document.createElement('div'); nxt.className = 'rn-sub';
+    if (next) {
+      const base = Math.max(0, RANKS[cur][0] === -Infinity ? 0 : RANKS[cur][0]);
+      fill.style.width = Math.max(0, Math.min(100, (eq - base) / (next[0] - base) * 100)) + '%';
+      nxt.textContent = '距離「' + levelName(cur + 1) + '」還差 ' + fmtShort(Math.max(0, next[0] - eq));
+    } else {
+      fill.style.width = '100%';
+      nxt.textContent = '已經是最高等級，剩下 2000 萬通關';
+    }
+    const note = document.createElement('div'); note.className = 'rn-sub';
+    note.textContent = '等級跟著淨值升降，沒錢就回家吃自己。升級禮只在第一次升上去時發。';
+    bar.appendChild(fill); now.appendChild(bar); now.appendChild(nxt); now.appendChild(note);
+    if (clearImg || cleared) {
+      const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'clear-btn';
+      cb.textContent = '🏁 查看通關成就頁';
+      cb.addEventListener('click', function () { $('rankModal').hidden = true; openClearPage(); });
+      now.appendChild(cb);
+    }
+
+    $('perkList').textContent = '';
+    const levs = [10, 25, 50, 102].filter(function (n) { return cur >= LEV_UNLOCK[n]; });
+    perk('可用槓桿：' + levs.map(function (n) { return n + 'x'; }).join('、'), true);
+    perk('🛡️ 免死金牌 ×' + shields, shields > 0);
+    perk('✨ 下次獲利翻倍', doubleNext);
+    perk('🏆 成就 ' + Object.keys(achieved).length + '／' + Object.keys(ACH).length, true);
+
+    const ol = $('ladder'); ol.textContent = '';
+    function row(name, th, perkText, cls, status) {
+      const li = document.createElement('li'); li.className = cls;
+      const a = document.createElement('span'); a.className = 'ln'; a.textContent = name;
+      const s2 = document.createElement('span'); s2.className = 'ls'; s2.textContent = status;
+      const t = document.createElement('span'); t.className = 'lt'; t.textContent = th;
+      const pp = document.createElement('span'); pp.className = 'lp'; pp.textContent = perkText;
+      li.appendChild(a); li.appendChild(s2); li.appendChild(t); li.appendChild(pp);
+      ol.appendChild(li);
+    }
+    row('🏁 2000 萬回本', '淨值 ≥ 2000萬', '通關結算：跳出成就頁，可下載戰績圖分享', 'goal ' + (cleared ? 'done' : 'locked'),
+        cleared ? '✓ 已通關' : '還差 ' + fmtShort(Math.max(0, GOAL - eq)));
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+      let cls = '', status = '';
+      if (i === cur) { cls = 'now'; status = '目前'; }
+      else if (i > cur) { cls = 'locked'; status = '還差 ' + fmtShort(Math.max(0, RANKS[i][0] - eq)); }
+      const gift = RANK_REWARDS[i] && i <= bestRank ? '（升級禮已領）' : '';
+      row(levelName(i), rankThresholdText(i), RANK_PERKS[i] + gift, cls, status);
+    }
+  }
+  $('rank').addEventListener('click', function () { renderRankPage(); $('rankModal').hidden = false; $('rankClose').focus(); });
+  $('rankClose').addEventListener('click', function () { $('rankModal').hidden = true; });
+  $('rankModal').addEventListener('click', function (e) { if (e.target === $('rankModal')) $('rankModal').hidden = true; });
+
+  /* ---- short-term missions: one at a time, each pays a reward; the
+     list loops with bigger targets every round ---- */
+  const MISSIONS = [
+    { key: 'open', target: 1, text: function () { return '開一張單，正式進場'; }, reward: { cash: 2000 } },
+    { key: 'profitClose', target: 1, text: function () { return '獲利平倉 1 次'; }, reward: { cash: 3000 } },
+    { key: 'hold', target: 8, text: function (t) { return '持倉撐過 ' + t + ' 根 K 線不爆倉'; }, reward: { cash: 5000 } },
+    { key: 'profitAmt', target: 5000, text: function (t) { return '單筆獲利達 ' + fmtTwd(t); }, reward: { cash: 5000 } },
+    { key: 'gold', target: 1, text: function () { return '走過去撿 1 個黃金 K 線紅包'; }, reward: { buff: 'double' } },
+    { key: 'short', target: 1, text: function () { return '做空，並獲利平倉 1 次'; }, reward: { cash: 8000 } },
+    { key: 'streak', target: 2, text: function (t) { return '連續 ' + t + ' 次獲利平倉'; }, reward: { buff: 'shield' } },
+    { key: 'profitAmt', target: 20000, text: function (t) { return '單筆獲利達 ' + fmtTwd(t); }, reward: { cash: 15000 } }
+  ];
+  let missionIdx = 0, missionRound = 0, missionProg = 0;
+  function curMission() {
+    const m = MISSIONS[missionIdx];
+    const scale = (m.key === 'profitAmt' || m.key === 'hold') ? Math.pow(2, missionRound) : 1;
+    const target = m.key === 'hold' ? m.target + missionRound * 4 : Math.round(m.target * scale * (m.key === 'profitAmt' ? K : 1));
+    return { key: m.key, target: target, text: m.text(target), reward: m.reward, scale: Math.pow(2, missionRound) };
+  }
+  function rewardText(r, scale) {
+    if (r.cash) return '🎁 +' + fmtShort(r.cash * K * scale);
+    return r.buff === 'double' ? '🎁 獲利翻倍' : '🎁 免死金牌';
+  }
+  function renderMission() {
+    const m = curMission();
+    $('mText').textContent = m.text;
+    $('mFill').style.width = Math.min(100, missionProg / m.target * 100) + '%';
+    $('mReward').textContent = rewardText(m.reward, m.scale);
+  }
+  function missionEvent(key, value, mode) {
+    const m = curMission();
+    if (m.key !== key) return;
+    missionProg = mode === 'max' ? Math.max(missionProg, value) : mode === 'set' ? value : missionProg + value;
+    if (missionProg >= m.target) {
+      const r = m.reward;
+      if (r.cash) balance += Math.round(r.cash * K * m.scale);
+      if (r.buff === 'double') doubleNext = true;
+      if (r.buff === 'shield') shields++;
+      toast('🎯 任務完成', m.text + '　' + rewardText(r, m.scale));
+      playFanfare();
+      const el = $('mission'); el.classList.remove('done'); void el.offsetWidth; el.classList.add('done');
+      missionProg = 0;
+      missionIdx++;
+      if (missionIdx >= MISSIONS.length) { missionIdx = 0; missionRound++; }
+      refreshTradeUI();
+    }
+    renderMission();
+  }
+
+  /* ---- casino meters: numbers roll toward their new value ---- */
+  const balMeter = $('balMeter'), pnlMeter = $('pnlMeter');
+  const meterState = { bal: { shown: null, target: 0 }, pnl: { shown: 0, target: 0 } };
+  const noMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function floatDelta(meter, d) {
+    const el = document.createElement('span');
+    el.className = 'delta ' + (d >= 0 ? 'up' : 'down');
+    el.textContent = fmtShortSigned(d);
+    meter.appendChild(el);
+    el.addEventListener('animationend', function () { el.remove(); });
+    setTimeout(function () { el.remove(); }, 1600);
+    meter.classList.remove('flash-up', 'flash-down');
+    void meter.offsetWidth;
+    meter.classList.add(d >= 0 ? 'flash-up' : 'flash-down');
+  }
+  function setBalanceMeter(v) {
+    const m = meterState.bal;
+    if (m.shown === null) { m.shown = v; m.target = v; $('balance').textContent = fmtShort(v); return; }
+    const d = v - m.target;
+    if (Math.abs(d) >= 1) floatDelta(balMeter, d);
+    m.target = v;
+  }
+  function renderMeters(dt) {
+    const b = meterState.bal, p = meterState.pnl;
+    const k = noMotion ? 1 : Math.min(1, dt * 9);
+    if (b.shown !== null && b.shown !== b.target) {
+      b.shown += (b.target - b.shown) * k;
+      if (Math.abs(b.target - b.shown) < 1) b.shown = b.target;
+      $('balance').textContent = fmtShort(b.shown);
+    }
+    if (position) {
+      p.shown += (p.target - p.shown) * k;
+      if (Math.abs(p.target - p.shown) < 1) p.shown = p.target;
+      livePnlEl.textContent = denial ? '沒賣不算賠' : fmtShortSigned(p.shown);
+    }
+  }
+  let meterLast = 0;
+  function meterLoop(now) {
+    const dt = meterLast ? Math.min(0.05, (now - meterLast) / 1000) : 0.016;
+    meterLast = now;
+    renderMeters(dt);
+    requestAnimationFrame(meterLoop);
+  }
+  requestAnimationFrame(meterLoop);
+
+  // the amount at stake: what you've put in, or what the next click will bet
+  function updateInvested() {
+    const m = $('invMeter');
+    if (position) {
+      const share = position.margin / Math.max(1, position.margin + Math.max(0, balance));
+      const isLong = position.dir > 0;
+      const hn = holdName(position);
+      $('invLabel').textContent = (isLong ? '▲ 做多' : '▼ 做空') + (hn === '短線' ? ' ' + (position.lev || LEVERAGE) + 'x' : '・' + hn);
+      $('invested').textContent = fmtShort(position.margin);
+      m.className = 'meter inv ' + (isLong ? 'is-long' : 'is-short') + (share >= 0.5 ? ' heavy' : '');
+    } else {
+      $('invLabel').textContent = '🎲 下一注 ' + lev + 'x';
+      $('invested').textContent = fmtShort(stakeAmt());
+      m.className = 'meter inv idle' + (stakeMode === 'all' ? ' heavy' : '');
+    }
+  }
+  function updateLivePnl() {
+    updateInvested();
+    const roiEl = $('pnlRoi');
+    if (!position) {
+      meterState.pnl.shown = 0; meterState.pnl.target = 0;
+      livePnlEl.textContent = '--';
+      roiEl.textContent = '';
+      pnlMeter.className = 'meter pnl idle';
+      $('denyBtn').hidden = true;
+      return;
+    }
+    const pnl = positionPnl(lastClose());
+    const roi = pnl / position.margin * 100;
+    meterState.pnl.target = pnl;
+    const db = $('denyBtn');
+    db.hidden = !denial && pnl >= 0;          // offered only while losing
+    db.textContent = denial ? '😱 面對' : '🙈 不看';
+    if (denial) {
+      roiEl.textContent = '';
+      pnlMeter.className = 'meter pnl deny';
+      return;
+    }
+    roiEl.textContent = (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%';
+    // near liquidation (lost 70%+ of margin): alarm lights
+    pnlMeter.className = 'meter pnl ' + (pnl >= 0 ? 'win' : 'lose') + (roi <= -70 ? ' danger' : '');
+  }
+
+  function bigWinText(title, sub) {
+    const el = $('bigWin');
+    el.textContent = title;
+    const sm = document.createElement('small'); sm.textContent = sub; el.appendChild(sm);
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    spawnParticles('up'); setTimeout(function () { spawnParticles('up'); }, 300);
+    playFanfare();
+  }
+  // casino-style win banner for a big profitable close
+  function bigWin(pnl) {
+    const el = $('bigWin');
+    const title = pnl >= 50000 * K ? 'MEGA WIN!' : pnl >= 20000 * K ? 'SUPER WIN!' : 'BIG WIN!';
+    el.textContent = title;
+    const sm = document.createElement('small');
+    sm.textContent = fmtSigned(pnl);
+    el.appendChild(sm);
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    spawnParticles('up'); setTimeout(function () { spawnParticles('up'); }, 300); setTimeout(function () { spawnParticles('up'); }, 600);
+    playFanfare(); setTimeout(playCoin, 450);
+  }
+
+  function refreshTradeUI() {
+    setBalanceMeter(balance);
+    $('debtStat').hidden = debt <= 0;
+    $('debt').textContent = fmtTwd(debt);
+    $('dadDebtStat').hidden = dadDebt <= 0;
+    $('dadDebt').textContent = fmtTwd(dadDebt);
+    const amt = stakeAmt();
+    const canAfford = amt >= 1000 && balance >= amt;
+    const locked = !started || grounded > 0;
+    btnLong.textContent = '做多 ' + stakeLabel();
+    btnShort.textContent = '做空 ' + stakeLabel();
+    document.querySelectorAll('[data-stake]').forEach(function (b) {
+      b.classList.toggle('on', String(stakeMode) === b.dataset.stake);
+    });
+    updateRank();   // level first, so leverage locks below match it
+    const shownLev = position ? (position.lev || LEVERAGE) : lev;
+    document.querySelectorAll('[data-lev]').forEach(function (b) {
+      const n = +b.dataset.lev, isLocked = curRank() < LEV_UNLOCK[n];
+      b.classList.toggle('on', n === shownLev);
+      b.classList.toggle('locked', isLocked);
+      b.textContent = (isLocked ? '🔒' : '') + n + 'x';
+      b.disabled = !!position;
+    });
+    // rescue options only when broke: no position and not enough for a bet
+    const broke = started && !position && balance < STAKE;
+    if (broke && !wasBroke) {
+      spins = 1;
+      setTimeout(function () { toast('💸 破產救濟', '救命轉盤可以轉動了。也可以……打爸爸錢包的主意。'); }, 300);
+    }
+    wasBroke = broke;
+    $('rescue').hidden = !broke;
+    btnBorrow.textContent = borrowCount < MAX_BORROW ? '🙏 借 10萬（剩 ' + (MAX_BORROW - borrowCount) + ' 次）' : '📵 朋友不接電話';
+    btnBorrow.disabled = borrowCount >= MAX_BORROW || grounded > 0;
+    const showClear = !!(clearImg || cleared);
+    $('clearBtn').hidden = !showClear; $('clearBtn2').hidden = !showClear;
+    btnWheel.textContent = spins > 0 ? '🎡 救命轉盤・轉動' : '🎡 轉盤已轉過';
+    btnWheel.disabled = !started || spins <= 0;
+    btnWheel.classList.toggle('ready', started && spins > 0);
+    if (!position) {
+      btnLong.disabled = !canAfford || locked;
+      btnShort.disabled = !canAfford || locked;
+      btnClose.disabled = true;
+      posBadge.textContent = '空手';
+      posBadge.className = '';
+    } else {
+      btnLong.disabled = position.dir < 0 || !canAfford || locked;
+      btnShort.disabled = position.dir > 0 || !canAfford || locked;
+      btnClose.disabled = locked;
+      posBadge.textContent = (position.dir > 0 ? '多單 ' : '空單 ') + fmtTwd(position.margin);
+      posBadge.className = position.dir > 0 ? 'long' : 'short';
+    }
+    btnBorrow.disabled = grounded > 0;
+    btnSteal.disabled = locked;
+
+    const chips = $('chips');
+    chips.textContent = '';
+    if (grounded > 0) addChip('📵 手機被沒收：還剩 ' + grounded + ' 根 K 線', true);
+    if (dadCheckIn > 0) addChip('👀 爸爸在找錢包……' + dadCheckIn + ' 根後揭曉（被抓機率 ' + Math.round(catchChance() * 100) + '%）', true);
+    else if (stolenAtRisk > 0) addChip('🤫 還沒被發現的錢：' + fmtTwd(stolenAtRisk), false);
+    if (debt > 0) addChip('🧾 欠朋友 ' + fmtShort(debt), false);
+    if (dadDebt > 0) addChip('👨 欠爸爸 ' + fmtShort(dadDebt), true);
+    if (shields > 0) addChip('🛡️ 免死金牌 ×' + shields, false);
+    if (doubleNext) addChip('✨ 下次獲利翻倍', false);
+    if (position && (position.lev || LEVERAGE) >= 102) addChip('🔥 久留美模式 102x', true);
+
+    updateLivePnl();
+    updateRank();
+    updateGoal();
+    updateVoteLinks();
+  }
+  function addChip(text, danger) {
+    const c = document.createElement('span');
+    c.className = 'chip' + (danger ? ' danger' : '');
+    c.textContent = text;
+    $('chips').appendChild(c);
+  }
+
+  function setMsg(t) { $('msg').textContent = t; }
+
+  /* ---------- trade history ---------- */
+  let trades = [], equityLog = [], startAt = 0;
+  function gameSecs() { return started ? (performance.now() - startAt) / 1000 : 0; }
+  function mmss(sec) { sec = Math.floor(sec); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+  function recordTrade(pos, exitPrice, pnl, type) {
+    trades.push({
+      n: trades.length + 1, t: gameSecs(), dir: pos.dir, lev: pos.lev || LEVERAGE,
+      margin: pos.margin, entry: pos.avgEntry, exit: exitPrice, pnl: pnl, type: type
+    });
+  }
+  function histTile(k, v, sub, cls) {
+    const d = document.createElement('div'); d.className = 'hs';
+    const a = document.createElement('span'); a.textContent = k;
+    const b = document.createElement('b'); b.textContent = v; if (cls) b.className = cls;
+    d.appendChild(a); d.appendChild(b);
+    if (sub) { const i = document.createElement('i'); i.textContent = sub; d.appendChild(i); }
+    return d;
+  }
+  function renderHistory() {
+    const n = trades.length;
+    const wins = trades.filter(function (t) { return t.pnl > 0; });
+    const losses = trades.filter(function (t) { return t.pnl <= 0; });
+    const total = trades.reduce(function (a, t) { return a + t.pnl; }, 0);
+    const avgW = wins.length ? wins.reduce(function (a, t) { return a + t.pnl; }, 0) / wins.length : 0;
+    const avgL = losses.length ? -losses.reduce(function (a, t) { return a + t.pnl; }, 0) / losses.length : 0;
+    let streak = 0, best = 0;
+    trades.forEach(function (t) { streak = t.pnl > 0 ? streak + 1 : 0; best = Math.max(best, streak); });
+    const maxW = wins.length ? Math.max.apply(null, wins.map(function (t) { return t.pnl; })) : null;
+    const maxL = losses.length ? Math.min.apply(null, losses.map(function (t) { return t.pnl; })) : null;
+    const eq = liveEquity();
+    const st = $('histStats'); st.textContent = '';
+    st.appendChild(histTile('遊戲時間', mmss(gameSecs()), '目標：8 分鐘衝 2000 萬'));
+    st.appendChild(histTile('勝率', n ? Math.round(wins.length / n * 100) + '%' : '--', '勝 ' + wins.length + '・敗 ' + losses.length + '・共 ' + n + ' 筆'));
+    st.appendChild(histTile('已實現總損益', fmtShortSigned(total), '平倉與爆倉加總', total >= 0 ? 'pos' : 'neg'));
+    st.appendChild(histTile('目前淨值', fmtShort(eq), '起始的 ×' + (eq / START).toFixed(2), eq >= START ? 'pos' : 'neg'));
+    st.appendChild(histTile('盈虧比', avgL > 0 ? (avgW / avgL).toFixed(2) : (avgW > 0 ? '∞' : '--'), '平均賺 ' + fmtShort(avgW) + '／平均賠 ' + fmtShort(avgL)));
+    st.appendChild(histTile('最大單筆獲利', maxW === null ? '--' : fmtShortSigned(maxW), '', 'pos'));
+    st.appendChild(histTile('最大單筆虧損', maxL === null ? '--' : fmtShortSigned(maxL), '', 'neg'));
+    st.appendChild(histTile('爆倉／最長連勝', stats.liqs + '／' + best, '免死金牌救回 ' + trades.filter(function (t) { return t.type === 'saved'; }).length + ' 次'));
+
+    const rows = $('histRows'); rows.textContent = '';
+    trades.slice().reverse().slice(0, 150).forEach(function (t) {
+      const tr = document.createElement('tr');
+      const tag = { win: '獲利', loss: '停損', liq: '爆倉', saved: '金牌救回' }[t.type];
+      const cells = [
+        t.n, mmss(t.t), (t.dir > 0 ? '多' : '空') + ' ' + t.lev + 'x', fmtShort(t.margin),
+        fmtUsd(t.entry) + '→' + fmtUsd(t.exit), fmtShortSigned(t.pnl), tag
+      ];
+      cells.forEach(function (c, i) {
+        const td = document.createElement('td');
+        if (i === 5) td.className = t.pnl >= 0 ? 'pos' : 'neg';
+        if (i === 6) { const sp = document.createElement('span'); sp.className = 'tag ' + t.type; sp.textContent = c; td.appendChild(sp); }
+        else td.textContent = c;
+        tr.appendChild(td);
+      });
+      rows.appendChild(tr);
+    });
+    $('histEmpty').hidden = n > 0;
+    const ev = $('evList'); ev.textContent = '';
+    eventLog.slice(0, 20).forEach(function (e) {
+      const li = document.createElement('li');
+      const t = document.createElement('span'); t.className = 'ev-t'; t.textContent = e.t;
+      const x = document.createElement('span'); x.textContent = e.text;
+      li.appendChild(t); li.appendChild(x); ev.appendChild(li);
+    });
+    if (!eventLog.length) { const li = document.createElement('li'); li.textContent = '還沒有動態'; ev.appendChild(li); }
+    drawEquity();
+  }
+  function drawEquity() {
+    const cv = $('eqChart'), c2 = cv.getContext('2d');
+    const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.max(1, r.width * dpr); cv.height = Math.max(1, r.height * dpr);
+    c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const w = r.width, h = r.height, pad = 10;
+    c2.clearRect(0, 0, w, h);
+    const data = equityLog.length ? equityLog : [START];
+    let hi = Math.max(START, Math.max.apply(null, data)), lo = Math.min(START, Math.min.apply(null, data));
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const X = function (i) { return pad + (data.length < 2 ? 0 : i / (data.length - 1)) * (w - pad * 2); };
+    const Y = function (v) { return pad + 12 + (hi - v) / (hi - lo) * (h - pad * 2 - 14); };
+    c2.save(); c2.setLineDash([5, 4]); c2.strokeStyle = '#c9a7b8'; c2.lineWidth = 1;
+    c2.beginPath(); c2.moveTo(pad, Y(START)); c2.lineTo(w - pad, Y(START)); c2.stroke(); c2.restore();
+    const g = c2.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, 'rgba(255,95,160,.35)'); g.addColorStop(1, 'rgba(255,95,160,0)');
+    c2.beginPath();
+    data.forEach(function (v, i) { if (i) c2.lineTo(X(i), Y(v)); else c2.moveTo(X(i), Y(v)); });
+    c2.lineTo(X(data.length - 1), h - pad); c2.lineTo(X(0), h - pad); c2.closePath();
+    c2.fillStyle = g; c2.fill();
+    c2.beginPath();
+    data.forEach(function (v, i) { if (i) c2.lineTo(X(i), Y(v)); else c2.moveTo(X(i), Y(v)); });
+    c2.strokeStyle = '#e83e82'; c2.lineWidth = 2; c2.stroke();
+    c2.fillStyle = '#e83e82';
+    c2.beginPath(); c2.arc(X(data.length - 1), Y(data[data.length - 1]), 3.5, 0, Math.PI * 2); c2.fill();
+    c2.font = '700 10px "Noto Sans TC", sans-serif'; c2.fillStyle = '#8a5a73'; c2.textBaseline = 'top';
+    c2.textAlign = 'left'; c2.fillText('最高 ' + fmtShort(hi), pad, 2);
+    c2.textAlign = 'right'; c2.fillText('最低 ' + fmtShort(lo), w - pad, 2);
+  }
+  $('histBtn').addEventListener('click', function () { $('histModal').hidden = false; renderHistory(); $('histClose').focus(); });
+  $('histClose').addEventListener('click', function () { $('histModal').hidden = true; });
+  $('histModal').addEventListener('click', function (e) { if (e.target === $('histModal')) $('histModal').hidden = true; });
+
+  function openPosition(dir) {
+    const amt = stakeAmt();
+    if (!started || grounded > 0 || amt < 1000 || balance < amt) return;
+    if (position && position.dir !== dir) return;
+    const p = lastClose();
+    const losing = position && positionPnl(p) < 0;
+    balance -= amt;
+    if (!position) {
+      position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: lev };
+    } else {
+      const m = position.margin + amt;
+      position.avgEntry = (position.avgEntry * position.margin + p * amt) / m;
+      position.margin = m;
+    }
+    playClick();
+    achieve('firstTrade');
+    if (losing) { achieve('lossAversion'); position.avgDown = true; }
+    if (stakeMode === 'all') achieve('allIn');
+    if (position.lev >= 102) achieve('kurumi');
+    missionEvent('open', 1);
+    setMsg(losing
+      ? '越跌越要加碼！均價拉低就是勝利！（保證金共 ' + fmtTwd(position.margin) + '）'
+      : (dir > 0 ? '做多！' : '做空！') + '這次絕對會中！（保證金共 ' + fmtTwd(position.margin) + '）');
+    refreshTradeUI();
+    draw();
+  }
+
+  function closePosition() {
+    if (!position || grounded > 0) return;
+    endDenial();
+    let pnl = positionPnl(lastClose());
+    const closedDir = position.dir, closedPos = position;
+    if (pnl > 0 && doubleNext) {
+      doubleNext = false;
+      pnl *= 2;
+      toast('✨ 獲利翻倍發動', '這一單的獲利變成兩倍！');
+    }
+    balance += position.margin + pnl;
+    recordTrade(closedPos, lastClose(), pnl, pnl > 0 ? 'win' : 'loss');
+    position = null;
+    if (pnl > 0) {
+      winStreak++;
+      playCoin();
+      spawnParticles('up');
+      setMsg('獲利了結 ' + fmtSigned(pnl) + '！我果然是天才！');
+      toast('💰 獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
+      if (winStreak >= 3) achieve('overconfidence');
+      if (pnl >= 10000 * K) bigWin(pnl);
+      stats.wins++;
+      missionEvent('profitClose', 1);
+      missionEvent('profitAmt', pnl, 'max');
+      missionEvent('streak', winStreak, 'set');
+      if (closedDir < 0) missionEvent('short', 1);
+    } else {
+      winStreak = 0;
+      playScary();
+      setMsg('停損了 ' + fmtSigned(pnl) + '……好痛……但還活著。');
+      if ((closedPos.peak || 0) > 0) { toast('📉 小賺大賠 ' + fmtShortSigned(pnl)); achieve('smallWinBigLoss'); }
+      else toast('🩸 停損 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・停損要膽識' : ''));
+    }
+    refreshTradeUI();
+    draw();
+  }
+
+  function liquidate() {
+    if (shields > 0) {
+      endDenial();
+      shields--;
+      const back = Math.round(position.margin / 2);
+      balance += back;
+      recordTrade(position, lastClose(), back - position.margin, 'saved');
+      position = null;
+      winStreak = 0;
+      triggerCrash('免死金牌發動！！');
+      setMsg('差點爆倉……金牌救回 ' + fmtTwd(back) + '！');
+      achieve('saved');
+      refreshTradeUI();
+      return;
+    }
+    if (denial) { achieve('aqDeath'); toast('🙈 嘴硬到最後一刻……'); }
+    endDenial();
+    recordTrade(position, lastClose(), -position.margin, 'liq');
+    const liqPeak = position.peak;
+    position = null;
+    winStreak = 0;
+    triggerCrash('強制平倉！！');
+    spawnParticles('crash');
+    setMsg('……保證金，沒了。什麼都來不及按。');
+    achieve('firstLiq');
+    if ((liqPeak || 0) > 0) achieve('smallWinBigLoss');
+    stats.liqs++;
+    refreshTradeUI();
+  }
+
+  let borrowCount = 0;
+  const MAX_BORROW = 3;
+  function borrow() {
+    if (grounded > 0) return;
+    if (borrowCount >= MAX_BORROW) { toast('📵 朋友不接電話了', '借了 ' + MAX_BORROW + ' 次，已讀不回。'); return; }
+    borrowCount++;
+    balance += STAKE;
+    debt += STAKE;
+    playClick();
+    setMsg('借到 ' + fmtShort(STAKE) + ' 了！下一把一定翻本，一定……');
+    achieve('borrow');
+    refreshTradeUI();
+  }
+
+  const stealLines = [
+    '爸爸在洗澡……現在是機會……',
+    '只是先借一下，賺回來就放回去……',
+    '輕輕地……不要發出聲音……',
+    '這不是偷，這是家庭內部融資！'
+  ];
+  function steal() {
+    if (!started || grounded > 0) return;
+    const amt = (100 + Math.floor(Math.random() * 201)) * 100 * K; // 20萬–60萬
+    balance += amt;
+    stealCount++;
+    stolenAtRisk += amt;
+    if (dadCheckIn <= 0) dadCheckIn = 4 + Math.floor(Math.random() * 4);
+    playSneak();
+    setMsg(pick(stealLines) + '（拿到 ' + fmtTwd(amt) + '）');
+    achieve('thief');
+    stats.steals++;
+    refreshTradeUI();
+  }
+
+  const dadLines = [
+    '錢包裡的錢呢？給我解釋清楚！',
+    '你最近一直盯著手機，就是在搞這個？',
+    '手機交出來。現在。',
+    '這個家的錢，不是給你拿去賭的！'
+  ];
+  function dadChecks() {
+    if (stolenAtRisk <= 0) return;
+    if (Math.random() < catchChance()) {
+      caught();
+    } else {
+      toast('😮‍💨 好險', '爸爸看了一下錢包，沒發現……這次。');
+      achieve('luckyThief');
+    }
+  }
+  function caught() {
+    const owed = stolenAtRisk * 2;
+    const paid = Math.min(Math.max(0, balance), owed);
+    balance -= paid;
+    dadDebt += owed - paid;
+    const taken = stolenAtRisk;
+    stolenAtRisk = 0;
+    dadCheckIn = 0;
+    grounded = GROUND_TICKS;
+
+    $('dadLine').textContent = '爸爸：「' + pick(dadLines) + '」';
+    const list = $('dadPenalty');
+    list.textContent = '';
+    [
+      '💸 拿走的 ' + fmtTwd(taken) + ' 要還，再罰一倍，共 ' + fmtTwd(owed) + (owed > paid ? '（餘額不夠，欠爸爸 ' + fmtTwd(owed - paid) + '）' : ''),
+      '📵 手機沒收 ' + GROUND_TICKS + ' 根 K 線：不能下單、不能平倉，持倉只能眼睜睜看著',
+      '🔒 錢包會藏得更好：之後再拿，被抓機率只會更高'
+    ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    $('dadAlert').hidden = false;
+    $('dadOk').focus();
+
+    document.body.classList.remove('crash-flash');
+    void document.body.offsetWidth;
+    document.body.classList.add('crash-flash');
+    $('crashText').textContent = '被發現了！！';
+    setTimeout(function () { document.body.classList.remove('crash-flash'); }, 700);
+    playThud();
+    view.shakeT = 0.8; view.kick = 1;
+    setMsg('完蛋了……爸爸全都知道了……');
+    achieve('caught');
+    stats.caught++;
+    refreshTradeUI();
+  }
+  $('dadOk').addEventListener('click', function () { $('dadAlert').hidden = true; });
+
+  btnLong.addEventListener('click', function () { openPosition(1); });
+  btnShort.addEventListener('click', function () { openPosition(-1); });
+  btnClose.addEventListener('click', closePosition);
+  btnBorrow.addEventListener('click', borrow);
+
+  /* ---------- ratings: a pre-written Threads post per choice ----------
+     Anyone can vote without signing in anywhere: the button opens Threads
+     with the text and hashtag filled in, and the post is the vote. Results
+     are whatever a hashtag search on Threads shows. */
+  document.querySelectorAll('.vote-slot').forEach(function (slot) {
+    slot.appendChild(document.getElementById('voteTpl').content.cloneNode(true));
+  });
+  const GAME_URL = 'https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS';
+  function threadsUrl(v) {
+    const eq = liveEquity();
+    const text = v === 'up'
+      ? '今天我也是 BTC 戰士！👍\n淨值 ' + fmtShort(eq) + '（' + levelName(curRank()) + '）\n你也來試試：' + GAME_URL + '\n#BTC戰士好玩'
+      : '我沒這個命……👎\n淨值剩 ' + fmtShort(eq) + '\n不信你來：' + GAME_URL + '\n#BTC戰士沒這個命';
+    return 'https://www.threads.net/intent/post?text=' + encodeURIComponent(text);
+  }
+  // keep every share link already filled in, so the very first tap opens
+  // Threads with the post text (the viewer may follow the link before a
+  // click handler could change it)
+  function updateVoteLinks() {
+    document.querySelectorAll('.vote-btn').forEach(function (b) { b.href = threadsUrl(b.dataset.vote); });
+  }
+  updateVoteLinks();
+  document.addEventListener('pointerdown', function (e) {
+    const b = e.target.closest && e.target.closest('.vote-btn');
+    if (b) b.href = threadsUrl(b.dataset.vote);
+  }, true);
+  document.addEventListener('click', function (e) {
+    const b = e.target.closest && e.target.closest('.vote-btn');
+    if (!b) return;
+    toast(b.dataset.vote === 'up' ? '👍 今天我也是 BTC 戰士！' : '👎 我沒這個命……', '已開啟 Threads 投票貼文');
+  }, true);
+
+  /* ---------- 回家吃自己: settle this run and start over ---------- */
+  function goHome() {
+    const n = trades.length, wins = trades.filter(function (t) { return t.pnl > 0; }).length;
+    const peak = equityLog.length ? Math.max.apply(null, equityLog) : START;
+    const list = $('overStats'); list.textContent = '';
+    [
+      '⏱ 撐了 ' + mmss(gameSecs()) + '・交易 ' + n + ' 筆・勝率 ' + (n ? Math.round(wins / n * 100) + '%' : '--'),
+      '📈 這局最高淨值 ' + fmtShort(peak) + '・最高到過 ' + levelName(bestRank),
+      '💥 爆倉 ' + stats.liqs + ' 次・👛 偷爸爸錢包 ' + stats.steals + ' 次',
+      '🧾 欠朋友 ' + fmtShort(debt) + '・欠爸爸 ' + fmtShort(dadDebt)
+    ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    $('overModal').hidden = false;
+    playScary();
+  }
+  function resetGame() {
+    position = null; balance = START; debt = 0; dadDebt = 0; winStreak = 0;
+    stealCount = 0; stolenAtRisk = 0; dadCheckIn = 0; grounded = 0;
+    spins = 0; shields = 0; doubleNext = false; wasBroke = false; borrowCount = 0;
+    stakeMode = 0.05; lev = 25; rankIdx = null; bestRank = 3; cleared = false;
+    trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
+    stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+    missionIdx = 0; missionRound = 0; missionProg = 0;
+    meterState.bal.shown = null;
+    $('overModal').hidden = true;
+    setMsg('重新開始！這次一定把 2000 萬賺回來。');
+    toast('🔄 重新開始', '起始資金 200 萬，等級回到 Lv.1。成就紀錄會保留。');
+    refreshTradeUI(); renderMission(); playFanfare();
+  }
+  $('btnHome').addEventListener('click', goHome);
+  $('overRestart').addEventListener('click', resetGame);
+  $('overStay').addEventListener('click', function () { $('overModal').hidden = true; });
+  $('clearBtn').addEventListener('click', function () { $('histModal').hidden = true; openClearPage(); });
+  $('clearBtn2').addEventListener('click', openClearPage);
+  btnSteal.addEventListener('click', steal);
+  $('denyBtn').addEventListener('click', function () {
+    if (!position) return;
+    denial = !denial;
+    if (denial) { denialTicks = 0; toast('🙈 不看就不會痛'); playClick(); }
+    else { toast('😱 面對現實：' + fmtShortSigned(positionPnl(lastClose()))); playScary(); }
+    refreshTradeUI();
+  });
+  const btnWheel = $('btnWheel');
+  btnWheel.addEventListener('click', openWheel);
+
+  document.querySelectorAll('[data-stake]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      stakeMode = b.dataset.stake === 'all' ? 'all' : parseFloat(b.dataset.stake);
+      if (stakeMode === 'all') toast('🎰 叫你 all in，你就 all in？');
+      playClick();
+      refreshTradeUI();
+    });
+  });
+  document.querySelectorAll('[data-lev]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (position) return;
+      const n = +b.dataset.lev;
+      if (curRank() < LEV_UNLOCK[n]) {
+        toast('🔒 等級不夠', n + 'x 槓桿要在「' + levelName(LEV_UNLOCK[n]) + '」以上才能用。');
+        playClick();
+        return;
+      }
+      lev = n;
+      toast(lev >= 102 ? '🏎️ 102x：你不是在騎機車，是在開賽車' : '槓桿 ' + lev + 'x・跌 ' + (100 / lev).toFixed(1) + '% 就爆倉');
+      playClick();
+      refreshTradeUI();
+    });
+  });
+
+  /* ---------- 黃金 K 線紅包: walk onto it to pick it up ---------- */
+  function collectGold(i) {
+    const c = candles[i];
+    if (!c || !c.gold || c.goldTaken) return;
+    c.goldTaken = true;
+    const amt = (20 + Math.floor(Math.random() * 131)) * 100 * K;  // 4萬–30萬
+    balance += amt;
+    playCoin();
+    spawnParticles('up');
+    toast('🧧 黃金 K 線紅包', '走過去順手撿到 ' + fmtTwd(amt) + '！');
+    achieve('gold');
+    missionEvent('gold', 1);
+    refreshTradeUI();
+  }
+
+  /* ---------- 命運轉盤 (lucky wheel) ---------- */
+  const PRIZES = [
+    { key: 'red10k', label: '🧧 +20萬', color: '#e83e82', w: 2 },
+    { key: 'none', label: '🙏 謝謝參與', color: '#9a6f86', w: 3 },
+    { key: 'shield', label: '🛡️ 免死金牌', color: '#3d8fe6', w: 1.5 },
+    { key: 'fee', label: '💸 -4萬', color: '#5c2f49', w: 2 },
+    { key: 'double', label: '✨ 獲利翻倍', color: '#f0a020', w: 1.5 },
+    { key: 'red3k', label: '🧧 +6萬', color: '#ff7fb0', w: 3 },
+    { key: 'dad', label: '👨 爸爸查勤', color: '#d11f3a', w: 1 },
+    { key: 'red5k', label: '🧧 +10萬', color: '#7a5cff', w: 1.5 }
+  ];
+  const SEG = 360 / PRIZES.length;
+  (function buildWheel() {
+    const wh = $('wheel');
+    wh.style.background = 'conic-gradient(' + PRIZES.map(function (p, i) {
+      return p.color + ' ' + (i * SEG) + 'deg ' + ((i + 1) * SEG) + 'deg';
+    }).join(',') + ')';
+    PRIZES.forEach(function (p, i) {
+      const el = document.createElement('div');
+      el.className = 'wseg';
+      el.textContent = p.label;
+      el.style.transform = 'translate(-50%, -50%) rotate(' + (i * SEG + SEG / 2) + 'deg) translateY(-78px)';
+      wh.appendChild(el);
+    });
+  })();
+  let wheelRot = 0, spinning = false;
+  function playTick() { if (canPlay()) bell(2400, 0, 0.05, 0.07); }
+  function openWheel() {
+    if (!started || spins <= 0) return;
+    $('wheelModal').hidden = false;
+    $('wheelResult').textContent = '不用花錢，轉動看看手氣……';
+    $('wheelSpin').disabled = false;
+    $('wheelSpin').focus();
+  }
+  function spinWheel() {
+    if (spinning || spins <= 0) return;
+    spins--;
+    spinning = true;
+    $('wheelSpin').disabled = true; $('wheelClose').disabled = true;
+    $('wheelResult').textContent = '轉轉轉……';
+    achieve('wheel');
+    const total = PRIZES.reduce(function (a, p) { return a + p.w; }, 0);
+    let r = Math.random() * total, k = 0;
+    for (k = 0; k < PRIZES.length - 1; k++) { r -= PRIZES[k].w; if (r < 0) break; }
+    const target = 360 - (k * SEG + SEG / 2) + (Math.random() - 0.5) * SEG * 0.6;
+    const cur = ((wheelRot % 360) + 360) % 360;
+    wheelRot += 360 * 5 + ((target - cur + 720) % 360);
+    $('wheel').style.transform = 'rotate(' + wheelRot + 'deg)';
+    const dur = reduceMotion ? 300 : 3700;
+    let gap = 45, elapsed = 0;
+    (function clicker() {
+      if (elapsed > dur - 300) return;
+      playTick(); gap *= 1.11; elapsed += gap;
+      setTimeout(clicker, gap);
+    })();
+    setTimeout(function () {
+      spinning = false;
+      $('wheelClose').disabled = false;
+      applyPrize(PRIZES[k]);
+      $('wheelSpin').disabled = spins <= 0;
+      refreshTradeUI();
+    }, dur);
+  }
+  function applyPrize(p) {
+    let text = '';
+    switch (p.key) {
+      case 'red10k': balance += 10000 * K; text = '🧧 紅包 +20 萬！'; playFanfare(); spawnParticles('up'); break;
+      case 'red3k': balance += 3000 * K; text = '🧧 小紅包 +6 萬～'; playCoin(); break;
+      case 'shield': shields++; text = '🛡️ 免死金牌！下次爆倉會救回一半保證金。'; playFanfare(); break;
+      case 'double': doubleNext = true; text = '✨ 下一次獲利平倉，獲利翻倍！'; playFanfare(); break;
+      case 'fee': { const f = Math.min(Math.max(0, balance), 2000 * K); balance -= f; text = '💸 平台手續費 -' + fmtTwd(f) + '。莊家永遠不會輸。'; playScary(); break; }
+      case 'red5k': balance += 5000 * K; text = '🧧 紅包 +10 萬！'; playCoin(); spawnParticles('up'); break;
+      case 'dad':
+        if (stolenAtRisk > 0) { text = '👨 爸爸突然查勤！'; playThud(); setTimeout(function () { $('wheelModal').hidden = true; dadCheckIn = 0; dadChecks(); refreshTradeUI(); }, 900); }
+        else { text = '👨 爸爸路過看了一眼，什麼都沒發現。'; playClick(); }
+        break;
+      default: text = '🙏 謝謝參與。下次一定中！'; playClick();
+    }
+    $('wheelResult').textContent = text;
+    setMsg(text);
+  }
+  $('wheelSpin').addEventListener('click', spinWheel);
+  $('wheelClose').addEventListener('click', function () { if (!spinning) $('wheelModal').hidden = true; });
+
+  /* ================= effects ================= */
+  const particleLayer = $('particles');
+  function spawnParticles(kind) {
+    const n = kind === 'crash' ? 12 : 3;
+    const glyphs = kind === 'up' ? ['🪙', '✨', '💰'] : kind === 'crash' ? ['💀', '🔥', '⚠️', '📉'] : ['💢', '📉'];
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('div');
+      el.className = 'particle';
+      el.textContent = pick(glyphs);
+      el.style.left = (5 + Math.random() * 90) + 'vw';
+      if (kind === 'up') el.style.bottom = '-5vh'; else el.style.top = '-5vh';
+      el.style.fontSize = (16 + Math.random() * 16) + 'px';
+      el.style.animation = (kind === 'up' ? 'floatUp' : 'floatDown') + ' ' + (2.2 + Math.random() * 1.4) + 's ease-out ' + (Math.random() * 0.4) + 's forwards';
+      el.style.opacity = '0';
+      particleLayer.appendChild(el);
+      el.addEventListener('animationend', function () { el.remove(); });
+    }
+  }
+
+  function triggerCrash(text) {
+    $('crashText').textContent = text || pick(crashMsgs);
+    document.body.classList.remove('crash-flash');
+    void document.body.offsetWidth;
+    document.body.classList.add('crash-flash');
+    playScream();
+    view.shakeT = 0.8; view.kick = 1;
+    setTimeout(function () { document.body.classList.remove('crash-flash'); }, 700);
+  }
+
+  /* ================= first-person 3D chart =================
+     You walk along the K line. The road surface follows the closing
+     prices, so a rally is a climb and a crash is a drop you fall off.
+     Candles stand as pillars along the left side of the road, the
+     future ahead is fog, and a mini-map in the corner keeps the whole
+     trend in view. Hand-rolled perspective with near-plane clipping on
+     a 2D canvas, so no WebGL or library is needed. */
+  const S = 2.2;            // walking distance per candle
+  let H = 6;                // height of the visible price range
+  const EYE = 1.45;         // eye height above the road
+  const LOOK = 0;           // you stand on the newest candle: the road ahead is the unknown future
+  const ROAD = 0.9;         // road half width
+  const PILLAR_Z = -2.3;    // candle pillars stand left of the road
+  const BODY = 0.5, WICK = 0.08;
+  const NEAR = 0.15, FAR = 34;
+  const view = {
+    w: 0, h: 0, lo: null, hi: null,
+    s: null, walkFrom: 0, walkTo: 0, walkP: 1, fromY: 0, pop: 1,
+    shakeT: 0, kick: 0, lookY: null, camY: null,
+    dragYaw: 0, dragging: false, dragX: 0, dragBase: 0, dragEnd: 0,
+    t: 0, last: 0, dt: 0.016, cam: null, hintUntil: performance.now() + 9000
+  };
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.max(1, Math.round(r.width * dpr));
+    canvas.height = Math.max(1, Math.round(r.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    view.w = r.width; view.h = r.height;
+  }
+  window.addEventListener('resize', function () { resize(); draw(); });
+
+  // ---- vector + color helpers ----
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function norm(a) { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function hexRgb(hex) {
+    hex = (hex || '#888').replace('#', '').trim();
+    if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
+    const n = parseInt(hex, 16) || 0;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function mix(c, t, a) { return [0, 1, 2].map(function (i) { return Math.round(c[i] + (t[i] - c[i]) * a); }); }
+  function rgbStr(c, a) { return a == null ? 'rgb(' + c.join(',') + ')' : 'rgba(' + c.join(',') + ',' + a + ')'; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  let pal = null;
+  function refreshPalette() {
+    const scary = document.body.classList.contains('scary');
+    pal = {
+      scary: scary,
+      up: hexRgb(cssVar('--up')), down: hexRgb(cssVar('--down')),
+      ink: hexRgb(cssVar('--ink')), liq: hexRgb(cssVar('--liq')), accent: hexRgb(cssVar('--accent')),
+      grid: scary ? [255, 40, 40] : [255, 95, 160],
+      skyTop: [255, 205, 228],
+      skyBottom: [255, 243, 228],
+      fog: [255, 228, 238]
+    };
+  }
+
+  // ---- world helpers ----
+  function yOf(v) { return (v - view.lo) / ((view.hi - view.lo) || 1) * H; }
+  function popE() {
+    const p = view.pop, c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+  }
+  // close height of candle i; the newest one grows in from the previous close
+  function closeY(i) {
+    const n = candles.length;
+    i = clamp(i, 0, n - 1);
+    const y = yOf(candles[i].close);
+    if (i === n - 1 && n > 1 && view.pop < 1) {
+      const yp = yOf(candles[n - 2].close);
+      return yp + (y - yp) * popE();
+    }
+    return y;
+  }
+  function roadY(s) {
+    const i0 = Math.floor(s), f = s - i0;
+    return closeY(i0) + (closeY(i0 + 1) - closeY(i0)) * f;
+  }
+  // where your eyes are: climbs ease up, steep drops are a fall
+  function walkerY(s) {
+    const n = candles.length;
+    const i0 = clamp(Math.floor(s), 0, n - 1), f = s - Math.floor(s);
+    if (i0 >= n - 1) return closeY(n - 1);
+    const y0 = closeY(i0), dy = closeY(i0 + 1) - y0;
+    let e;
+    if (dy < -0.9) e = Math.pow(f, 2.4);
+    else if (dy > 0) e = 1 - Math.pow(1 - f, 2);
+    else e = f;
+    return y0 + dy * e;
+  }
+
+  // ---- camera ----
+  // Chase camera: it sits a few candles behind you, so the road you just
+  // walked and the candles beside it are in view. You are the glowing orb
+  // at the newest price; past it there is only fog (the future).
+  function setupCamera() {
+    const s = view.s;
+    const bob = (view.walkP < 1 && !reduceMotion) ? Math.abs(Math.sin(view.walkP * Math.PI)) * 0.16 : 0;
+    const wy = walkerY(s) + bob;
+    const BACK = 4.6 * S, UP = 3.4;
+    // stay above any road between the camera and you
+    let ground = wy;
+    for (let k = 1; k <= 5; k++) ground = Math.max(ground, roadY(Math.max(0, s - k)));
+    const wantCamY = Math.max(wy + UP, ground + 2.2);
+    view.camY = view.camY == null ? wantCamY : view.camY + (wantCamY - view.camY) * Math.min(1, view.dt * 3.5);
+    const wantLook = wy + 0.2;
+    view.lookY = view.lookY == null ? wantLook : view.lookY + (wantLook - view.lookY) * Math.min(1, view.dt * 4);
+    const yaw = view.dragYaw + (reduceMotion ? 0 : Math.sin(view.t * 0.4) * 0.06);
+    const P = [s * S, wy, 0];
+    let C = [P[0] - Math.cos(yaw) * BACK, view.camY, -Math.sin(yaw) * BACK];
+    const T = [P[0] + Math.cos(yaw) * 2.2, view.lookY, Math.sin(yaw) * 2.2];
+    if (view.shakeT > 0 && !reduceMotion) {
+      const k = view.shakeT * 0.9;
+      C = [C[0] + (Math.random() - .5) * k, C[1] + (Math.random() - .5) * k, C[2] + (Math.random() - .5) * k];
+    }
+    const f = norm(sub(T, C)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
+    const fov = 60 * Math.PI / 180 * (1 - view.kick * 0.32);   // crash = zoom punch
+    view.cam = { C: C, f: f, r: r, u: u, focal: (view.h / 2) / Math.tan(fov / 2) };
+  }
+
+  // you: a glowing orb standing on the newest price
+  function walkerOrb() {
+    const q = toCam([view.s * S, walkerY(view.s) + 0.45, 0]);
+    if (q[2] < NEAR + 0.2) return;
+    const sp = scr(q);
+    const r = Math.max(6, 0.42 * view.cam.focal / q[2]);
+    ctx.save();
+    ctx.shadowColor = rgbStr(pal.accent, 0.95); ctx.shadowBlur = 24;
+    const g = ctx.createRadialGradient(sp[0] - r * .3, sp[1] - r * .35, r * .1, sp[0], sp[1], r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(.55, rgbStr(mix(pal.accent, [255, 255, 255], .35))); g.addColorStop(1, rgbStr(pal.accent));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(sp[0], sp[1], r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    if (position) {
+      const pnl = positionPnl(lastClose());
+      if (denial) pill('你・😌 沒在看', sp[0], sp[1] - r - 14, '#8e7685', 'center', 13);
+      else pill('你・' + (position.dir > 0 ? '多▲ ' : '空▼ ') + fmtShortSigned(pnl), sp[0], sp[1] - r - 14, pnl >= 0 ? pal.up : pal.down, 'center', 13);
+    } else {
+      pill('你', sp[0], sp[1] - r - 12, pal.ink, 'center', 11);
+    }
+  }
+
+  // ---- projection with near-plane clipping ----
+  function toCam(p) { const c = view.cam, d = sub(p, c.C); return [dot(d, c.r), dot(d, c.u), dot(d, c.f)]; }
+  function scr(q) { return [view.w / 2 + q[0] * view.cam.focal / q[2], view.h / 2 - q[1] * view.cam.focal / q[2]]; }
+  function clipNear(qs) {
+    const out = [];
+    for (let i = 0; i < qs.length; i++) {
+      const a = qs[i], b = qs[(i + 1) % qs.length];
+      const ain = a[2] >= NEAR, bin = b[2] >= NEAR;
+      if (ain) out.push(a);
+      if (ain !== bin) {
+        const t = (NEAR - a[2]) / (b[2] - a[2]);
+        out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, NEAR]);
+      }
+    }
+    return out;
+  }
+  function fillPoly(pts, style) {
+    const q = clipNear(pts.map(toCam));
+    if (q.length < 3) return;
+    const sp = q.map(scr);
+    ctx.fillStyle = style;
+    ctx.beginPath();
+    sp.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
+    ctx.closePath();
+    ctx.fill();
+  }
+  function line3(a, b, style, width, dash) {
+    let qa = toCam(a), qb = toCam(b);
+    if (qa[2] < NEAR && qb[2] < NEAR) return;
+    if (qa[2] < NEAR) { const t = (NEAR - qa[2]) / (qb[2] - qa[2]); qa = [qa[0] + (qb[0] - qa[0]) * t, qa[1] + (qb[1] - qa[1]) * t, NEAR]; }
+    if (qb[2] < NEAR) { const t = (NEAR - qb[2]) / (qa[2] - qb[2]); qb = [qb[0] + (qa[0] - qb[0]) * t, qb[1] + (qa[1] - qb[1]) * t, NEAR]; }
+    const A = scr(qa), B = scr(qb);
+    ctx.save();
+    ctx.strokeStyle = style; ctx.lineWidth = width || 1;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
+    ctx.restore();
+  }
+  function depth(p) { return toCam(p)[2]; }
+  function fogMix(rgb, z) { return mix(rgb, pal.fog, clamp((z - 9) / (FAR - 9), 0, 1) * 0.85); }
+
+  function box(cx, y0, y1, cz, hw, hd, rgb) {
+    const z = depth([cx, (y0 + y1) / 2, cz]);
+    if (z > FAR + 3) return;
+    const base = fogMix(rgb, z);
+    const x0 = cx - hw, x1 = cx + hw, z0 = cz - hd, z1 = cz + hd;
+    const faces = [
+      [[0, 1, 0], [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], 0.3],
+      [[0, -1, 0], [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], -0.4],
+      [[-1, 0, 0], [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]], 0],
+      [[1, 0, 0], [[x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]], -0.15],
+      [[0, 0, 1], [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], -0.22],
+      [[0, 0, -1], [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]], -0.3]
+    ];
+    const C = view.cam.C;
+    faces.forEach(function (fc) {
+      const p = fc[1];
+      const mid = [(p[0][0] + p[2][0]) / 2, (p[0][1] + p[2][1]) / 2, (p[0][2] + p[2][2]) / 2];
+      if (dot(fc[0], sub(C, mid)) <= 0) return;
+      const col = fc[2] >= 0 ? mix(base, [255, 255, 255], fc[2]) : mix(base, [0, 0, 0], -fc[2]);
+      fillPoly(p, rgbStr(col));
+    });
+  }
+
+  // one stretch of road from candle i's close to candle i+1's close
+  function roadSeg(i) {
+    const xa = i * S, xb = (i + 1) * S, ya = closeY(i), yb = closeY(i + 1);
+    const up = candles[i + 1].close >= candles[i].close;
+    const z = depth([(xa + xb) / 2, (ya + yb) / 2, 0]);
+    const base = fogMix(up ? pal.up : pal.down, z);
+    const T = 0.24;
+    fillPoly([[xa, ya, ROAD], [xb, yb, ROAD], [xb, yb - T, ROAD], [xa, ya - T, ROAD]], rgbStr(mix(base, [0, 0, 0], 0.32)));
+    fillPoly([[xa, ya, -ROAD], [xb, yb, -ROAD], [xb, yb - T, -ROAD], [xa, ya - T, -ROAD]], rgbStr(mix(base, [0, 0, 0], 0.32)));
+    fillPoly([[xa, ya, -ROAD], [xb, yb, -ROAD], [xb, yb, ROAD], [xa, ya, ROAD]], rgbStr(mix(base, [255, 255, 255], 0.16)));
+    line3([xa, ya + 0.01, 0], [xb, yb + 0.01, 0], rgbStr(mix(base, [255, 255, 255], 0.7), 0.85), 1.4, [7, 7]);
+    line3([xa, ya + 0.01, -ROAD], [xb, yb + 0.01, -ROAD], rgbStr(mix(base, [255, 255, 255], 0.5)), 1.2);
+    line3([xa, ya + 0.01, ROAD], [xb, yb + 0.01, ROAD], rgbStr(mix(base, [255, 255, 255], 0.5)), 1.2);
+  }
+
+  function pillar(i, pz) {
+    const c = candles[i], newest = i === candles.length - 1;
+    const e = newest ? popE() : 1;
+    const yo = yOf(c.open);
+    const yc = yo + (yOf(c.close) - yo) * e, yh = yo + (yOf(c.high) - yo) * e, yl = yo + (yOf(c.low) - yo) * e;
+    const col = c.gold && !c.goldTaken ? [255, 196, 46] : c.close >= c.open ? pal.up : pal.down;
+    const x = i * S;
+    box(x, Math.min(yl, yh), Math.max(yl, yh), pz, WICK, WICK, col);
+    let b0 = Math.min(yo, yc), b1 = Math.max(yo, yc);
+    if (b1 - b0 < 0.06) { b0 -= 0.03; b1 += 0.03; }
+    if (newest) { ctx.save(); ctx.shadowColor = rgbStr(col, 0.9); ctx.shadowBlur = 18; }
+    box(x, b0, b1, pz, BODY, BODY, col);
+    if (newest) ctx.restore();
+  }
+
+  // floating spinning coin above a gold candle's spot on the road
+  function coin(i) {
+    const c = candles[i];
+    if (!c.gold || c.goldTaken) return;
+    const bob = reduceMotion ? 0 : Math.sin(view.t * 3 + i) * 0.12;
+    const q = toCam([i * S, closeY(i) + 0.8 + bob, 0]);
+    if (q[2] < NEAR + 0.3) return;
+    const sp = scr(q);
+    const rad = 0.36 * view.cam.focal / q[2];
+    const spin = reduceMotion ? 1 : Math.max(0.15, Math.abs(Math.cos(view.t * 2.4 + i)));
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,200,40,.95)'; ctx.shadowBlur = 22;
+    const g = ctx.createRadialGradient(sp[0] - rad * .3, sp[1] - rad * .3, rad * .1, sp[0], sp[1], rad);
+    g.addColorStop(0, '#fff6b0'); g.addColorStop(.6, '#ffc83a'); g.addColorStop(1, '#d99000');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(sp[0], sp[1], rad * spin, rad, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    if (spin > 0.5) {
+      ctx.fillStyle = '#9a5b00';
+      ctx.font = '900 ' + Math.max(8, Math.round(rad * 1.1)) + 'px "Baloo 2", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('$', sp[0], sp[1] + 1);
+    }
+    ctx.restore();
+  }
+
+  function pill(text, x, y, bg, align, size) {
+    size = size || 11;
+    ctx.save();
+    ctx.font = '800 ' + size + 'px "Baloo 2", "Noto Sans TC", sans-serif';
+    const tw = ctx.measureText(text).width, bw = tw + 14, bh = size + 9;
+    let bx = align === 'left' ? x : align === 'right' ? x - bw : x - bw / 2;
+    let by = y - bh / 2;
+    bx = clamp(bx, 3, view.w - bw - 3); by = clamp(by, 3, view.h - bh - 3);
+    ctx.fillStyle = typeof bg === 'string' ? bg : rgbStr(bg);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, bh / 2); else ctx.rect(bx, by, bw, bh);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, bx + bw / 2, by + bh / 2 + 1);
+    ctx.restore();
+  }
+  function labelAt(p, text, bg, size) {
+    const q = toCam(p);
+    if (q[2] < NEAR) return;
+    const s2 = scr(q);
+    pill(text, s2[0], s2[1], bg, 'center', size);
+  }
+
+  // the whole trend in a small corner map, with your position marked
+  function miniMap() {
+    const n = candles.length;
+    const mw = Math.min(140, view.w * 0.36), mh = 42, mx = view.w - mw - 10, my = 54;
+    let hi = -Infinity, lo = Infinity;
+    candles.forEach(function (c) { hi = Math.max(hi, c.high); lo = Math.min(lo, c.low); });
+    const yy = function (v) { return my + 6 + (hi - v) / ((hi - lo) || 1) * (mh - 12); };
+    ctx.save();
+    ctx.fillStyle = rgbStr(pal.scary ? [0, 0, 0] : [255, 255, 255], 0.62);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(mx, my, mw, mh, 10); else ctx.rect(mx, my, mw, mh);
+    ctx.fill();
+    const cw = (mw - 8) / MAX;
+    candles.forEach(function (c, i) {
+      const x = mx + 4 + i * cw + cw / 2;
+      ctx.strokeStyle = ctx.fillStyle = rgbStr(c.close >= c.open ? pal.up : pal.down);
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, yy(c.high)); ctx.lineTo(x, yy(c.low)); ctx.stroke();
+      const t = yy(Math.max(c.open, c.close));
+      ctx.fillRect(x - cw * 0.3, t, Math.max(1, cw * 0.6), Math.max(1, Math.abs(yy(c.open) - yy(c.close))));
+      if (c.gold && !c.goldTaken) {
+        ctx.fillStyle = '#ffc83a';
+        ctx.beginPath(); ctx.arc(x, yy(c.high) - 4, 2.6, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    // you are here
+    const sx = mx + 4 + view.s * cw + cw / 2;
+    const sy = yy(candles[clamp(Math.round(view.s), 0, n - 1)].close);
+    ctx.fillStyle = rgbStr(pal.ink);
+    ctx.beginPath(); ctx.arc(sx, sy, 3.2, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '700 9px "Noto Sans TC", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.restore();
+  }
+
+  function draw() {
+    if (!view.w || !candles.length) return;
+    if (!pal) refreshPalette();
+    const now = performance.now();
+    const dt = view.last ? Math.min(0.05, (now - view.last) / 1000) : 0.016;
+    view.last = now; view.t += dt; view.dt = dt;
+    const n = candles.length;
+
+    // smoothed price range
+    let hi = Math.max.apply(null, candles.map(function (c) { return c.high; }));
+    let lo = Math.min.apply(null, candles.map(function (c) { return c.low; }));
+    if (position) { hi = Math.max(hi, position.avgEntry); lo = Math.min(lo, position.avgEntry); }
+    const span = (hi - lo) || 1;
+    hi += span * 0.05; lo -= span * 0.05;
+    if (view.lo === null) { view.lo = lo; view.hi = hi; }
+    const k = Math.min(1, dt * 3);
+    view.lo += (lo - view.lo) * k; view.hi += (hi - view.hi) * k;
+
+    // walking
+    if (view.s === null) { view.s = view.walkTo = Math.max(0, n - 1 - LOOK); view.walkP = 1; }
+    if (view.walkP < 1) {
+      view.walkP = Math.min(1, view.walkP + dt / 0.85);
+      const p = view.walkP, e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      view.s = view.walkFrom + (view.walkTo - view.walkFrom) * e;
+      if (view.walkP === 1) {
+        if (walkerY(view.s) - view.fromY < -1.2) view.shakeT = Math.max(view.shakeT, 0.4);  // hard landing
+        collectGold(Math.round(view.s));
+      }
+    }
+    view.pop = Math.min(1, view.pop + dt / 0.4);
+    view.shakeT = Math.max(0, view.shakeT - dt);
+    view.kick = Math.max(0, view.kick - dt * 1.3);
+    if (!view.dragging && now - view.dragEnd > 1800) view.dragYaw *= Math.max(0, 1 - dt * 1.5);
+
+    setupCamera();
+    const w = view.w, h = view.h;
+
+    // sky
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, rgbStr(pal.skyTop)); g.addColorStop(1, rgbStr(pal.skyBottom));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+    // ground far below, so drops feel like drops
+    const gy = -1.5;
+    const sx0 = Math.floor(view.s) * S - 14;
+    for (let x = Math.floor(sx0 / 2) * 2; x <= sx0 + FAR + 8; x += 2) {
+      line3([x, gy, -7], [x, gy, 7], rgbStr(pal.grid, 0.25), 1);
+    }
+    for (let z = -7; z <= 7; z += 1.75) {
+      line3([sx0, gy, z], [sx0 + FAR + 8, gy, z], rgbStr(pal.grid, 0.25), 1);
+    }
+
+    // the unknown future: a fading dashed path into the fog
+    const xN = (n - 1) * S, yN = closeY(n - 1);
+    for (let j = 0; j < 5; j++) {
+      line3([xN + j * 1.4, yN, 0], [xN + (j + 1) * 1.4, yN, 0], rgbStr(pal.ink, 0.35 - j * 0.06), 2, [5, 6]);
+    }
+
+    // road segments and candle pillars, far to near
+    const items = [];
+    const from = Math.max(0, Math.floor(view.s) - 8);
+    for (let i = from; i < n; i++) {
+      if (i + 1 < n) items.push({ z: depth([(i + 0.5) * S, closeY(i), 0]), f: roadSeg.bind(null, i) });
+      items.push({ z: depth([i * S, yOf(candles[i].close), PILLAR_Z]), f: pillar.bind(null, i, PILLAR_Z) });
+      items.push({ z: depth([i * S, yOf(candles[i].close), -PILLAR_Z]), f: pillar.bind(null, i, -PILLAR_Z) });
+      if (candles[i].gold && !candles[i].goldTaken) items.push({ z: depth([i * S, closeY(i) + 0.8, 0]) - 0.01, f: coin.bind(null, i) });
+    }
+    items.push({ z: depth([view.s * S, walkerY(view.s) + 0.45, 0]) - 0.02, f: walkerOrb });
+    items.sort(function (a, b) { return b.z - a.z; });
+    items.forEach(function (it) { if (it.z > -3) it.f(); });
+
+    // position: entry rail and the liquidation "lava" sheet
+    if (position) {
+      const ye = yOf(position.avgEntry);
+      line3([view.s * S - 2, ye, 0], [xN + 7, ye, 0], rgbStr(pal.ink, 0.75), 2, [8, 6]);
+      labelAt([xN + 2.5, ye, 0], '均價', rgbStr(pal.ink, 0.8), 10);
+      const lp = liqPrice(), yl = yOf(lp);
+      if (lp >= view.lo - span && lp <= view.hi + span) {
+        const pulse = denial ? 0.04 : reduceMotion ? 0.24 : 0.2 + 0.12 * Math.sin(view.t * 6);
+        fillPoly([[view.s * S - 3, yl, -4], [xN + 9, yl, -4], [xN + 9, yl, 4], [view.s * S - 3, yl, 4]], rgbStr(pal.liq, pulse));
+        line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 2.2);
+        if (!denial) labelAt([xN + 3.5, yl, 0], '💀 爆倉', pal.liq, 10);
+      }
+    }
+
+    // HUD
+    miniMap();
+    // (drag hint removed: the message and indicator overlays use that space)
+  }
+
+  // called by tick() after a new candle arrives: take one step forward
+  function stepForward(shifted) {
+    if (view.s === null) return;
+    if (shifted) { view.s -= 1; view.walkFrom -= 1; }   // world re-indexed one candle left
+    view.fromY = walkerY(view.s);
+    view.walkFrom = view.s;
+    view.walkTo = Math.max(0, candles.length - 1 - LOOK);
+    view.walkP = 0;
+    view.pop = 0;
+  }
+
+  let fitChartFn = null;
+  function loop() { draw(); requestAnimationFrame(loop); }
+
+  // drag sideways to turn your head (vertical swipes still scroll the page)
+  canvas.addEventListener('pointerdown', function (e) {
+    view.dragging = true; view.dragX = e.clientX; view.dragBase = view.dragYaw;
+    view.hintUntil = 0;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!view.dragging) return;
+    // drag direction follows the finger: drag right, the scene turns right
+    view.dragYaw = clamp(view.dragBase + (e.clientX - view.dragX) * 0.008, -1.3, 1.3);
+  });
+  function endDrag() { view.dragging = false; view.dragEnd = performance.now(); }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  /* ================= tick ================= */
+  function tick() {
+    maybeTriggerNews();
+    tickCount++;
+    const mult = volTicksLeft > 0 ? volMult : 1;
+    if (volTicksLeft > 0) volTicksLeft--;
+
+    const last = candles[candles.length - 1];
+    const c = newCandle(last.close, mult, true);
+    if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
+    candles.push(c);
+    let shifted = false;
+    if (candles.length > MAX) { candles.shift(); shifted = true; }
+    stepForward(shifted);
+
+    const diff = c.close - last.close;
+    const pct = (c.close - candles[0].open) / candles[0].open * 100;
+    const rising = diff >= 0;
+
+    $('price').textContent = fmtUsd(c.close);
+    const ch = $('change');
+    ch.textContent = (rising ? '▲ +' : '▼ ') + Math.round(diff).toLocaleString('en-US') + '（區間 ' + pct.toFixed(2) + '%）';
+
+    document.body.classList.toggle('scary', !rising);
+    refreshPalette();
+    ch.style.color = rising ? cssVar('--up') : cssVar('--down');
+    $('mood').textContent = rising ? '😊' : '😱';
+    $('title').textContent = rising ? '🌸 BTC 戰士 🌸' : '💀 BTC 戰士 💀';
+
+    if (streakDir !== 0 && (rising ? 1 : -1) === streakDir) streakLen++;
+    else { streakDir = rising ? 1 : -1; streakLen = 1; }
+    streakEl.textContent = streakLabel(streakDir, streakLen);
+
+    setMsg(pick(rising ? cuteMsgs : scaryMsgs));
+
+    if (rising) { playCute(); spawnParticles('up'); }
+    else { playScary(); spawnParticles('down'); }
+
+    if (position) {
+      const pnl = positionPnl(c.close);
+      if (pnl <= -position.margin) {
+        liquidate();
+      } else {
+        position.redTicks = pnl < 0 ? position.redTicks + 1 : 0;
+        position.peak = Math.max(position.peak || 0, pnl);
+        const nm = holdName(position);
+        if (position.holdName && nm !== position.holdName && nm !== '短線') toast('📦 這單升格為「' + nm + '」');
+        position.holdName = nm;
+        if (position.redTicks >= 30) achieve('heirloom');
+        if (position.avgDown && position.redTicks >= 10) achieve('valueInvest');
+        if (denial) { denialTicks++; if (denialTicks >= 10) achieve('aq'); }
+        if (position.redTicks >= 10) achieve('diamond');
+        position.held = (position.held || 0) + 1;
+        missionEvent('hold', position.held, 'max');
+      }
+    }
+    const now = performance.now();
+    if (!rising && diff / last.close < -0.018 && now - lastCrashAt > 6000) {
+      lastCrashAt = now;
+      triggerCrash();
+      spawnParticles('crash');
+    }
+
+    if (liveEquity() >= START * 2) achieve('doubled');
+
+    if (grounded > 0) {
+      grounded--;
+      if (grounded === 0) toast('📱 手機拿回來了', '爸爸：「下不為例。」');
+    }
+    if (dadCheckIn > 0) {
+      dadCheckIn--;
+      if (dadCheckIn === 0) dadChecks();
+    }
+
+    equityLog.push(Math.round(liveEquity()));
+    if (equityLog.length > 800) equityLog.splice(0, equityLog.length - 800);
+    $('clock').textContent = mmss(gameSecs());
+    if (fitChartFn) fitChartFn();
+    if (!$('histModal').hidden) renderHistory();
+    updateIndicator();
+    refreshTradeUI();
+  }
+
+  /* ================= start ================= */
+  function begin() {
+    if (started) return;
+    started = true;
+    if (!startAt) startAt = performance.now();
+    if (!equityLog.length) equityLog.push(Math.round(liveEquity()));
+    $('splash').hidden = true;
+    $('change').textContent = '開盤！';
+    setTimeout(function () { toast('🎯 第一個任務', '下方黃色條是目前任務，完成就有獎勵。'); }, 1200);
+    refreshTradeUI();
+    timer = setInterval(tick, 1500);
+    setTimeout(tick, 400);
+  }
+  $('enterBtn').addEventListener('click', function () {
+    soundOn = true;
+    ensureAudio().then(function () { playFanfare(); }).catch(function () {});
+    setMuteUI();
+    begin();
+  });
+
+  function init(saved) {
+    // a snapshot from an older version with a different money scale starts fresh
+    if (saved && saved.scale !== START) saved = null;
+    if (saved && saved.candles && saved.candles.length) {
+      candles = saved.candles;
+      balance = saved.balance; debt = saved.debt; position = saved.position;
+      achieved = saved.achieved || {}; winStreak = saved.winStreak || 0;
+      dadDebt = saved.dadDebt || 0; stealCount = saved.stealCount || 0;
+      stolenAtRisk = saved.stolenAtRisk || 0; dadCheckIn = saved.dadCheckIn || 0; grounded = saved.grounded || 0;
+      if (saved.spins != null) spins = saved.spins;
+      shields = saved.shields || 0; doubleNext = !!saved.doubleNext; tickCount = saved.tickCount || 0;
+      if (saved.stakeMode === 'all' || [0.05, 0.1, 0.3].indexOf(saved.stakeMode) >= 0) stakeMode = saved.stakeMode;
+      if (saved.trades) trades = saved.trades;
+      if (saved.equityLog) equityLog = saved.equityLog;
+      if (saved.elapsed) startAt = performance.now() - saved.elapsed * 1000;
+      if (saved.trend) trend = saved.trend;
+      if (saved.lev) lev = saved.lev;
+      if (saved.bestRank != null) bestRank = saved.bestRank;
+      missionIdx = saved.missionIdx || 0; missionRound = saved.missionRound || 0; missionProg = saved.missionProg || 0;
+      if (saved.stats) stats = saved.stats;
+      cleared = !!saved.cleared;
+      if (saved.rankIdx != null) rankIdx = saved.rankIdx;
+      if (curRank() < LEV_UNLOCK[lev]) lev = 25;
+      borrowCount = saved.borrowCount || 0;
+      soundOn = saved.soundOn !== false; setMuteUI();
+    } else {
+      seed();
+    }
+    $('price').textContent = fmtUsd(lastClose());
+
+    // keep the page's bottom padding equal to the dock's real height
+    const dock = $('dock');
+    function syncDock() { document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px'); }
+    // the chart takes whatever height is left above the dock
+    fitChartFn = fitChart;
+    function fitChart() {
+      const r = canvas.getBoundingClientRect();
+      if (Math.abs(r.width - view.w) > 1 || Math.abs(r.height - view.h) > 1) resize();
+    }
+    if (window.ResizeObserver) new ResizeObserver(fitChart).observe(document.querySelector('.stage'));
+    if (window.ResizeObserver) new ResizeObserver(function () { syncDock(); fitChart(); }).observe(dock);
+    window.addEventListener('resize', fitChart);
+    syncDock();
+    fitChart();
+
+    resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission();
+    requestAnimationFrame(loop);
+    if (saved && saved.started) begin();
+
+    if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+      window.claude.hot.snapshot(function () {
+        return {
+          candles: candles, balance: balance, debt: debt, position: position, achieved: achieved,
+          winStreak: winStreak, soundOn: soundOn, started: started,
+          dadDebt: dadDebt, stealCount: stealCount, stolenAtRisk: stolenAtRisk, dadCheckIn: dadCheckIn, grounded: grounded,
+          spins: spins, shields: shields, doubleNext: doubleNext, tickCount: tickCount, stakeMode: stakeMode, lev: lev,
+          bestRank: bestRank, rankIdx: rankIdx, borrowCount: borrowCount, missionIdx: missionIdx, missionRound: missionRound, missionProg: missionProg, stats: stats, cleared: cleared,
+          trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START
+        };
+      });
+    }
+    window.addEventListener('pagehide', function () { if (timer) clearInterval(timer); });
+  }
+
+  if (window.claude && window.claude.hot && window.claude.hot.ready) {
+    window.claude.hot.ready(function (data) { init(data); });
+  } else {
+    init(window.claude && window.claude.hot ? window.claude.hot.data : null);
+  }
+})();
+</script>
