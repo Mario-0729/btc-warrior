@@ -3498,10 +3498,10 @@
   }
 
   // you: a bunch of 韭菜 standing on the newest price. Its height follows your net
-  // worth (200萬 = 1.2, 2000萬 ≈ 3.1); a realized loss chops the top off.
-  const leek = { h: 1.2, cut: null };
+  // worth (200萬 = 2.0, 2000萬 ≈ 4.6); a realized loss chops the top off.
+  const leek = { h: 2.0, cut: null };
   const LEEK_BLADES = [-0.32, -0.2, -0.09, 0, 0.1, 0.21, 0.33];
-  function leekTarget() { return Math.min(3.2, 0.3 + 0.9 * Math.sqrt(Math.max(0, liveEquity()) / START)); }
+  function leekTarget() { return Math.min(4.6, 0.8 + 1.2 * Math.sqrt(Math.max(0, liveEquity()) / START)); }
   function cutLeek() {
     const to = leekTarget();
     if (leek.h - to < 0.04) return;
@@ -3519,7 +3519,7 @@
       // 2D fallback: blades fan out from a pale stem
       ctx.save();
       ctx.lineCap = 'round';
-      ctx.lineWidth = Math.max(2, 0.08 * view.cam.focal / qb[2]);
+      ctx.lineWidth = Math.max(3, 0.15 * view.cam.focal / qb[2]);
       LEEK_BLADES.forEach(function (a, i) {
         ctx.strokeStyle = i % 2 ? '#2f9a3a' : '#46c04f';
         ctx.beginPath();
@@ -3528,7 +3528,7 @@
         ctx.stroke();
       });
       ctx.fillStyle = '#f2f7e4';
-      ctx.beginPath(); ctx.ellipse(B[0], B[1] - len * 0.05, Math.max(4, len * 0.09), Math.max(3, len * 0.1), 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(B[0], B[1] - len * 0.06, Math.max(6, len * 0.13), Math.max(5, len * 0.12), 0, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     const ly = Tp[1] - 14;
@@ -3549,7 +3549,7 @@
     if (t > 0.3) return;
     const q = toCam([view.s * S, walkerY(view.s) + c.to, 0]);
     if (q[2] < NEAR) return;
-    const p = scr(q), r = 0.9 * view.cam.focal / q[2], a = 1 - t / 0.3;
+    const p = scr(q), r = 1.4 * view.cam.focal / q[2], a = 1 - t / 0.3;
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,' + a + ')';
     ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 14;
@@ -3841,7 +3841,7 @@
       const coins = [];
 
       // you: a bunch of 韭菜 (blades pivot at the bottom so scaling y grows them)
-      const bladeGeo = new T.BoxGeometry(0.075, 1, 0.025); bladeGeo.translate(0, 0.5, 0);
+      const bladeGeo = new T.BoxGeometry(0.15, 1, 0.045); bladeGeo.translate(0, 0.5, 0);
       const bladeMats = [new T.MeshStandardMaterial({ color: 0x46c04f, roughness: 0.55 }), new T.MeshStandardMaterial({ color: 0x2f9a3a, roughness: 0.55 })];
       function makeBunch() {
         const g = new T.Group();
@@ -3854,9 +3854,9 @@
         return g;
       }
       const orb = new T.Group();
-      const stem = new T.Mesh(new T.CylinderGeometry(0.1, 0.13, 0.22, 14), new T.MeshStandardMaterial({ color: 0xf2f7e4, roughness: 0.6 }));
-      stem.position.y = 0.11; stem.castShadow = true;
-      const blades = makeBunch(); blades.position.y = 0.12;
+      const stem = new T.Mesh(new T.CylinderGeometry(0.2, 0.26, 0.4, 16), new T.MeshStandardMaterial({ color: 0xf2f7e4, roughness: 0.6 }));
+      stem.position.y = 0.2; stem.castShadow = true;
+      const blades = makeBunch(); blades.position.y = 0.22;
       orb.add(stem, blades);
       scene.add(orb);
       const chopped = makeBunch();
@@ -3986,7 +3986,7 @@
 
         // you
         orb.position.set(sx, wy, 0);
-        blades.scale.set(1, Math.max(0.05, leek.h - 0.12), 1);
+        blades.scale.set(1, Math.max(0.05, leek.h - 0.22), 1);
         orb.visible = orbLight.visible = !view.liqFreeze;
         orbLight.position.set(sx, wy + leek.h + 0.4, 0);
         // the chopped-off top tumbles down and away
