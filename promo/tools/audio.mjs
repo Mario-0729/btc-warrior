@@ -1,11 +1,16 @@
-import { chromium } from '/home/claude/.npm-global/lib/node_modules/playwright/index.mjs';
+// 離線合成宣傳影片的配樂與音效（全部原創），時間點讀錄影產生的 marks.json，自動對拍。
+// 用法：node promo/tools/audio.mjs <marks.json> <輸出.wav>
+import { createRequire } from 'module';
 import fs from 'fs';
-const OUT = '/tmp/claude-0/-home-claude/eaac89d7-213c-52c0-9572-b3c7e304c279/scratchpad/promo/soundtrack.wav';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const M = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+const OUT = process.argv[3];
+const b = await chromium.launch();
 const p = await b.newPage();
 await p.goto('about:blank');
-const b64 = await p.evaluate(async () => {
-  const SR = 48000, LEN = 15;
+const b64 = await p.evaluate(async (M) => {
+  const SR = 48000, LEN = Math.ceil(M.stop + 0.2);
   const c = new OfflineAudioContext(2, SR * LEN, SR);
   const master = c.createGain(); master.gain.value = 0.8;
   const comp = c.createDynamicsCompressor();
@@ -94,81 +99,81 @@ const b64 = await p.evaluate(async () => {
     C6: 1046.5, D6: 1174.66, E6: 1318.5, F6: 1396.9, G6: 1568, A6: 1760,
     A2: 110, F2: 87.31, G2: 98, C3: 130.81, A3: 220, E3: 164.81, D3: 146.83, Bb2: 116.54 };
 
-  // ---------- A: cute (0 → 5.85) — 128 BPM music box + bouncy beat ----------
-  const e8 = 60 / 128 / 2; // eighth
-  const mel = ['C6','E6','G6','E6','A6','G6','E6','G6', 'F6','A6','G6','E6','D6','E6','C6','D6', 'C6','E6','G6','E6','A6','G6','A6','C6' ];
-  const melT = (i) => 0.05 + i * e8;
-  for (let i = 0; i < 24 && melT(i) < 5.8; i++) bell(N[mel[i]] || 2093, melT(i), 0.45, 0.11, musicA, rev);
-  // counter-melody sparkle on top during the rise
-  for (let i = 0; i < 12; i++) { const t = 2.4 + i * e8 * 2 + e8; if (t < 5.8) bell([2093, 2637, 3136, 2637][i % 4], t, 0.25, 0.035, musicA, rev); }
-  // beat drops when the long button is pressed (1.1s)
+
+  const e8 = 60 / 128 / 2;
+  const T = M;
+  // ---------- 開場：進場號角＋劇情叮 ----------
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => bell(f, 0.02 + i * 0.09, 0.6, 0.12));
+  [1568, 2093].forEach((f, i) => bell(f, T.story + i * 0.12, 0.9, 0.09, master, bigRev));
+  // ---------- A: 可愛八音盒（開場 → 下一秒） ----------
+  const mel = ['C6','E6','G6','E6','A6','G6','E6','G6','F6','A6','G6','E6','D6','E6','C6','D6'];
+  const cuteEnd = T.tease;
+  for (let i = 0; ; i++) { const t = 0.4 + i * e8; if (t > cuteEnd - 0.05) break; bell(N[mel[i % 16]], t, 0.45, i < 16 ? 0.07 : 0.1, musicA, rev); }
+  // 下注：籌碼叮
+  bell(1318.5, T.chip1, 0.16, 0.12); bell(1568, T.chip2, 0.16, 0.12);
+  // 做多：上行琶音＋節奏進來
+  [1046.5, 1318.5, 1568, 2093].forEach((f, i) => bell(f, T.long + i * 0.06, 0.5, 0.14 - i * 0.015));
   const bassLine = ['C3','C3','A2','A2','F2','F2','G2','G2'];
   for (let k = 0; ; k++) {
-    const t = 1.1 + k * e8 * 2; if (t > 5.8) break;
-    kick(t, 0.42, musicA);
-    hat(t + e8, 0.05, musicA);
-    pluck(N[bassLine[k % 8]] , t, e8 * 1.8, 0.09, musicA);
+    const t = T.long + k * e8 * 2; if (t > cuteEnd - 0.1) break;
+    kick(t, 0.42, musicA); hat(t + e8, 0.05, musicA);
+    pluck(N[bassLine[k % 8]], t, e8 * 1.8, 0.09, musicA);
   }
-  // SFX: stake chip tap + long press
-  bell(1318.5, 0.6, 0.16, 0.1); // chip
-  [1046.5, 1318.5, 1568, 2093].forEach((f, i) => bell(f, 1.1 + i * 0.06, 0.5, 0.14 - i * 0.015)); // playCute (long)
-  // coin pings while climbing
-  [2.6, 3.4, 4.2, 5.0].forEach(t => { bell(1975.5, t, 0.18, 0.12); bell(2637, t + 0.08, 0.5, 0.12); });
-
-  // ---------- record-scratch power-down at 5.85 ----------
-  musicA.gain.setValueAtTime(1, 5.82); musicA.gain.linearRampToValueAtTime(0, 5.9);
+  // 飛幣叮叮
+  for (let i = 0; i < 5; i++) bell(2349, T.long + 0.15 + i * 0.07, 0.15, 0.06);
+  // 每根上漲 K 線一聲錢幣
+  for (let t = T.long + 0.6; t < T.rise_end + 0.1; t += 1.2) { bell(1975.5, t, 0.18, 0.12); bell(2637, t + 0.08, 0.5, 0.12); }
+  // 400 萬劇情：閃亮和弦
+  [1046.5, 1318.5, 1568, 2093, 2637].forEach((f, i) => bell(f, T.s400 + i * 0.05, 1.2, 0.08, master, bigRev));
+  musicA.gain.setValueAtTime(1, T.s400); musicA.gain.linearRampToValueAtTime(0.55, T.s400 + 0.3);
+  // ---------- 下一秒：唱片急停＋心跳 ----------
+  musicA.gain.setValueAtTime(0.55, cuteEnd - 0.03); musicA.gain.linearRampToValueAtTime(0, cuteEnd + 0.05);
   {
-    const t0 = 5.85, o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter(); o.type = 'sawtooth';
+    const t0 = cuteEnd, o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter(); o.type = 'sawtooth';
     o.frequency.setValueAtTime(900, t0); o.frequency.exponentialRampToValueAtTime(35, t0 + 0.55);
     lp.type = 'lowpass'; lp.frequency.setValueAtTime(3000, t0); lp.frequency.exponentialRampToValueAtTime(200, t0 + 0.55);
     g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.18, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.6);
     o.connect(lp).connect(g).connect(master); o.start(t0); o.stop(t0 + 0.65);
   }
-  // tension: rising high whine + heartbeat before the crash
+  for (let t = cuteEnd + 0.25; t < T.liq - 0.2; t += 0.42) heartbeat(t, 0.55);
   {
-    const t0 = 6.0, o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
-    o.frequency.setValueAtTime(1800, t0); o.frequency.exponentialRampToValueAtTime(4200, 6.9);
-    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.05, 6.88); g.gain.linearRampToValueAtTime(0, 6.9);
-    o.connect(g).connect(master); o.start(t0); o.stop(6.92);
+    const t0 = cuteEnd + 0.2, t1 = T.liq, o = c.createOscillator(), g = c.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(1800, t0); o.frequency.exponentialRampToValueAtTime(4200, t1);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.05, t1 - 0.02); g.gain.linearRampToValueAtTime(0, t1);
+    o.connect(g).connect(master); o.start(t0); o.stop(t1 + 0.02);
   }
-  heartbeat(6.15, 0.5); heartbeat(6.55, 0.6);
-
-  // ---------- B: crash + horror bed (6.9 → 11.6) ----------
-  scream(6.9, 1.0); thud(6.9, 0.9); scary(7.05, 1.2, 0.22); noiseBurst(6.9, 0.35, 0.35, 4000, 200);
+  // ---------- B: 爆倉＋恐怖底噪（爆倉 → 結局台詞） ----------
+  scream(T.liq, 1.0); thud(T.liq, 1.0); thud(T.liq + 0.42, 0.8); scary(T.liq + 0.1, 1.3, 0.22); noiseBurst(T.liq, 0.5, 0.4, 4000, 120);
   {
-    // detuned low drone through distortion with slow tremolo
+    const s0 = T.liq + 0.05, s1 = T.end + 0.4;
     const bus = c.createGain(), sh = dist(2.2), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520;
     bus.connect(sh).connect(lp).connect(musicB); lp.connect(bigRev);
-    [55, 58.27, 82.4, 110.6].forEach(fq => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fq; o.connect(bus); o.start(7.0); o.stop(12.6); });
-    const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 3.2; lg.gain.value = 0.04; lfo.connect(lg).connect(bus.gain); lfo.start(7.0); lfo.stop(12.6);
+    [55, 58.27, 82.4, 110.6].forEach(fq => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fq; o.connect(bus); o.start(s0); o.stop(s1); });
+    const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 3.2; lg.gain.value = 0.04; lfo.connect(lg).connect(bus.gain); lfo.start(s0); lfo.stop(s1);
     bus.gain.value = 0.09;
-    // dissonant high cluster (tritone) — ghostly
     [1244.5, 1760, 1864.7].forEach((fq, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = fq; o.detune.value = (i - 1) * 14;
-      g.gain.setValueAtTime(0.0001, 7.4); g.gain.exponentialRampToValueAtTime(0.018, 9.6); g.gain.exponentialRampToValueAtTime(0.0001, 11.8);
-      o.connect(g); pan(g, (i - 1) * 0.7).connect(musicB); g.connect(bigRev); o.start(7.4); o.stop(11.9); });
-    musicB.gain.setValueAtTime(0, 6.95); musicB.gain.linearRampToValueAtTime(1, 7.6);
-    musicB.gain.setValueAtTime(1, 11.4); musicB.gain.linearRampToValueAtTime(0, 12.4);
+      g.gain.setValueAtTime(0.0001, s0 + 0.4); g.gain.exponentialRampToValueAtTime(0.018, s0 + 2.5); g.gain.exponentialRampToValueAtTime(0.0001, s1);
+      o.connect(g); pan(g, (i - 1) * 0.7).connect(musicB); g.connect(bigRev); o.start(s0 + 0.4); o.stop(s1); });
+    musicB.gain.setValueAtTime(0, s0); musicB.gain.linearRampToValueAtTime(1, s0 + 0.6);
+    musicB.gain.setValueAtTime(1, T.end - 0.3); musicB.gain.linearRampToValueAtTime(0, s1);
   }
-  // heartbeat speeds up toward dad
-  [7.9, 8.6, 9.2].forEach(t => heartbeat(t, 0.5));
-  // "強制平倉" caption hit
-  thud(8.65, 0.55); bell(233, 8.65, 1.2, 0.1, master, bigRev);
-  // ---------- dad caught at 9.95 ----------
-  // sneaky footsteps first
-  bell(392, 9.35, 0.22, 0.1); bell(466.2, 9.55, 0.22, 0.09);
-  thud(9.95, 1.0); scary(10.2, 1.1, 0.24); noiseBurst(9.95, 0.25, 0.3, 2500, 150);
-  scream(10.05, 0.7);
-
-  // ---------- C: end card (11.6 → 15) creepy music box returns ----------
+  for (let t = T.liq + 1.4; t < T.liqScreen - 0.2; t += 0.6) heartbeat(t, 0.45);
+  // 強制平倉登場：重擊＋鐘聲
+  thud(T.liqScreen, 1.0); noiseBurst(T.liqScreen, 0.3, 0.35, 2500, 150); thud(T.liqScreen + 0.35, 0.7);
+  bell(233, T.liqScreen + 0.35, 1.6, 0.12, master, bigRev);
+  scream(T.liqScreen + 0.1, 0.7);
+  // 結局台詞：走音的八音盒下行
+  ['E6','C6','A5','E5','D5','C5'].forEach((n, i) => bell(N[n], T.broke + 0.1 + i * 0.36, 1.0, 0.09, master, bigRev, 30));
+  // ---------- C: 結尾卡 ----------
   {
-    const t0 = 11.65, q = 0.3;
+    const t0 = T.end + 0.05, q = 0.28;
+    bell(1046.5, T.end, 0.3, 0.12); bell(1568, T.end + 0.06, 0.4, 0.1);
     const endMel = ['A5','C6','E6','A6','G6','E6','D6','E6','C6','B5','A5'];
-    endMel.forEach((n, i) => bell(N[n], t0 + i * q, 0.9, 0.1, musicC, bigRev, 18));
-    // final cute chord, slightly off
-    [880, 1046.5, 1318.5, 1760].forEach((f, i) => bell(f, t0 + 11 * q + 0.1 + i * 0.03, 1.4, 0.07, musicC, bigRev, 22));
-    musicC.gain.setValueAtTime(1, 14.2); musicC.gain.linearRampToValueAtTime(0, 14.95);
+    endMel.forEach((n, i) => { const t = t0 + 0.25 + i * q; if (t < T.stop - 0.6) bell(N[n], t, 0.9, 0.1, musicC, bigRev, 18); });
+    const tc = Math.min(t0 + 0.25 + 11 * q + 0.1, T.stop - 1.0);
+    [880, 1046.5, 1318.5, 1760].forEach((f, i) => bell(f, tc + i * 0.03, 1.4, 0.07, musicC, bigRev, 22));
   }
-  master.gain.setValueAtTime(0.8, 14.5); master.gain.linearRampToValueAtTime(0, 15);
+  master.gain.setValueAtTime(0.8, T.stop - 0.6); master.gain.linearRampToValueAtTime(0, T.stop);
 
   const buf = await c.startRendering();
   // to 16-bit WAV
@@ -183,7 +188,7 @@ const b64 = await p.evaluate(async () => {
   const bytes = new Uint8Array(out.buffer); let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
   return btoa(s);
-});
+}, M);
 fs.writeFileSync(OUT, Buffer.from(b64, 'base64'));
 console.log('wrote', OUT);
 await b.close();

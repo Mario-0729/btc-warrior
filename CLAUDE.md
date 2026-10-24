@@ -62,13 +62,14 @@
 - 音效全部用 Web Audio 即時合成，已處理 iOS 靜音問題；角落有一顆小靜音鍵。
 
 ## 宣傳影片（promo/）
-- `BTC戰士_宣傳影片_15秒_有聲.mp4`：1080×1920，15 秒，走恐怖反差風格，配樂與音效都是原創合成。
-- `promo.html`：錄影專用的遊戲版本，可以強制指定漲跌。
-- `tools/rec.mjs`：自動操作並錄影。
-- `tools/audio.mjs`：離線合成配樂與音效。
-- `tools/endcard.mjs`：產生結尾卡。
-- 腳本裡的路徑是舊環境的路徑，換環境使用前要先改掉。
+- `韭菜戰士_宣傳影片_有聲.mp4`：1080×1920、30fps、約 25 秒，劇情：媽媽賠掉 2000 萬 → 梭哈 102 倍一路漲到 400 萬（「媽媽你看到了嗎」）→ 下一秒被插針爆倉 → 強制平倉登場畫面 →「跟媽媽一模一樣」→ 結尾卡（網址＋hashtag）。配樂音效全部原創合成。`endcard.png` 是結尾卡截圖。
+- 一鍵重做：`node promo/tools/make.mjs`（約 20～40 分鐘；`--skip-rec` 只重做配樂與輸出）。遊戲改版後直接重跑即可，錄影版會自動從 `index.html` 產生。
+  - `tools/build-promo.mjs`：從 `index.html` 產生 `promo.html`（可用 `window.__force` 強制漲跌／插針、關掉隨機事件與黑箱、不連排行榜）。字幕與結尾卡在 `tools/promo-overlay.html`。
+  - `tools/rec.mjs`：本機開小伺服器，用 Chromium「虛擬時間」逐格拍攝（3D 算再慢影片也流暢），並輸出各段落秒數 `marks.json`。
+  - `tools/audio.mjs`：依 `marks.json` 離線合成配樂與音效，自動對拍。
+- 需要中文字型（Linux：`apt-get install fonts-noto-cjk fonts-noto-color-emoji`）。
+- `舊版_BTC戰士/`：改名前的舊影片，僅留檔。
 
 ## 想做但還沒做的事
-- 宣傳影片（promo/）和舊的 claude.ai Artifact 還是「BTC 戰士」舊版，要更新得重錄影片、重新發布 Artifact。
+- 舊的 claude.ai Artifact 還是「BTC 戰士」舊版，要更新得重新發布。
 - 防作弊：分數由前端上傳，懂技術的人可以灌假分數；要擋得把遊戲邏輯搬到後端。

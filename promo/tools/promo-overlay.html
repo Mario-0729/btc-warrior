@@ -1,0 +1,43 @@
+<!-- ===== 宣傳影片專用：字幕條與結尾卡（由 tools/build-promo.mjs 接在遊戲後面） ===== -->
+<style>
+  #muteBtn { display: none !important; }
+  #promoCap {
+    position: fixed; left: 50%; top: 15%; transform: translate(-50%, 0) scale(.85); z-index: 9998; opacity: 0;
+    width: 94%; text-align: center; pointer-events: none; transition: opacity .2s ease, transform .35s cubic-bezier(.2,1.6,.3,1);
+    font-family: "Noto Sans CJK TC", sans-serif;
+  }
+  #promoCap.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  #promoCap b {
+    display: inline-block; font-size: 31px; font-weight: 900; color: #fff; line-height: 1.25;
+    padding: 6px 16px; border-radius: 16px; background: rgba(232,62,130,.94);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,.45);
+  }
+  #promoCap.dark b { background: rgba(20,0,8,.92); color: #ff4d4d; box-shadow: 0 0 22px rgba(255,0,0,.45); }
+  #promoCap.low { top: auto; bottom: 9%; }
+  #promoEnd {
+    position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    background: radial-gradient(circle at 50% 38%, #fff3f8 0, #ffd3e6 45%, #ffc9a8 100%);
+    font-family: "Noto Sans CJK TC", sans-serif; text-align: center; padding: 24px;
+  }
+  #promoEnd.show { display: flex; animation: endIn .45s cubic-bezier(.2,1.4,.3,1); }
+  @keyframes endIn { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: none; } }
+  #promoEnd .face { width: 132px; height: 132px; border-radius: 50%; background: #fff; box-shadow: 0 10px 30px -10px rgba(140,30,80,.5); overflow: hidden; animation: wob 1.2s ease-in-out infinite; }
+  #promoEnd .face svg { width: 100%; height: 100%; display: block; }
+  @keyframes wob { 50% { transform: rotate(-5deg) scale(1.04); } }
+  #promoEnd .t1 { font-size: 21px; font-weight: 900; color: #2f8a3c; letter-spacing: .08em; }
+  #promoEnd .t2 { font-size: 46px; font-weight: 900; color: #e83e82; line-height: 1.15; text-shadow: 0 3px 0 #fff, 0 6px 16px rgba(232,62,130,.35); }
+  #promoEnd .t3 { font-size: 19px; font-weight: 800; color: #5c2f49; }
+  #promoEnd .url { margin-top: 8px; font-size: 17px; font-weight: 900; color: #fff; background: #5c2f49; padding: 9px 18px; border-radius: 999px; }
+  #promoEnd .tags { font-size: 15px; font-weight: 800; color: #b23a6e; }
+  #promoEnd .fine { margin-top: 12px; font-size: 11.5px; color: #a07890; }
+</style>
+<div id="promoCap"><b></b></div>
+<div id="promoEnd">
+  <div class="face" id="promoFace"></div>
+  <div class="t1">🌱 韭菜戰士 🌱</div>
+  <div class="t2">媽媽的<br>2000 萬</div>
+  <div class="t3">5 分鐘，200 萬 → 2000 萬<br>你，是戰士還是韭菜？</div>
+  <div class="url">▶ 免安裝 馬上玩<br>mario-0729.github.io/mama2000</div>
+  <div class="tags">#韭菜戰士好玩　#韭菜戰士沒這個命</div>
+  <div class="fine">人物虛構・K 線模擬・僅供娛樂，非投資建議</div>
+</div>
