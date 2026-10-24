@@ -3531,6 +3531,20 @@
       ctx.beginPath(); ctx.ellipse(B[0], B[1] - len * 0.06, Math.max(16, 0.75 * view.cam.focal / qb[2]), Math.max(8, len * 0.12), 0, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
+    if (!labelOnly) {
+      const fs = Math.max(12, Math.min(30, 0.4 * view.cam.focal / qb[2]));
+      const ty = B[1] - Math.max(len * 0.5, fs);
+      ctx.save();
+      ctx.font = '900 ' + fs + 'px "Noto Sans TC", sans-serif';
+      const tw = ctx.measureText('韭菜').width + fs * 0.8, th = fs * 1.4;
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2f9a3a'; ctx.lineWidth = Math.max(2, fs * 0.12);
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(B[0] - tw / 2, ty - th / 2, tw, th, th / 3.5); else ctx.rect(B[0] - tw / 2, ty - th / 2, tw, th);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1f6e28'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('韭菜', B[0], ty + 1);
+      ctx.restore();
+    }
     const ly = Tp[1] - 14;
     if (position) {
       const pnl = positionPnl(lastClose());
@@ -3858,6 +3872,20 @@
       stem.position.y = 0.22; stem.castShadow = true;
       const blades = makeBunch(); blades.position.y = 0.3;
       orb.add(stem, blades);
+      // 「韭菜」name tag on the bunch, always facing the player
+      const tagCv = document.createElement('canvas'); tagCv.width = 256; tagCv.height = 128;
+      (function (c) {
+        c.fillStyle = '#ffffff'; c.strokeStyle = '#2f9a3a'; c.lineWidth = 10;
+        c.beginPath();
+        if (c.roundRect) c.roundRect(8, 8, 240, 112, 30); else c.rect(8, 8, 240, 112);
+        c.fill(); c.stroke();
+        c.fillStyle = '#1f6e28'; c.font = '900 76px "Noto Sans TC", sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('韭菜', 128, 68);
+      })(tagCv.getContext('2d'));
+      const tagTex = new T.CanvasTexture(tagCv); tagTex.colorSpace = T.SRGBColorSpace;
+      const tag = new T.Sprite(new T.SpriteMaterial({ map: tagTex, depthTest: false }));
+      tag.scale.set(1.5, 0.75, 1); tag.renderOrder = 10;
+      orb.add(tag);
       scene.add(orb);
       const chopped = makeBunch();
       chopped.visible = false;
@@ -3987,6 +4015,7 @@
         // you
         orb.position.set(sx, wy, 0);
         blades.scale.set(1, Math.max(0.05, leek.h - 0.3), 1);
+        tag.position.set(-0.5, Math.max(0.7, leek.h * 0.5), 0);
         orb.visible = orbLight.visible = !view.liqFreeze;
         orbLight.position.set(sx, wy + leek.h + 0.4, 0);
         // the chopped-off top tumbles down and away
