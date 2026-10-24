@@ -842,6 +842,13 @@
     color: #fff; background: rgba(50, 15, 35, .88); padding: 9px 16px; border-radius: 16px;
   }
   .fb-line:empty { display: none; }
+  #faceBig.modal { pointer-events: auto; background: rgba(30, 5, 20, .55); backdrop-filter: blur(3px); }
+  #fbClose {
+    appearance: none; cursor: pointer; border: 0; border-radius: 999px; padding: 10px 22px;
+    font: 800 15px var(--display); background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+  }
+  #fbClose:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   @keyframes fbIn { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
   @keyframes fbShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 2px); } 75% { transform: translate(4px, -2px); } }
   .hud-duel {
@@ -957,7 +964,7 @@
 <div id="crashFlash"></div>
 <div id="crashText"></div>
 <div id="bigWin" aria-hidden="true"></div>
-<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div></div></div>
+<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（5）</button></div></div>
 <div id="particles"></div>
 <div id="newsBanner" role="status"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -2709,6 +2716,7 @@
   }
   let faceBigTimer = null;
   function showFaceBig(st, line, ms, scare) {
+    if (storyOpen) return;
     $('fbFace').innerHTML = faceSvg(st);
     $('fbLine').textContent = line || '';
     const el = $('faceBig');
@@ -2731,12 +2739,62 @@
     eventLog.unshift({ t: started && startAt ? mmss(gameSecs()) : '', text: text });
     if (eventLog.length > 60) eventLog.pop();
   }
+  // a story line pauses the market until it is closed (button, tap outside, Esc, or 5 s)
+  const storyQueue = [];
+  let storyOpen = false, storyTimer = null, pausedAt = 0;
   function story(key, face) {
     if (storyDone[key] && key !== 'broke') return;
     storyDone[key] = true;
-    showFaceBig(face, '「' + STORY[key] + '」', 3000, face === 'blood' || face === 'cry');
     logEvent('💭 ' + STORY[key]);
+    storyQueue.push({ face: face, line: '「' + STORY[key] + '」' });
+    if (!storyOpen) nextStory();
   }
+  function pauseGame() {
+    if (!timer) return;
+    clearInterval(timer); timer = null;
+    pausedAt = performance.now();
+  }
+  function resumeGame() {
+    if (!started || timer || !pausedAt) return;
+    startAt += performance.now() - pausedAt;
+    pausedAt = 0;
+    timer = setInterval(tick, 1200);
+  }
+  function nextStory() {
+    const it = storyQueue.shift();
+    storyOpen = true;
+    pauseGame();
+    clearTimeout(faceBigTimer);
+    $('fbFace').innerHTML = faceSvg(it.face);
+    $('fbLine').textContent = it.line;
+    const el = $('faceBig'), btn = $('fbClose');
+    el.classList.toggle('scare', it.face === 'blood' || it.face === 'cry');
+    el.classList.add('modal');
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    btn.hidden = false;
+    let left = 5;
+    btn.textContent = '✕ 關閉（' + left + '）';
+    try { btn.focus({ preventScroll: true }); } catch (e) {}
+    clearInterval(storyTimer);
+    storyTimer = setInterval(function () {
+      left--;
+      if (left <= 0) closeStory();
+      else btn.textContent = '✕ 關閉（' + left + '）';
+    }, 1000);
+  }
+  function closeStory() {
+    if (!storyOpen) return;
+    clearInterval(storyTimer);
+    const el = $('faceBig');
+    el.hidden = true; el.classList.remove('modal', 'scare');
+    $('fbClose').hidden = true;
+    storyOpen = false;
+    if (storyQueue.length) nextStory();
+    else resumeGame();
+  }
+  $('fbClose').addEventListener('click', closeStory);
+  $('faceBig').addEventListener('click', function (e) { if (e.target === $('faceBig')) closeStory(); });
+  document.addEventListener('keydown', function (e) { if (storyOpen && e.key === 'Escape') closeStory(); });
 
   /* ---------- 喊單部落客「發財姐」: her calls steer the next 5 candles, usually the wrong way ---------- */
   let callTicks = 0, callDir = 1, callTrue = false, callWait = 16, callFollow = 0;
