@@ -9,7 +9,9 @@
 - 修改前先備份，改完要用無頭瀏覽器（Playwright）實測，並檢查手機寬度 360px 的排版。
 
 ## 目前上線位置
-- claude.ai Artifact：https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS（已設為任何人可用連結開啟）
+- GitHub Pages（主站）：https://mario-0729.github.io/btc-warrior/ （`GAME_URL` 已指向這裡）
+- 分享預覽圖：`og.png`（1200×630），`index.html` 開頭的 og: 標籤用絕對網址指向它；換網址要一起改。
+- 舊的 claude.ai Artifact：https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS（已設為任何人可用連結開啟）
 - 如果換網址，要同步修改 `index.html` 裡的 `GAME_URL`（分享文案與分享圖都會用到），以及宣傳影片結尾卡。
 
 ## 設計原則（使用者明確要求，不要改）
@@ -43,4 +45,4 @@
 - 腳本裡的路徑是舊環境的路徑，換環境使用前要先改掉。
 
 ## 想做但還沒做的事
-- 自己架站（GitHub Pages 或 Vercel）、瀏覽數統計、全網排行榜、改用 Three.js 升級 3D、分享預覽圖（Open Graph）。
+- 瀏覽數統計、全網排行榜、改用 Three.js 升級 3D（自己架站後已不受 Artifact 限制）。
