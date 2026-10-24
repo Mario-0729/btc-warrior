@@ -587,7 +587,11 @@
     appearance: none; cursor: pointer; border-radius: 999px; padding: 6px 12px; white-space: nowrap;
     font: 800 12px var(--display); background: #fff; color: #d11f3a; border: 2px solid #f0b3c0;
   }
-  #resetBtn:focus-visible, #resetYes:focus-visible, #resetNo:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  #resetBtn2 {
+    flex: 0 0 auto; align-self: center; appearance: none; cursor: pointer; border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    font: 800 11px var(--display); background: rgba(255,255,255,.7); color: #d11f3a; border: 1.5px solid #f0b3c0;
+  }
+  #resetBtn2:focus-visible, #resetBtn:focus-visible, #resetYes:focus-visible, #resetNo:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   #overStay { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
   #btnHome {
     flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
@@ -1264,6 +1268,7 @@
       <div class="goal2000">
         <div class="g-head">
           <span class="g-title">🏁 目標 2000 萬</span>
+          <button id="resetBtn2" type="button">🔄 重來</button>
           <span class="g-now"><b id="goalNow">200萬</b> ／ 2000萬・<b id="goalPct">10%</b></span>
         </div>
         <div class="g-bar">
@@ -2770,13 +2775,15 @@
   }
   $('btnHome').addEventListener('click', goHome);
   // 重新開始: always reachable from the history page, behind a warning
-  $('resetBtn').addEventListener('click', function () {
+  function askReset() {
     const eq = Math.max(0, liveEquity());
     $('resetInfo').textContent = '目前淨值 ' + fmtShort(eq) + (position ? '（持倉會直接作廢）' : '') + '，全部歸零、從 200 萬重來。成就紀錄會保留。';
     $('resetModal').hidden = false;
     pauseGame('reset');
     $('resetNo').focus();
-  });
+  }
+  $('resetBtn').addEventListener('click', askReset);
+  $('resetBtn2').addEventListener('click', askReset);
   $('resetNo').addEventListener('click', function () { $('resetModal').hidden = true; resumeGame('reset'); });
   $('resetYes').addEventListener('click', function () {
     $('resetModal').hidden = true;
