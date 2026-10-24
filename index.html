@@ -929,8 +929,7 @@
     font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
     background: rgba(255,255,255,.8); color: var(--ink); backdrop-filter: blur(4px);
   }
-  .rescue .side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .rescue .side-actions #btnWheel { grid-column: 1 / -1; }
+  .rescue .side-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   #btnBuddy {
     appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
     font-family: var(--display); font-weight: 700; font-size: 13px;
@@ -938,7 +937,7 @@
   }
   #btnBuddy:disabled { opacity: .45; cursor: not-allowed; }
   #btnBuddy:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
-  .rescue .side-actions button { width: auto; min-width: 0; }
+  #rescue .side-actions button { width: auto; min-width: 0; padding: 8px 4px; font-size: 12.5px; line-height: 1.25; }
   @media (prefers-reduced-motion: reduce) { .fb-card, #faceBig.scare .fb-face { animation: none; } }
   #lbBtn {
     position: absolute; z-index: 2; top: 10px; right: calc(102px + env(safe-area-inset-right, 0px));
@@ -967,6 +966,7 @@
   #dock {
     position: relative; left: auto; right: auto; bottom: auto; flex: 0 0 auto; z-index: 6;
     box-shadow: 0 -8px 24px -12px rgba(0,0,0,.25);
+    max-height: calc(100% - 170px); overflow-y: auto; overscroll-behavior: contain;
   }
   .goal2000 { display: flex; flex-direction: column; gap: 4px; }
   .g-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -1056,7 +1056,7 @@
     <div class="lq-amt" id="lqAmt"></div>
     <div class="lq-sub" id="lqSub"></div>
   </div>
-  <button id="lqClose" type="button">✕ 關閉（3）</button>
+  <button id="lqClose" type="button">✕ 關閉（5）</button>
 </div>
 <div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（3）</button></div></div>
 <div id="particles"></div>
@@ -1294,11 +1294,11 @@
       <div class="rescue" id="rescue" hidden>
         <div class="rescue-head">💸 沒錢了……要怎麼翻身？</div>
         <div class="side-actions">
-          <button id="btnWheel" type="button">🎡 救命轉盤・轉動</button>
-          <button id="btnBuddy" type="button">🤓 找學霸救命</button>
-          <button id="btnSteal" type="button">👛 偷爸爸錢包</button>
-          <button id="btnBorrow" type="button">🙏 借 10萬</button>
-          <button id="btnHome" type="button">🏠 回家吃自己</button>
+          <button id="btnWheel" type="button">🎡 轉盤</button>
+          <button id="btnBuddy" type="button">🤓 找學霸</button>
+          <button id="btnSteal" type="button">👛 偷錢包</button>
+          <button id="btnBorrow" type="button">🙏 借錢</button>
+          <button id="btnHome" type="button">🏠 回家</button>
         </div>
       </div>
     </div>
@@ -2303,13 +2303,13 @@
     }
     wasBroke = broke;
     $('rescue').hidden = !broke;
-    btnBorrow.textContent = borrowCount < MAX_BORROW ? '🙏 借 10萬（剩 ' + (MAX_BORROW - borrowCount) + ' 次）' : '📵 朋友不接電話';
+    btnBorrow.textContent = borrowCount < MAX_BORROW ? '🙏 借錢（' + (MAX_BORROW - borrowCount) + '）' : '📵 已讀不回';
     btnBorrow.disabled = borrowCount >= MAX_BORROW || grounded > 0;
     const showClear = !!(clearImg || cleared);
     $('clearBtn').hidden = !showClear; $('clearBtn2').hidden = !showClear;
-    btnBuddy.textContent = buddyLeft > 0 ? '🤓 找學霸救命' : buddyCount >= 3 ? '🤓 學霸已讀不回' : '🤓 學霸救過了';
+    btnBuddy.textContent = buddyLeft > 0 ? '🤓 找學霸' : buddyCount >= 3 ? '🤓 不理你了' : '🤓 救過了';
     btnBuddy.disabled = buddyLeft <= 0 || locked;
-    btnWheel.textContent = spins > 0 ? '🎡 救命轉盤・轉動' : '🎡 轉盤已轉過';
+    btnWheel.textContent = spins > 0 ? '🎡 轉盤' : '🎡 轉過了';
     btnWheel.disabled = !started || spins <= 0;
     btnWheel.classList.toggle('ready', started && spins > 0);
     if (!position) {
@@ -2921,7 +2921,7 @@
     }
     el.hidden = true; void el.offsetWidth; el.hidden = false;
     const btn = $('lqClose');
-    let left = 3;
+    let left = 5;
     btn.textContent = '✕ 關閉（' + left + '）';
     try { btn.focus({ preventScroll: true }); } catch (e) {}
     clearInterval(liqTimer);
@@ -3007,13 +3007,13 @@
   function stepRivals(pct) {
     // 學霸 follows the trend with modest size; 懶人 flips a coin at 102x;
     // 發財姐 trades her own calls and lives off course sales
-    rivals.nerd *= 1 + trend * pct * 2.5 + 0.002;
+    rivals.nerd *= 1 + trend * pct * 0.8 + 0.006;
     if (Math.random() < 0.15) lazyDir = -lazyDir;
     rivals.lazy *= Math.max(0.05, 1 + lazyDir * pct * 15);
     if (rivals.lazy < START * 0.15) { rivals.lazy = START; if (Math.random() < 0.5) toast('😴 懶人又跟家裡拿了 200 萬'); }
     rivals.guru = rivals.guru * (1 + (callTicks > 0 ? callDir * pct * 8 : 0)) + START * 0.006;
     RIVALS.forEach(function (r) {
-      rivals[r.id] = Math.max(0, rivals[r.id]);
+      rivals[r.id] = Math.min(GOAL * 1.5, Math.max(0, rivals[r.id]));
       if (!rivalsDone[r.id] && rivals[r.id] >= GOAL) { rivalsDone[r.id] = true; toast('🏁 ' + r.emo + r.name + '先到 2000 萬了……'); }
     });
     renderDuel();
