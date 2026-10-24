@@ -39,7 +39,7 @@
 - 分享按鈕會開啟 Threads 並預填內文、遊戲網址與 hashtag：#韭菜戰士好玩、#韭菜戰士沒這個命。
 - 3D 畫面：自架站版用 Three.js（`vendor/three.module.min.js`，r170，放在本機不靠 CDN）畫世界，有打光、陰影、霧；文字標籤、均價線、爆倉線、小地圖仍畫在上層 2D canvas，兩邊共用同一組鏡頭數學。WebGL 或模組載入失敗（例如在 claude.ai Artifact 裡）會自動退回原本手刻的 2D 透視渲染。採追尾鏡頭，可以拖曳旋轉視角。
 - 存檔：在 claude.ai 用 `window.claude.hot`；自架站用 localStorage（`btc-warrior-save`），每 3 秒與離開頁面時存。
-- 瀏覽數：自架站版在警語頁底部顯示「已有 N 位戰士進場」，用免費的 abacus.jasoncameron.dev（命名空間 `btc-warrior/visits`，同一個分頁階段只算一次），服務掛掉就自動隱藏。
+- 瀏覽數：自架站版在警語頁底部顯示「已有 N 位韭菜進場」，用免費的 abacus.jasoncameron.dev（命名空間 `btc-warrior/visits`，同一個分頁階段只算一次），服務掛掉就自動隱藏。
 - 全網排行榜：右上角 🏆，比單局最高淨值（賺過 200 萬才上榜，每 20 秒最多上傳一次，暱稱可改）。後台是使用者的 Supabase 專案 `kjmgvykhndurutsqtgxk`，網址與公開金鑰寫在 `index.html` 的 `LB_URL`、`LB_KEY`；資料表與函式在 `supabase.sql`（可重複執行）。
 - 主線「媽媽的 2000 萬」：開場、淨值 400 萬／800 萬／1200 萬、破產時各跳一句原創台詞（`STORY`），以頭像特寫＋一行字呈現，出現時遊戲暫停（K 線停止、計時不算），有關閉鈕與 5 秒倒數自動關閉，也可點背景或按 Esc 關；多句會排隊。爆倉特寫不暫停。通關頁有結局台詞。
 - 顏藝頭像：舞台左下角是原創 Q 版女主角（SVG 手繪，`faceSvg`），表情隨損益變化：平靜 → 開心 → ¥ 眼 → 冒汗 → 雙眼充血 → 哭著抱頭；嘴硬模式是瞇眼。爆倉時中央特寫並震動。

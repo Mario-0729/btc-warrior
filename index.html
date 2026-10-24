@@ -1870,7 +1870,7 @@
     c.fillStyle = '#a07890'; c.font = '600 26px ' + F;
     c.fillText('人物是虛構的，K 線是模擬的・僅供娛樂，非投資建議', W / 2, 1245);
     c.fillStyle = '#e83e82'; c.font = '700 24px ' + F;
-    c.fillText('來玩 ▸ claude.ai/artifact/KST77twsVmJom7YqTx9pkS', W / 2, 1285);
+    c.fillText('來玩 ▸ ' + GAME_URL.replace(/^https?:\/\//, '').replace(/\/$/, ''), W / 2, 1285);
     return cv;
   }
   function openClearPage() {
@@ -2201,7 +2201,7 @@
       spins = 1;
       buddyLeft = buddyCount < 3 ? 1 : 0;
       setTimeout(function () { story('broke', 'cry'); }, 900);
-      setTimeout(function () { toast('💸 破產救濟', '救命轉盤可以轉動了。也可以……打爸爸錢包的主意。'); }, 300);
+      setTimeout(function () { toast('💸 破產救濟', '轉盤、學霸、借錢……或是打爸爸錢包的主意。'); }, 300);
     }
     wasBroke = broke;
     $('rescue').hidden = !broke;
@@ -2289,7 +2289,7 @@
     const maxL = losses.length ? Math.min.apply(null, losses.map(function (t) { return t.pnl; })) : null;
     const eq = liveEquity();
     const st = $('histStats'); st.textContent = '';
-    st.appendChild(histTile('遊戲時間', mmss(gameSecs()), '目標：8 分鐘衝 2000 萬'));
+    st.appendChild(histTile('遊戲時間', mmss(gameSecs()), '目標：5 分鐘衝 2000 萬'));
     st.appendChild(histTile('勝率', n ? Math.round(wins.length / n * 100) + '%' : '--', '勝 ' + wins.length + '・敗 ' + losses.length + '・共 ' + n + ' 筆'));
     st.appendChild(histTile('已實現總損益', fmtShortSigned(total), '平倉與爆倉加總', total >= 0 ? 'pos' : 'neg'));
     st.appendChild(histTile('目前淨值', fmtShort(eq), '起始的 ×' + (eq / START).toFixed(2), eq >= START ? 'pos' : 'neg'));
@@ -3931,7 +3931,7 @@
     if (!lb || !lb.id) {
       const id = window.crypto && crypto.randomUUID ? crypto.randomUUID()
         : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); });
-      lb = { id: id, name: '戰士' + (1000 + Math.floor(Math.random() * 9000)), best: 0, sent: 0, cleared: false };
+      lb = { id: id, name: '韭菜' + (1000 + Math.floor(Math.random() * 9000)), best: 0, sent: 0, cleared: false };
     }
     return lb;
   }
@@ -4016,7 +4016,7 @@
       .then(function (d) {
         if (typeof d.value !== 'number') return;
         try { sessionStorage.setItem('btcw-counted', '1'); } catch (e) {}
-        el.textContent = '👀 已有 ' + d.value.toLocaleString('en-US') + ' 位戰士進場';
+        el.textContent = '👀 已有 ' + d.value.toLocaleString('en-US') + ' 位韭菜進場';
         el.hidden = false;
       })
       .catch(function () {});
