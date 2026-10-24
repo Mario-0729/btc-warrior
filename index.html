@@ -2551,7 +2551,7 @@
     // 定格: stop the market on the killing candle so the player sees what happened,
     // then roll the cut-in screen
     liqPending = true; liqOpen = true;
-    pauseGame();
+    pauseGame('liq');
     view.liqFreeze = freeze;
     triggerCrash('💥 爆倉了！！');
     spawnParticles('crash');
@@ -2637,6 +2637,7 @@
       '🔒 錢包會藏得更好：之後再拿，被抓機率只會更高'
     ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
     $('dadAlert').hidden = false;
+    pauseGame('dad');
     $('dadOk').focus();
 
     document.body.classList.remove('crash-flash');
@@ -2651,7 +2652,7 @@
     stats.caught++;
     refreshTradeUI();
   }
-  $('dadOk').addEventListener('click', function () { $('dadAlert').hidden = true; });
+  $('dadOk').addEventListener('click', function () { $('dadAlert').hidden = true; resumeGame('dad'); });
 
   btnLong.addEventListener('click', function () { openPosition(1); });
   btnShort.addEventListener('click', function () { openPosition(-1); });
@@ -2861,12 +2862,17 @@
     storyQueue.push({ face: face, line: '「' + STORY[key] + '」' });
     if (!storyOpen && !liqOpen) nextStory();
   }
-  function pauseGame() {
+  // every blocking window holds its own lock; the market resumes only when all are released
+  const holds = {};
+  function pauseGame(why) {
+    holds[why] = true;
     if (!timer) return;
     clearInterval(timer); timer = null;
     pausedAt = performance.now();
   }
-  function resumeGame() {
+  function resumeGame(why) {
+    delete holds[why];
+    if (Object.keys(holds).length) return;
     if (!started || timer || !pausedAt) return;
     startAt += performance.now() - pausedAt;
     pausedAt = 0;
@@ -2875,7 +2881,7 @@
   function nextStory() {
     const it = storyQueue.shift();
     storyOpen = true;
-    pauseGame();
+    pauseGame('story');
     clearTimeout(faceBigTimer);
     $('fbFace').innerHTML = faceSvg(it.face);
     $('fbLine').textContent = it.line;
@@ -2902,7 +2908,7 @@
     $('fbClose').hidden = true;
     storyOpen = false;
     if (storyQueue.length) nextStory();
-    else resumeGame();
+    else resumeGame('story');
   }
   $('fbClose').addEventListener('click', closeStory);
 
@@ -2910,8 +2916,8 @@
   let liqOpen = false, liqTimer = null, liqAt = 0, liqPending = false;
   function showLiq(pos, wasDenial) {
     liqOpen = true; liqAt = performance.now();
-    pauseGame();
-    if (storyOpen) { clearInterval(storyTimer); $('faceBig').hidden = true; $('faceBig').classList.remove('modal', 'scare'); $('fbClose').hidden = true; storyOpen = false; }
+    pauseGame('liq');
+    if (storyOpen) { clearInterval(storyTimer); $('faceBig').hidden = true; $('faceBig').classList.remove('modal', 'scare'); $('fbClose').hidden = true; storyOpen = false; delete holds.story; }
     const el = $('liqScreen');
     $('lqFace').innerHTML = faceSvg('blood');
     $('lqKicker').textContent = liqReason || (wasDenial ? '🙈 嘴硬到最後一刻' : '💀 第 ' + stats.liqs + ' 次爆倉');
@@ -2947,7 +2953,7 @@
     $('liqScreen').hidden = true;
     liqOpen = false;
     if (storyQueue.length) nextStory();
-    else resumeGame();
+    resumeGame('liq');
   }
   $('lqClose').addEventListener('click', closeLiq);
   // a stray tap from mashing 平倉 shouldn't skip the show: ignore taps in the first second
