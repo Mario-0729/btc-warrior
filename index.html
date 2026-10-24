@@ -1056,9 +1056,9 @@
     <div class="lq-amt" id="lqAmt"></div>
     <div class="lq-sub" id="lqSub"></div>
   </div>
-  <button id="lqClose" type="button">✕ 關閉（5）</button>
+  <button id="lqClose" type="button">✕ 關閉（3）</button>
 </div>
-<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（5）</button></div></div>
+<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（3）</button></div></div>
 <div id="particles"></div>
 <div id="newsBanner" role="status"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -2460,6 +2460,7 @@
     const p = lastClose();
     const losing = position && positionPnl(p) < 0;
     balance -= amt;
+    maybeRig();
     if (!position) {
       position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: buddyLock ? 10 : lev, buddy: buddyLock };
       if (position.lev >= 102) stats.lev102 = (stats.lev102 || 0) + 1;
@@ -2868,7 +2869,7 @@
     el.classList.add('modal');
     el.hidden = true; void el.offsetWidth; el.hidden = false;
     btn.hidden = false;
-    let left = 5;
+    let left = 3;
     btn.textContent = '✕ 關閉（' + left + '）';
     try { btn.focus({ preventScroll: true }); } catch (e) {}
     clearInterval(storyTimer);
@@ -2914,7 +2915,7 @@
     }
     el.hidden = true; void el.offsetWidth; el.hidden = false;
     const btn = $('lqClose');
-    let left = 5;
+    let left = 3;
     btn.textContent = '✕ 關閉（' + left + '）';
     try { btn.focus({ preventScroll: true }); } catch (e) {}
     clearInterval(liqTimer);
@@ -2938,6 +2939,14 @@
   document.addEventListener('keydown', function (e) { if (liqOpen && e.key === 'Escape') closeLiq(); });
   $('faceBig').addEventListener('click', function (e) { if (e.target === $('faceBig')) closeStory(); });
   document.addEventListener('keydown', function (e) { if (storyOpen && e.key === 'Escape') closeStory(); });
+
+  /* ---------- 黑箱波段: 40% of entries get a silent wave against you ---------- */
+  let rigTicks = 0, rigTease = false;
+  function maybeRig() {
+    if (rigTicks > 0 || Math.random() >= 0.4) return;
+    rigTicks = 3 + Math.floor(Math.random() * 5);
+    rigTease = Math.random() < 0.5;
+  }
 
   /* ---------- 喊單部落客「發財姐」: her calls steer the next 5 candles, usually the wrong way ---------- */
   let callTicks = 0, callDir = 1, callTrue = false, callWait = 16, callFollow = 0;
@@ -3874,10 +3883,17 @@
     if (volTicksLeft > 0) volTicksLeft--;
 
     stepGuru();
+    let boost = 1;
     trendLock = callTicks > 0;
-    if (trendLock) trend = callTrue ? callDir : -callDir;
+    if (trendLock) { trend = callTrue ? callDir : -callDir; boost = 2.2; }
+    if (rigTicks > 0 && position) {
+      // 黑箱波段: the house quietly trades against you (sometimes one sweet candle first)
+      trendLock = true;
+      if (rigTease) { trend = position.dir; boost = 1.6; rigTease = false; }
+      else { trend = -position.dir; boost = 2.6; rigTicks--; }
+    } else rigTicks = 0;
     const last = candles[candles.length - 1];
-    const c = newCandle(last.close, mult, true, trendLock ? 2.2 : 1);
+    const c = newCandle(last.close, mult, true, boost);
     if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
     candles.push(c);
     let shifted = false;
@@ -4011,6 +4027,7 @@
       lazyDir = saved.lazyDir || 1; rivalsDone = saved.rivalsDone || {}; storyDone = saved.storyDone || {};
       if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
       buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
+      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; }
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
       seed();
@@ -4047,7 +4064,7 @@
           trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START, pair: 'USDJPY',
           rivals: rivals, lazyDir: lazyDir, rivalsDone: rivalsDone, storyDone: storyDone,
           guru: { ticks: callTicks, dir: callDir, truth: callTrue, wait: callWait, follow: callFollow },
-          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount
+          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease]
         };
     }
     if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
