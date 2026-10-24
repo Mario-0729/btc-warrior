@@ -1,4 +1,6 @@
--- BTC 戰士 全網排行榜：在 Supabase 的 SQL Editor 貼上整段，按 Run。
+-- BTC 戰士 全網排行榜：在 Supabase 的 SQL Editor 貼上整段，按 Run（可重複執行，但會清空排行榜）。
+drop function if exists public.submit_score(uuid, text, bigint, boolean);
+drop table if exists public.scores;
 create table public.scores (
   player uuid primary key,
   name text not null check (char_length(name) between 1 and 12),

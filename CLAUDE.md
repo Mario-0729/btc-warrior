@@ -36,6 +36,7 @@
 - 3D 畫面：自架站版用 Three.js（`vendor/three.module.min.js`，r170，放在本機不靠 CDN）畫世界，有打光、陰影、霧；文字標籤、均價線、爆倉線、小地圖仍畫在上層 2D canvas，兩邊共用同一組鏡頭數學。WebGL 或模組載入失敗（例如在 claude.ai Artifact 裡）會自動退回原本手刻的 2D 透視渲染。採追尾鏡頭，可以拖曳旋轉視角。
 - 存檔：在 claude.ai 用 `window.claude.hot`；自架站用 localStorage（`btc-warrior-save`），每 3 秒與離開頁面時存。
 - 瀏覽數：自架站版在警語頁底部顯示「已有 N 位戰士進場」，用免費的 abacus.jasoncameron.dev（命名空間 `btc-warrior/visits`，同一個分頁階段只算一次），服務掛掉就自動隱藏。
+- 全網排行榜：右上角 🏆，比單局最高淨值（賺過 200 萬才上榜，每 20 秒最多上傳一次，暱稱可改）。後台是使用者的 Supabase 專案 `kjmgvykhndurutsqtgxk`，網址與公開金鑰寫在 `index.html` 的 `LB_URL`、`LB_KEY`；資料表與函式在 `supabase.sql`（可重複執行）。
 - 音效全部用 Web Audio 即時合成，已處理 iOS 靜音問題；角落有一顆小靜音鍵。
 
 ## 宣傳影片（promo/）
@@ -47,4 +48,4 @@
 - 腳本裡的路徑是舊環境的路徑，換環境使用前要先改掉。
 
 ## 想做但還沒做的事
-- 全網排行榜：程式已完成（比單局最高淨值，賺過 200 萬才上榜，每 20 秒最多上傳一次），等 Supabase 建好後把網址與金鑰填進 `index.html` 的 `LB_URL`、`LB_KEY`，🏆 按鈕才會出現。資料表與函式在 `supabase.sql`。
+- 防作弊：分數由前端上傳，懂技術的人可以灌假分數；要擋得把遊戲邏輯搬到後端。

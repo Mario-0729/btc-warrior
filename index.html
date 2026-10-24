@@ -3568,8 +3568,8 @@
   /* ---------- 全網排行榜 (Supabase; hidden until LB_URL / LB_KEY are set) ----------
      Table and submit function: see supabase.sql. Each browser is one
      player (random id in localStorage); the board keeps its best net worth. */
-  const LB_URL = '';
-  const LB_KEY = '';
+  const LB_URL = 'https://kjmgvykhndurutsqtgxk.supabase.co';
+  const LB_KEY = 'sb_publishable_d-BOCI0N9zPLIVSmeP56xw_Ewwccz_c';
   const lbOn = !!(LB_URL && LB_KEY && window.fetch && !window.claude);
   let lb = null, lbLastSent = 0;
   function lbLoad() {
