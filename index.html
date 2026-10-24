@@ -3006,9 +3006,9 @@
   function honeymoon() { return started && gameSecs() < HONEYMOON && liveEquity() < START * 4; }
   function maybeRig() {
     if (rigTicks > 0 || favorTicks > 0) return;
-    if (lossStreak >= 3) { lossStreak = 0; favorBoost = 2.2; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
-    if (honeymoon()) { if (Math.random() < 0.7) { favorBoost = 1.6; favorTicks = 2 + Math.floor(Math.random() * 3); } return; }
-    if (chosenLeft > 0 && Math.random() < 0.15) { chosenLeft--; favorBoost = 2.6; favorTicks = 4 + Math.floor(Math.random() * 3); return; }
+    if (lossStreak >= 3) { lossStreak = 0; favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
+    if (honeymoon()) { if (Math.random() < 0.5) { favorBoost = 1.3; favorTicks = 2 + Math.floor(Math.random() * 2); } return; }
+    if (chosenLeft > 0 && Math.random() < 0.1) { chosenLeft--; favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
     if (Math.random() >= 0.4) return;
     rigTicks = 3 + Math.floor(Math.random() * 5);
     rigTease = Math.random() < 0.5;
