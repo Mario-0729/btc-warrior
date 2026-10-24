@@ -2726,7 +2726,7 @@
     trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
     stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
     resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0; rescued = false;
-    favorTicks = 0; rigTicks = 0; lossStreak = 0; chosenLeft = 3;
+    favorTicks = 0; rigTicks = 0; lossStreak = 0; chosenLeft = 2;
     setTimeout(function () { story('start', 'calm'); }, 600);
     missionIdx = 0; missionRound = 0; missionProg = 0;
     meterState.bal.shown = null;
@@ -3000,15 +3000,15 @@
   let rigTicks = 0, rigTease = false;
   // favor waves ride with you: 新手蜜月期 (first 75 s, 70%), 保底 (after 3 losses
   // in a row, guaranteed) and 天選波段 (3 per run, 15% per entry after the honeymoon)
-  let favorTicks = 0, favorBoost = 2.6, lossStreak = 0, chosenLeft = 3;
+  let favorTicks = 0, favorBoost = 2.6, lossStreak = 0, chosenLeft = 2;
   const HONEYMOON = 75;
   // the honeymoon only carries you to about 800萬, then the house starts taking it back
-  function honeymoon() { return started && gameSecs() < HONEYMOON && liveEquity() < START * 4; }
+  function honeymoon() { return started && gameSecs() < HONEYMOON && liveEquity() < START * 3; }
   function maybeRig() {
     if (rigTicks > 0 || favorTicks > 0) return;
-    if (lossStreak >= 3) { lossStreak = 0; favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
-    if (honeymoon()) { if (Math.random() < 0.5) { favorBoost = 1.3; favorTicks = 2 + Math.floor(Math.random() * 2); } return; }
-    if (chosenLeft > 0 && Math.random() < 0.1) { chosenLeft--; favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
+    if (lossStreak >= 4) { lossStreak = 0; favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
+    if (honeymoon()) { if (Math.random() < 0.4) { favorBoost = 1.3; favorTicks = 2 + Math.floor(Math.random() * 2); } return; }
+    if (chosenLeft > 0 && Math.random() < 0.08) { chosenLeft--; favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
     if (Math.random() >= 0.4) return;
     rigTicks = 3 + Math.floor(Math.random() * 5);
     rigTease = Math.random() < 0.5;
@@ -4116,7 +4116,7 @@
       lazyDir = saved.lazyDir || 1; rivalsDone = saved.rivalsDone || {}; storyDone = saved.storyDone || {};
       if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
       buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
-      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; favorTicks = saved.rig[2] || 0; lossStreak = saved.rig[3] || 0; chosenLeft = saved.rig[4] == null ? 3 : saved.rig[4]; }
+      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; favorTicks = saved.rig[2] || 0; lossStreak = saved.rig[3] || 0; chosenLeft = saved.rig[4] == null ? 2 : saved.rig[4]; }
       rescued = !!saved.rescued;
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
