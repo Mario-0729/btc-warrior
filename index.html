@@ -1,4 +1,28 @@
-<title>BTC 戰士</title>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="媽媽在匯市賠掉 2000 萬，我要用 102 倍槓桿賺回來。漲了很可愛，跌了很恐怖。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="韭菜戰士">
+<meta property="og:title" content="韭菜戰士：媽媽的 2000 萬">
+<meta property="og:description" content="媽媽在匯市賠掉 2000 萬，我要用 102 倍槓桿賺回來。漲了很可愛，跌了很恐怖。">
+<meta property="og:url" content="https://mario-0729.github.io/mama2000/">
+<meta property="og:image" content="https://mario-0729.github.io/mama2000/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mario-0729.github.io/mama2000/og.png">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="韭菜戰士">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffd6e8">
+<title>韭菜戰士：媽媽的 2000 萬</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -331,6 +355,8 @@
     box-shadow: 0 24px 60px -10px rgba(0,0,0,.45);
     display: flex; flex-direction: column; gap: 12px;
   }
+  .splash-title { align-self: flex-start; font-family: var(--display); font-weight: 800; font-size: 26px; color: #ff5fa0; line-height: 1.1; }
+  .splash-title small { display: block; font-size: 13px; font-weight: 800; color: #8a5a73; letter-spacing: .15em; margin-top: 2px; }
   .splash-badge {
     align-self: flex-start; font-size: 12px; font-weight: 900; letter-spacing: .1em;
     background: #d11f3a; color: #fff; padding: 4px 10px; border-radius: 6px;
@@ -548,6 +574,24 @@
     background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
   }
   #overRestart { background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; }
+  #resetModal {
+    position: fixed; inset: 0; z-index: 25; display: grid; place-items: center;
+    padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
+  }
+  #resetModal[hidden] { display: none; }
+  #resetModal .wheel-card { border-color: #d11f3a; }
+  #resetYes { background: #d11f3a; color: #fff; }
+  #resetNo { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
+  #resetBtn {
+    appearance: none; cursor: pointer; border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+    font: 800 12px var(--display); background: #fff; color: #d11f3a; border: 2px solid #f0b3c0;
+  }
+  #resetBtn2 {
+    flex: 0 0 auto; align-self: center; appearance: none; cursor: pointer; border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    font: 800 11px var(--display); background: rgba(255,255,255,.7); color: #d11f3a; border: 1.5px solid #f0b3c0;
+  }
+  #resetBtn2:focus-visible, #resetBtn:focus-visible, #resetYes:focus-visible, #resetNo:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   #overStay { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
   #btnHome {
     flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
@@ -561,7 +605,7 @@
   }
   .clear-btn:focus-visible, #btnHome:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   .hist-top .clear-btn { margin-left: auto; }
-  #histModal, #rankModal {
+  #histModal, #rankModal, #lbModal {
     position: fixed; inset: 0; z-index: 22; overflow-y: auto;
     padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
     background: rgba(30, 5, 20, .6); backdrop-filter: blur(5px);
@@ -778,7 +822,8 @@
     position: relative; flex: 1 1 auto; min-height: 220px; overflow: hidden;
     background: linear-gradient(180deg, #ffcde4, #fff3e4);
   }
-  .stage #chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage #chart, .stage #chart3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage #chart3d { pointer-events: none; }
   body.scary .stage { box-shadow: inset 0 0 0 3px rgba(225,20,40,.9); animation: stagePulse 1.2s ease-in-out infinite; }
   @keyframes stagePulse { 0%,100% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.95); } 50% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.3); } }
   body.crash-flash .stage { animation: crashShake .6s ease-out; }
@@ -798,9 +843,165 @@
     display: grid; place-items: center;
   }
   #muteBtn { top: calc(10px + env(safe-area-inset-top, 0px)); }
+  /* 顏藝頭像 + 特寫 */
+  #face {
+    position: absolute; z-index: 2; left: max(8px, env(safe-area-inset-left, 0px)); bottom: 8px;
+    width: 60px; height: 60px; border-radius: 50%; overflow: hidden; pointer-events: none;
+    background: rgba(255,255,255,.85); border: 3px solid var(--panel-border);
+  }
+  #face svg, #faceBig svg { width: 100%; height: 100%; display: block; }
+  body.scary #face { border-color: rgba(225,20,40,.9); }
+  #faceBig {
+    position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; pointer-events: none;
+    padding: 16px;
+  }
+  #faceBig[hidden] { display: none; }
+  .fb-card { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: fbIn .35s cubic-bezier(.2,1.6,.4,1); }
+  .fb-face {
+    width: min(180px, 46vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+    background: #fff; border: 5px solid #ff5fa0; box-shadow: 0 16px 40px -10px rgba(0,0,0,.45);
+  }
+  #faceBig.scare .fb-face { border-color: #d11f3a; animation: fbShake .12s linear infinite; }
+  .fb-line {
+    max-width: min(420px, calc(100vw - 32px)); text-align: center; font-weight: 900; font-size: 16px; line-height: 1.45;
+    color: #fff; background: rgba(50, 15, 35, .88); padding: 9px 16px; border-radius: 16px;
+  }
+  .fb-line:empty { display: none; }
+  #faceBig.modal { pointer-events: auto; background: rgba(30, 5, 20, .55); backdrop-filter: blur(3px); }
+  #fbClose {
+    appearance: none; cursor: pointer; border: 0; border-radius: 999px; padding: 10px 22px;
+    font: 800 15px var(--display); background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+  }
+  #fbClose:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  @keyframes fbIn { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes fbShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 2px); } 75% { transform: translate(4px, -2px); } }
+  /* 爆倉登場畫面: a fighting-game style character cut-in */
+  #liqScreen {
+    position: fixed; inset: 0; z-index: 40; overflow: hidden; background: #12000a;
+    animation: lqShake .55s ease-out;
+  }
+  #liqScreen[hidden] { display: none; }
+  #liqScreen::after {
+    content: ''; position: absolute; inset: 0; background: #fff; pointer-events: none;
+    animation: lqFlash .45s ease-out forwards;
+  }
+  .lq-rays {
+    position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax;
+    background: repeating-conic-gradient(from 0deg, rgba(209,31,58,.85) 0deg 7deg, rgba(60,0,15,.0) 7deg 15deg);
+    animation: lqSpin 14s linear infinite;
+  }
+  .lq-cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .lq-cracks path {
+    fill: none; stroke: #fff; stroke-width: .5; stroke-linejoin: bevel; vector-effect: non-scaling-stroke;
+    stroke-dasharray: 400; stroke-dashoffset: 400; animation: lqCrack .5s .1s ease-out forwards;
+    filter: drop-shadow(0 0 3px rgba(255,60,80,.9));
+  }
+  .lq-cracks path { stroke-width: 3px; }
+  .lq-debris { position: absolute; top: -40px; width: 18px; height: 14px; background: #5a0a1c; border: 2px solid #ff6b81; animation: lqFall 1.6s ease-in forwards; }
+  .lq-band {
+    position: absolute; left: -15%; right: -15%; top: 50%; height: 34%;
+    background: linear-gradient(100deg, #8a0020, #d11f3a 45%, #3a0010);
+    border-top: 6px solid #fff; border-bottom: 6px solid #ffd23a;
+    transform: skewY(-9deg); animation: lqBand .35s .12s cubic-bezier(.2,.9,.3,1.2) both;
+    box-shadow: 0 0 40px rgba(0,0,0,.6);
+  }
+  .lq-face {
+    position: absolute; left: -6%; top: 14%; width: min(72vw, 400px); aspect-ratio: 1;
+    border-radius: 50%; overflow: hidden; background: #fff; border: 8px solid #ffd23a;
+    box-shadow: 10px 10px 0 #000; animation: lqFace .45s .22s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  .lq-face svg { width: 100%; height: 100%; display: block; }
+  .lq-text {
+    position: absolute; right: 5%; left: 5%; top: 52%; text-align: right; transform: skewY(-9deg);
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  }
+  .lq-kicker {
+    font: 900 14px var(--body); color: #3a0010; background: #ffd23a; padding: 3px 12px; letter-spacing: .12em;
+    animation: lqPop .3s .4s both;
+  }
+  .lq-title {
+    font: italic 900 clamp(46px, 15vw, 110px)/1 var(--body); color: #fff; letter-spacing: .02em;
+    -webkit-text-stroke: 3px #3a0010; paint-order: stroke fill; text-shadow: 6px 6px 0 #000;
+    animation: lqSlam .4s .45s cubic-bezier(.3,1.6,.5,1) both;
+  }
+  .lq-amt {
+    font: italic 900 clamp(28px, 9vw, 60px)/1.1 var(--display); color: #ffd23a;
+    -webkit-text-stroke: 2px #3a0010; paint-order: stroke fill; text-shadow: 4px 4px 0 #000;
+    font-variant-numeric: tabular-nums; animation: lqPop .3s .7s both;
+  }
+  .lq-sub { font: 800 14px var(--body); color: #fff; text-shadow: 2px 2px 0 #000; animation: lqPop .3s .85s both; }
+  #lqClose {
+    position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    appearance: none; cursor: pointer; border: 3px solid #fff; border-radius: 999px; padding: 11px 26px;
+    font: 900 16px var(--display); background: #000; color: #fff; animation: lqPop .3s 1s both;
+  }
+  #lqClose:focus-visible { outline: 3px solid #ffd23a; outline-offset: 3px; }
+  @keyframes lqShake { 0%, 100% { transform: none; } 10% { transform: translate(-14px, 8px) rotate(-1deg); } 25% { transform: translate(12px, -10px) rotate(1deg); } 40% { transform: translate(-9px, 6px); } 60% { transform: translate(6px, -4px); } 80% { transform: translate(-3px, 2px); } }
+  @keyframes lqFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes lqSpin { to { transform: rotate(360deg); } }
+  @keyframes lqCrack { to { stroke-dashoffset: 0; } }
+  @keyframes lqFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(115vh) rotate(540deg); opacity: .8; } }
+  @keyframes lqBand { 0% { transform: skewY(-9deg) translateX(110%); } 100% { transform: skewY(-9deg) translateX(0); } }
+  @keyframes lqFace { 0% { transform: translateX(-120%) rotate(-25deg); } 100% { transform: none; } }
+  @keyframes lqSlam { 0% { transform: scale(3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes lqPop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    #liqScreen, #liqScreen::after, .lq-rays, .lq-cracks path, .lq-debris, .lq-band, .lq-face, .lq-kicker, .lq-title, .lq-amt, .lq-sub, #lqClose { animation: none; }
+    #liqScreen::after { opacity: 0; } .lq-cracks path { stroke-dashoffset: 0; } .lq-debris { display: none; }
+  }
+  /* 下注飛幣 */
+  .fly-coin {
+    position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none;
+    width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff6b0, #ffc83a 55%, #d99000);
+    border: 2px solid #9a5b00; box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    color: #7a4300; font: 900 14px/22px "Baloo 2", sans-serif; text-align: center;
+  }
+  .meter.coin-hit { animation: coinHit .25s ease-out; }
+  @keyframes coinHit { 50% { transform: scale(1.07); } }
+  .hud-duel {
+    font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+    background: rgba(255,255,255,.8); color: var(--ink); backdrop-filter: blur(4px);
+  }
+  .rescue .side-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #btnBuddy {
+    appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    background: #eaf4ff; color: #2a5a8a; border: 2px solid #9cc6f0;
+  }
+  #btnBuddy:disabled { opacity: .45; cursor: not-allowed; }
+  #btnBuddy:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  #rescue .side-actions button { width: auto; min-width: 0; padding: 8px 4px; font-size: 12.5px; line-height: 1.25; }
+  @media (prefers-reduced-motion: reduce) { .fb-card, #faceBig.scare .fb-face { animation: none; } }
+  #lbBtn {
+    position: absolute; z-index: 2; top: 10px; right: calc(102px + env(safe-area-inset-right, 0px));
+    width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 16px; display: grid; place-items: center;
+    appearance: none; cursor: pointer; border: 2px solid var(--panel-border); background: var(--panel); color: var(--ink);
+  }
+  #lbBtn:focus-visible, #lbClose:focus-visible, #lbSave:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  .lb-me { display: flex; gap: 8px; align-items: center; }
+  .lb-me input {
+    flex: 1 1 auto; min-width: 0; font: 700 14px var(--body); color: #5c2f49; padding: 8px 12px;
+    border: 2px solid #e8c7d6; border-radius: 999px; background: #fff;
+  }
+  .lb-me button {
+    appearance: none; cursor: pointer; border: 0; border-radius: 999px; padding: 8px 14px; flex: 0 0 auto; white-space: nowrap;
+    font: 800 13px var(--display); background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff;
+  }
+  .lb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .lb-list li {
+    display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #f0d6e2; border-radius: 12px; padding: 7px 10px; font-size: 13px;
+  }
+  .lb-list li.me { border: 2px solid #ff5fa0; background: #fff0f6; }
+  .lb-list .rk { font: 800 15px var(--display); color: #c47f00; text-align: center; }
+  .lb-list .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-list .pk { font: 800 15px var(--display); color: #d42a6e; font-variant-numeric: tabular-nums; }
   #dock {
     position: relative; left: auto; right: auto; bottom: auto; flex: 0 0 auto; z-index: 6;
     box-shadow: 0 -8px 24px -12px rgba(0,0,0,.25);
+    max-height: calc(100% - 170px); overflow-y: auto; overscroll-behavior: contain;
   }
   .goal2000 { display: flex; flex-direction: column; gap: 4px; }
   .g-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -872,6 +1073,27 @@
 <div id="crashFlash"></div>
 <div id="crashText"></div>
 <div id="bigWin" aria-hidden="true"></div>
+<div id="liqScreen" hidden role="alertdialog" aria-labelledby="lqTitle">
+  <div class="lq-rays"></div>
+  <svg class="lq-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M52 0 L48 14 L55 22 L46 35 L53 47 L44 60 L50 72 L42 86 L47 100"/>
+    <path d="M48 14 L30 18 L22 30 L6 33 L0 41"/>
+    <path d="M53 47 L70 44 L80 54 L94 52 L100 58"/>
+    <path d="M44 60 L28 66 L18 80 L4 84"/>
+    <path d="M55 22 L72 16 L86 20 L100 12"/>
+    <path d="M50 72 L66 78 L74 92 L88 100"/>
+  </svg>
+  <div class="lq-band"></div>
+  <div class="lq-face" id="lqFace"></div>
+  <div class="lq-text">
+    <div class="lq-kicker" id="lqKicker">💀 爆倉</div>
+    <div class="lq-title" id="lqTitle">強制平倉</div>
+    <div class="lq-amt" id="lqAmt"></div>
+    <div class="lq-sub" id="lqSub"></div>
+  </div>
+  <button id="lqClose" type="button">✕ 關閉（10）</button>
+</div>
+<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（3）</button></div></div>
 <div id="particles"></div>
 <div id="newsBanner" role="status"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -879,10 +1101,11 @@
 
 <div id="splash">
   <div class="splash-card">
+    <div class="splash-title">🥬 韭菜戰士<small>媽媽的 2000 萬</small></div>
     <div class="splash-badge">⚠️ 投資風險警語</div>
     <h2>「2000 萬而已，我一定能輕鬆賺回來！」<br>……進場前，請先讀完這份很長的警語</h2>
     <ol class="warn-list">
-      <li>本頁所有價格都是隨機模擬，跟真實比特幣行情無關。</li>
+      <li>本頁的美元/日圓匯率全是隨機模擬，跟真實行情無關。</li>
       <li>槓桿會同時放大獲利和虧損，本遊戲最高 102 倍（久留美模式）。</li>
       <li>保證金賠光時會被強制平倉，系統不會先問你。</li>
       <li>「沒賣就不算賠」是帳面虧損最常見的藉口。</li>
@@ -895,6 +1118,7 @@
     </ol>
     <button id="enterBtn" type="button">🔊 我已了解風險，開聲音進入戰場</button>
     <p class="splash-foot">右下角的小按鈕可以隨時靜音。iPhone 沒聲音時，請把音量調大。</p>
+    <p class="splash-foot" id="visits" hidden></p>
   </div>
 </div>
 
@@ -914,6 +1138,8 @@
       <div class="wheel-title" id="endTitle">🏁 通關！2000 萬回來了</div>
       <button id="endX" class="xbtn" type="button" aria-label="關閉">✕</button>
     </div>
+    <div class="wheel-result" id="endLine"></div>
+    <ul class="dad-penalty end-stats" id="endSermon"></ul>
     <img id="shareImg" class="share-img" alt="通關戰績圖">
     <p class="share-hint" id="shareHint">戰績圖產生中……</p>
     <div class="vote-slot"></div>
@@ -937,6 +1163,17 @@
   </div>
 </div>
 
+<div id="resetModal" hidden>
+  <div class="wheel-card" role="alertdialog" aria-labelledby="resetTitle">
+    <div class="wheel-title" id="resetTitle">⚠️ 確定要重新開始？</div>
+    <div class="wheel-result" id="resetInfo"></div>
+    <div class="wheel-btns">
+      <button id="resetYes" type="button">確定重來</button>
+      <button id="resetNo" type="button">先不要</button>
+    </div>
+  </div>
+</div>
+
 <div id="rankModal" hidden>
   <div class="hist-card" role="dialog" aria-labelledby="rankTitle">
     <div class="hist-top">
@@ -956,6 +1193,7 @@
     <div class="hist-top">
       <div class="wheel-title" id="histTitle">📜 投資紀錄</div>
       <button id="clearBtn" class="clear-btn" type="button" hidden>🏁 通關成就</button>
+      <button id="resetBtn" type="button">🔄 重新開始</button>
       <button id="histClose" type="button" aria-label="關閉">✕</button>
     </div>
     <div class="vote-slot"></div>
@@ -973,6 +1211,22 @@
     </div>
     <p class="hist-empty" id="histEmpty">還沒有交易紀錄。平倉或爆倉後，每一筆都會記在這裡。</p>
     <p class="hist-empty">人物是虛構的，K 線是模擬的。轉盤和紅包都是假的錢。僅供娛樂，非投資建議。</p>
+  </div>
+</div>
+
+<div id="lbModal" hidden>
+  <div class="hist-card" role="dialog" aria-labelledby="lbTitle">
+    <div class="hist-top">
+      <div class="wheel-title" id="lbTitle">🏆 全網排行榜</div>
+      <button id="lbClose" class="xbtn" type="button" aria-label="關閉">✕</button>
+    </div>
+    <div class="lb-me">
+      <input id="lbName" maxlength="12" aria-label="我的暱稱" autocomplete="off">
+      <button id="lbSave" type="button">改名</button>
+    </div>
+    <div class="hist-sub" id="lbMine"></div>
+    <ol class="lb-list" id="lbList"></ol>
+    <p class="hist-empty">比單局最高淨值，賺過 200 萬起始資金、破紀錄就自動上榜。🏁＝達成 2000 萬。</p>
   </div>
 </div>
 
@@ -999,8 +1253,11 @@
     <div class="hud-tl">
       <button id="rank" type="button" aria-label="查看我的等級與福利"><span id="rankName">Lv.1 ⚔️ 新手 FX 戰士</span><span class="rank-bar" aria-hidden="true"><span id="rankBarFill"></span></span></button>
       <div class="hud-price"><b id="price">--</b><span id="change">等待進場…</span></div>
+      <div class="hud-duel" id="duel">⚔️ 投資對決</div>
     </div>
+    <div id="face" aria-hidden="true"></div>
     <button id="histBtn" type="button" aria-label="投資紀錄">📜</button>
+    <button id="lbBtn" type="button" aria-label="全網排行榜" hidden>🏆</button>
     <div id="msg"></div>
     <div id="ticker" role="status" aria-live="polite"></div>
     <div id="indicator">
@@ -1021,6 +1278,7 @@
       <div class="goal2000">
         <div class="g-head">
           <span class="g-title">🏁 目標 2000 萬</span>
+          <button id="resetBtn2" type="button">🔄 重來</button>
           <span class="g-now"><b id="goalNow">200萬</b> ／ 2000萬・<b id="goalPct">10%</b></span>
         </div>
         <div class="g-bar">
@@ -1055,8 +1313,8 @@
       </div>
       <div class="substats">
         <span>持倉 <span id="posBadge">空手</span></span>
-        <span id="debtStat" hidden>欠朋友 <b id="debt">NT$0</b></span>
-        <span id="dadDebtStat" hidden>欠爸爸 <b id="dadDebt">NT$0</b></span>
+        <span id="debtStat" hidden>欠朋友 <b id="debt">¥0</b></span>
+        <span id="dadDebtStat" hidden>欠爸爸 <b id="dadDebt">¥0</b></span>
       </div>
       <div class="chips" id="chips"></div>
       <div class="opts">
@@ -1084,10 +1342,11 @@
       <div class="rescue" id="rescue" hidden>
         <div class="rescue-head">💸 沒錢了……要怎麼翻身？</div>
         <div class="side-actions">
-          <button id="btnWheel" type="button">🎡 救命轉盤・轉動</button>
-          <button id="btnSteal" type="button">👛 偷爸爸錢包</button>
-          <button id="btnBorrow" type="button">🙏 借 10萬</button>
-          <button id="btnHome" type="button">🏠 回家吃自己</button>
+          <button id="btnWheel" type="button">🎡 轉盤</button>
+          <button id="btnBuddy" type="button">🤓 找學霸</button>
+          <button id="btnSteal" type="button">👛 偷錢包</button>
+          <button id="btnBorrow" type="button">🙏 借錢</button>
+          <button id="btnHome" type="button">🏠 回家</button>
         </div>
       </div>
     </div>
@@ -1098,10 +1357,10 @@
   <div class="vote-box">
     <div class="vote-q">這遊戲好玩嗎？發一篇 Threads 就算一票</div>
     <div class="vote-btns">
-      <a class="vote-btn up" data-vote="up" href="https://www.threads.net/" target="_blank" rel="noopener">👍 好玩！<br>今天我也是 BTC 戰士</a>
+      <a class="vote-btn up" data-vote="up" href="https://www.threads.net/" target="_blank" rel="noopener">👍 好玩！<br>今天我也是韭菜戰士</a>
       <a class="vote-btn down" data-vote="down" href="https://www.threads.net/" target="_blank" rel="noopener">👎 不好玩<br>我沒這個命</a>
     </div>
-    <div class="vote-note">看大家怎麼說：在 Threads 搜尋 #BTC戰士好玩、#BTC戰士沒這個命</div>
+    <div class="vote-note">看大家怎麼說：在 Threads 搜尋 #韭菜戰士好玩、#韭菜戰士沒這個命</div>
   </div>
 </template>
 
@@ -1117,7 +1376,7 @@
   const START = 2000000;
   const K = START / 100000;
   const STAKE = START * 0.05;        // below this with no position = broke
-  const BIG_P = 0.35;                // chance of a big move on any candle
+  const BIG_P = 0.45;                // chance of a big move on any candle
   let trend = 1;                     // trends persist, so the indicator means something
   const GOAL = 20000000;
 
@@ -1141,10 +1400,11 @@
   let lastCrashAt = 0;
 
   function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
-  function fmtUsd(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
-  function fmtTwd(n) { return 'NT$' + Math.round(n).toLocaleString('en-US'); }
+  // USD/JPY quote, the pair the show trades: 150.123 円
+  function fmtUsd(n) { return '¥' + n.toFixed(3); }
+  function fmtTwd(n) { return '¥' + Math.round(n).toLocaleString('en-US'); }
   function fmtSigned(n) { return (n >= 0 ? '+' : '-') + fmtTwd(Math.abs(n)); }
-  // compact Taiwanese money: 2,000,000 → 200萬, 35,000 → 3.5萬
+  // compact money: 2,000,000 → 200萬, 35,000 → 3.5萬
   function fmtShort(n) {
     const a = Math.abs(n), sg = n < 0 ? '-' : '';
     if (a >= 1e8) return sg + (a / 1e8).toFixed(2).replace(/\.?0+$/, '') + '億';
@@ -1334,6 +1594,13 @@
     setTimeout(playScary, 260);
   }
 
+  // 砍韭菜: a quick blade swish
+  function playSlash() {
+    if (!canPlay()) return;
+    noiseBurst(0, 0.16, 0.4, 7000, 1200);
+    noiseBurst(0.05, 0.1, 0.2, 2500, 400);
+  }
+
   function noiseBurst(start, duration, peak, hzA, hzB) {
     if (!audioCtx) return;
     const t0 = audioCtx.currentTime + start;
@@ -1426,37 +1693,45 @@
   /* ================= market ================= */
   let volMult = 1, volTicksLeft = 0;
   const newsPool = [
-    { text: '📰 快訊：某央行意外升息', mult: 2.4 },
-    { text: '📰 快訊：巨鯨帳戶大額異動', mult: 2.6 },
-    { text: '📰 快訊：交易所傳出系統故障', mult: 2.2 },
-    { text: '📰 快訊：散戶信心大爆發', mult: 2.3 },
-    { text: '📰 快訊：監理機關即將發表談話', mult: 2.0 },
-    { text: '📰 快訊：知名網紅宣布全倉梭哈', mult: 2.5 }
+    { text: '📰 快訊：日銀總裁突然發言', mult: 2.4 },
+    { text: '📰 快訊：美國非農就業數據公布', mult: 2.6 },
+    { text: '📰 快訊：財務省疑似進場干預匯市', mult: 2.8 },
+    { text: '📰 快訊：聯準會主席「一切看數據」', mult: 2.0 },
+    { text: '📰 快訊：某央行意外升息', mult: 2.3 },
+    { text: '📰 快訊：深夜流動性突然消失', mult: 2.2 },
+    { text: '📰 快訊：日本 CPI 遠超預期', mult: 2.4 },
+    { text: '📰 快訊：美債殖利率暴衝', mult: 2.5 },
+    { text: '📰 快訊：大型避險基金傳出爆倉', mult: 2.7 },
+    { text: '📰 快訊：首相暗示提前大選', mult: 2.1 }
   ];
   const newsBanner = $('newsBanner');
   function maybeTriggerNews() {
-    if (volTicksLeft > 0 || Math.random() > 1 / 22) return;
+    if (volTicksLeft > 0 || Math.random() > 1 / 10) return;
     const ev = pick(newsPool);
-    volMult = ev.mult; volTicksLeft = 5;
+    volMult = ev.mult; volTicksLeft = 4;
     toast(ev.text.replace('📰 快訊：', '📰 '), '接下來幾根波動變大');
   }
 
-  function newCandle(prevClose, mult, live) {
+  // moves are a share of the price (tuned so one candle is about 1%,
+  // i.e. 102x is a coin toss: 動 1 円多就歸零, like episode 1)
+  let trendLock = false;
+  function newCandle(prevClose, mult, live, boost) {
     mult = mult || 1;
-    if (live && Math.random() < 0.12) trend = -trend;
-    const drift = live ? trend * 180 : 0;
+    const u = prevClose / 68000;
+    if (live && !trendLock && Math.random() < 0.22) trend = -trend;
+    const drift = live ? trend * 180 * (boost || 1) * u : 0;
     const open = prevClose;
-    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3000 * mult : 0;
-    const close = open + (Math.random() - 0.5) * 900 * mult + drift + big;
+    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3800 * mult * u : 0;
+    const close = open + (Math.random() - 0.5) * 1300 * mult * u + drift + big;
     return {
       open: open, close: close,
-      high: Math.max(open, close) + Math.random() * 300 * mult,
-      low: Math.min(open, close) - Math.random() * 300 * mult
+      high: Math.max(open, close) + Math.random() * 550 * mult * u,
+      low: Math.min(open, close) - Math.random() * 550 * mult * u
     };
   }
   function seed() {
     candles = [];
-    let p = 68000;
+    let p = 149 + Math.random() * 3;
     for (let i = 0; i < MAX; i++) { const c = newCandle(p); candles.push(c); p = c.close; }
   }
   function lastClose() { return candles[candles.length - 1].close; }
@@ -1516,7 +1791,7 @@
     firstTrade: ['歡迎來到戰場', '第一筆單送出去了，回不去了。'],
     lossAversion: ['損失厭惡', '帳面虧損還加碼，這叫攤平還是越陷越深？'],
     allIn: ['梭哈', '一把全押，膽子比本金還大。'],
-    kurumi: ['久留美模式', '開了 102 倍槓桿，價格動 1% 就是天堂或地獄。'],
+    kurumi: ['久留美模式', '開了 102 倍槓桿，匯率動 1 円多就是天堂或地獄。'],
     gold: ['撿到紅包', '走在 K 線上，撿到黃金 K 線紅包。'],
     wheel: ['轉盤初體驗', '第一次轉命運轉盤。小心，會上癮。'],
     saved: ['免死金牌', '爆倉的瞬間，金牌救回一半保證金。'],
@@ -1532,7 +1807,10 @@
     aq: ['阿 Q', '嘴硬模式撐過 10 根 K 線：沒賣就不算賠。'],
     heirloom: ['傳家寶', '套牢 30 根 K 線，這單可以傳給下一代了。'],
     valueInvest: ['價值投資', '越跌越買，你說這叫價值投資。'],
-    aqDeath: ['嘴硬到最後一刻', '在不看的時候被強制平倉。']
+    aqDeath: ['嘴硬到最後一刻', '在不看的時候被強制平倉。'],
+    guruFollow: ['韭菜', '跟著發財姐的單衝，結果她刪文了。'],
+    guruFade: ['反指標大師', '反著發財姐做，賺到了。'],
+    duelWin: ['班上第一', '投資對決中超越所有同學。']
   };
   let achieved = {};
   function achieve(key) {
@@ -1595,11 +1873,11 @@
   // mid-term goals: reaching a rank for the first time pays a reward and
   // unlocks higher leverage
   const RANK_REWARDS = {
-    4: { text: '解鎖 50x 槓桿＋獲利翻倍', give: function () { doubleNext = true; } },
-    5: { text: '解鎖 102x 久留美模式＋免死金牌', give: function () { shields++; } },
+    4: { text: '解鎖 102x 久留美模式＋獲利翻倍', give: function () { doubleNext = true; } },
+    5: { text: '免死金牌', give: function () { shields++; } },
     6: { text: '免死金牌 ×2＋紅包 100 萬', give: function () { shields += 2; balance += START / 2; } }
   };
-  const LEV_UNLOCK = { 10: 0, 25: 0, 50: 4, 102: 5 };
+  const LEV_UNLOCK = { 10: 0, 25: 0, 50: 3, 102: 4 };
   // 等級 follows your net worth both ways: lose money and you drop, and
   // the leverage it unlocked locks again (沒錢就回家吃自己). A level-up
   // gift is paid only the first time you reach a level (bestRank).
@@ -1628,7 +1906,7 @@
     }
     rankIdx = idx;
     // a dropped level takes its leverage with it (an open position keeps its own)
-    if (!position && curRank() < LEV_UNLOCK[lev]) lev = curRank() >= 4 ? 50 : 25;
+    if (!position && curRank() < LEV_UNLOCK[lev]) lev = curRank() >= 3 ? 50 : 25;
     $('rankName').textContent = levelName(idx);
     const next = RANKS[idx + 1];
     if (next) {
@@ -1665,7 +1943,7 @@
     $('goalLeft').textContent = eq >= GOAL ? '🎉 已達成！' : '還差 ' + fmtShort(GOAL - eq) + '・最高紀錄 ' + fmtShort(bestEquity);
     if (!cleared && started && eq >= GOAL) showEnding();
   }
-  let stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+  let stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
   // settlement: an achievement page with a shareable PNG of the run
   let shareBlob = null, downloadsApi = null, clearImg = null;
   (function () {
@@ -1702,11 +1980,11 @@
     rr(c, 50, 50, W - 100, H - 100, 48); c.fillStyle = '#fff7fb'; c.fill();
     c.lineWidth = 8; c.strokeStyle = '#ff5fa0'; c.stroke();
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    c.fillStyle = '#ff5fa0'; c.font = '800 54px ' + F; c.fillText('🌸 BTC 戰士 🌸', W / 2, 150);
+    c.fillStyle = '#ff5fa0'; c.font = '800 54px ' + F; c.fillText('🥬 韭菜戰士・媽媽的 2000 萬', W / 2, 150);
     c.fillStyle = '#5c2f49'; c.font = '900 72px ' + F; c.fillText('通關！2000 萬回來了', W / 2, 250);
     c.font = '900 120px ' + F; c.lineWidth = 10; c.strokeStyle = '#b8001f';
-    c.strokeText('NT$' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
-    c.fillStyle = '#ffc83a'; c.fillText('NT$' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
+    c.strokeText('¥' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
+    c.fillStyle = '#ffc83a'; c.fillText('¥' + Math.round(st.eq).toLocaleString('en-US'), W / 2, 400);
     c.fillStyle = '#8a5a73'; c.font = '700 36px ' + F;
     c.fillText('起始 200 萬 → ×' + (st.eq / START).toFixed(1) + '・用時 ' + st.time, W / 2, 465);
     const tiles = [
@@ -1745,10 +2023,11 @@
     c.fillStyle = '#a07890'; c.font = '600 26px ' + F;
     c.fillText('人物是虛構的，K 線是模擬的・僅供娛樂，非投資建議', W / 2, 1245);
     c.fillStyle = '#e83e82'; c.font = '700 24px ' + F;
-    c.fillText('來玩 ▸ claude.ai/artifact/KST77twsVmJom7YqTx9pkS', W / 2, 1285);
+    c.fillText('來玩 ▸ ' + GAME_URL.replace(/^https?:\/\//, '').replace(/\/$/, ''), W / 2, 1285);
     return cv;
   }
   function openClearPage() {
+    fillEnd();
     $('endModal').hidden = false;
     if (clearImg) {
       $('shareImg').src = clearImg;
@@ -1758,9 +2037,16 @@
       buildClearImage();
     }
   }
+  function fillEnd() {
+    const first = RIVALS.every(function (r) { return !rivalsDone[r.id]; });
+    $('endLine').textContent = (first ? '全班第一個到！' : '') + '「2000 萬，回來了。……可是媽媽當年，也是在這裡停不下來的。」';
+    const ul = $('endSermon'); ul.textContent = '';
+    sermon().forEach(function (t) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+  }
   function showEnding() {
     cleared = true;
     bigWinText('通關！', '2000 萬回來了');
+    fillEnd();
     $('endModal').hidden = false;
     buildClearImage();
   }
@@ -1784,7 +2070,7 @@
   }
   $('shareDl').addEventListener('click', function () {
     if (!downloadsApi || !shareBlob) return;
-    downloadsApi.save({ filename: 'BTC戰士_通關戰績.png', data: shareBlob }).then(function () {
+    downloadsApi.save({ filename: '韭菜戰士_通關戰績.png', data: shareBlob }).then(function () {
       $('shareHint').textContent = '已存好，快去炫耀吧！';
     }).catch(function (err) {
       const code = err && err.code;
@@ -1803,9 +2089,9 @@
     '負債中：只剩救援區能翻身',
     '幾乎見底：下一單請三思',
     '本金腰斬：還有機會翻盤',
-    '起始等級：可用 10x、25x 槓桿',
-    '可用 50x 槓桿・升級禮：獲利翻倍',
-    '可用 102x 久留美模式・升級禮：免死金牌',
+    '起始等級：可用 10x、25x、50x 槓桿',
+    '可用 102x 久留美模式・升級禮：獲利翻倍',
+    '升級禮：免死金牌',
     '可用全部槓桿・升級禮：免死金牌 ×2＋紅包 100 萬'
   ];
   function rankThresholdText(i) {
@@ -2036,6 +2322,7 @@
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
     spawnParticles('up'); setTimeout(function () { spawnParticles('up'); }, 300); setTimeout(function () { spawnParticles('up'); }, 600);
     playFanfare(); setTimeout(playCoin, 450);
+    buzz([40, 30, 40, 30, 80]);
   }
 
   function refreshTradeUI() {
@@ -2046,7 +2333,7 @@
     $('dadDebt').textContent = fmtTwd(dadDebt);
     const amt = stakeAmt();
     const canAfford = amt >= 1000 && balance >= amt;
-    const locked = !started || grounded > 0;
+    const locked = !started || grounded > 0 || liqPending;
     btnLong.textContent = '做多 ' + stakeLabel();
     btnShort.textContent = '做空 ' + stakeLabel();
     document.querySelectorAll('[data-stake]').forEach(function (b) {
@@ -2059,21 +2346,28 @@
       b.classList.toggle('on', n === shownLev);
       b.classList.toggle('locked', isLocked);
       b.textContent = (isLocked ? '🔒' : '') + n + 'x';
-      b.disabled = !!position;
+      b.disabled = !!position || (buddyLock && n !== 10);
     });
     // rescue options only when broke: no position and not enough for a bet
     const broke = started && !position && balance < STAKE;
-    if (broke && !wasBroke) {
+    // one rescue per bankruptcy: a new round opens on going broke, or on losing the rescue money too
+    const busted = broke && balance < 1000;
+    if ((broke && !wasBroke) || (rescued && busted)) {
+      rescued = false;
       spins = 1;
-      setTimeout(function () { toast('💸 破產救濟', '救命轉盤可以轉動了。也可以……打爸爸錢包的主意。'); }, 300);
+      buddyLeft = buddyCount < 3 ? 1 : 0;
+      setTimeout(function () { story('broke', 'cry'); }, 900);
+      setTimeout(function () { toast('💸 破產救濟', '轉盤、學霸、借錢……或是打爸爸錢包的主意。'); }, 300);
     }
     wasBroke = broke;
     $('rescue').hidden = !broke;
-    btnBorrow.textContent = borrowCount < MAX_BORROW ? '🙏 借 10萬（剩 ' + (MAX_BORROW - borrowCount) + ' 次）' : '📵 朋友不接電話';
+    btnBorrow.textContent = borrowCount < MAX_BORROW ? '🙏 借錢（' + (MAX_BORROW - borrowCount) + '）' : '📵 已讀不回';
     btnBorrow.disabled = borrowCount >= MAX_BORROW || grounded > 0;
     const showClear = !!(clearImg || cleared);
     $('clearBtn').hidden = !showClear; $('clearBtn2').hidden = !showClear;
-    btnWheel.textContent = spins > 0 ? '🎡 救命轉盤・轉動' : '🎡 轉盤已轉過';
+    btnBuddy.textContent = buddyLeft > 0 ? '🤓 找學霸' : buddyCount >= 3 ? '🤓 不理你了' : '🤓 救過了';
+    btnBuddy.disabled = buddyLeft <= 0 || locked;
+    btnWheel.textContent = spins > 0 ? '🎡 轉盤' : '🎡 轉過了';
     btnWheel.disabled = !started || spins <= 0;
     btnWheel.classList.toggle('ready', started && spins > 0);
     if (!position) {
@@ -2091,6 +2385,11 @@
     }
     btnBorrow.disabled = grounded > 0;
     btnSteal.disabled = locked;
+    if (rescued) {
+      btnWheel.disabled = btnBuddy.disabled = btnBorrow.disabled = btnSteal.disabled = true;
+      btnWheel.classList.remove('ready');
+    }
+    document.querySelector('.rescue-head').textContent = rescued ? '🆘 這次已經被救過了，再賠光才能再求救' : '💸 沒錢了……要怎麼翻身？';
 
     const chips = $('chips');
     chips.textContent = '';
@@ -2102,6 +2401,9 @@
     if (shields > 0) addChip('🛡️ 免死金牌 ×' + shields, false);
     if (doubleNext) addChip('✨ 下次獲利翻倍', false);
     if (position && (position.lev || LEVERAGE) >= 102) addChip('🔥 久留美模式 102x', true);
+    if (buddyLock) addChip('🤓 學霸盯著你：只准 10x', false);
+    if (callTicks > 0) addChip('📣 發財姐喊' + (callDir > 0 ? '多' : '空') + '・剩 ' + callTicks + ' 根', false);
+    setFace(faceState());
 
     updateLivePnl();
     updateRank();
@@ -2148,7 +2450,7 @@
     const maxL = losses.length ? Math.min.apply(null, losses.map(function (t) { return t.pnl; })) : null;
     const eq = liveEquity();
     const st = $('histStats'); st.textContent = '';
-    st.appendChild(histTile('遊戲時間', mmss(gameSecs()), '目標：8 分鐘衝 2000 萬'));
+    st.appendChild(histTile('遊戲時間', mmss(gameSecs()), '目標：5 分鐘衝 2000 萬'));
     st.appendChild(histTile('勝率', n ? Math.round(wins.length / n * 100) + '%' : '--', '勝 ' + wins.length + '・敗 ' + losses.length + '・共 ' + n + ' 筆'));
     st.appendChild(histTile('已實現總損益', fmtShortSigned(total), '平倉與爆倉加總', total >= 0 ? 'pos' : 'neg'));
     st.appendChild(histTile('目前淨值', fmtShort(eq), '起始的 ×' + (eq / START).toFixed(2), eq >= START ? 'pos' : 'neg'));
@@ -2220,22 +2522,25 @@
 
   function openPosition(dir) {
     const amt = stakeAmt();
-    if (!started || grounded > 0 || amt < 1000 || balance < amt) return;
+    if (!started || grounded > 0 || liqPending || amt < 1000 || balance < amt) return;
     if (position && position.dir !== dir) return;
     const p = lastClose();
     const losing = position && positionPnl(p) < 0;
     balance -= amt;
+    maybeRig();
     if (!position) {
-      position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: lev };
+      position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: buddyLock ? 10 : lev, buddy: buddyLock };
+      if (position.lev >= 102) stats.lev102 = (stats.lev102 || 0) + 1;
     } else {
       const m = position.margin + amt;
       position.avgEntry = (position.avgEntry * position.margin + p * amt) / m;
       position.margin = m;
     }
     playClick();
+    flyCoins(dir > 0 ? btnLong : btnShort, $('invMeter'), stakeMode === 'all' ? 14 : stakeMode >= 0.3 ? 9 : stakeMode >= 0.1 ? 6 : 4);
     achieve('firstTrade');
-    if (losing) { achieve('lossAversion'); position.avgDown = true; }
-    if (stakeMode === 'all') achieve('allIn');
+    if (losing) { achieve('lossAversion'); position.avgDown = true; stats.avgDowns = (stats.avgDowns || 0) + 1; }
+    if (stakeMode === 'all') { achieve('allIn'); stats.allIns = (stats.allIns || 0) + 1; }
     if (position.lev >= 102) achieve('kurumi');
     missionEvent('open', 1);
     setMsg(losing
@@ -2258,12 +2563,14 @@
     balance += position.margin + pnl;
     recordTrade(closedPos, lastClose(), pnl, pnl > 0 ? 'win' : 'loss');
     position = null;
+    lossStreak = pnl > 0 ? 0 : lossStreak + 1;
     if (pnl > 0) {
       winStreak++;
       playCoin();
+      flyCoins($('pnlMeter'), $('balMeter'), pnl >= 10000 * K ? 16 : 8);
       spawnParticles('up');
       setMsg('獲利了結 ' + fmtSigned(pnl) + '！我果然是天才！');
-      toast('💰 獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
+      toast((winStreak >= 2 ? '🔥 ' + winStreak + ' 連勝！' : '💰 ') + '獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
       if (winStreak >= 3) achieve('overconfidence');
       if (pnl >= 10000 * K) bigWin(pnl);
       stats.wins++;
@@ -2274,10 +2581,13 @@
     } else {
       winStreak = 0;
       playScary();
+      flyCoins($('invMeter'), null, 6);
+      cutLeek();
       setMsg('停損了 ' + fmtSigned(pnl) + '……好痛……但還活著。');
       if ((closedPos.peak || 0) > 0) { toast('📉 小賺大賠 ' + fmtShortSigned(pnl)); achieve('smallWinBigLoss'); }
       else toast('🩸 停損 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・停損要膽識' : ''));
     }
+    if (closedPos.buddy) buddyDone(pnl > 0);
     refreshTradeUI();
     draw();
   }
@@ -2286,6 +2596,7 @@
     if (shields > 0) {
       endDenial();
       shields--;
+      liqReason = '';
       const back = Math.round(position.margin / 2);
       balance += back;
       recordTrade(position, lastClose(), back - position.margin, 'saved');
@@ -2297,19 +2608,37 @@
       refreshTradeUI();
       return;
     }
+    const wasDenial = denial;
     if (denial) { achieve('aqDeath'); toast('🙈 嘴硬到最後一刻……'); }
     endDenial();
     recordTrade(position, lastClose(), -position.margin, 'liq');
-    const liqPeak = position.peak;
+    const liqPeak = position.peak, wasBuddy = position.buddy, liqPos = position;
+    const freeze = { lp: liqPrice(), entry: position.avgEntry, dir: position.dir, px: lastClose(), t0: performance.now(),
+      sparks: Array.from({ length: 46 }, function () { return { a: Math.random() * Math.PI * 2, v: 140 + Math.random() * 300, life: 0.7 + Math.random() * 0.9, w: 1.5 + Math.random() * 2.5 }; }),
+      smoke: Array.from({ length: 12 }, function () { return { dx: (Math.random() - 0.5) * 90, dy: Math.random() * 30, r: 18 + Math.random() * 22, rise: 25 + Math.random() * 35 }; }) };
     position = null;
     winStreak = 0;
-    triggerCrash('強制平倉！！');
+    // 定格: stop the market on the killing candle so the player sees what happened,
+    // then roll the cut-in screen
+    liqPending = true; liqOpen = true;
+    pauseGame('liq');
+    view.liqFreeze = freeze;
+    triggerCrash('💥 爆倉了！！');
+    playThud(); setTimeout(playThud, 420);
     spawnParticles('crash');
     setMsg('……保證金，沒了。什麼都來不及按。');
     achieve('firstLiq');
     if ((liqPeak || 0) > 0) achieve('smallWinBigLoss');
     stats.liqs++;
+    buzz([90, 60, 240]);
+    if (wasBuddy) buddyDone(false);
+    lossStreak++;
     refreshTradeUI();
+    setTimeout(function () {
+      view.liqFreeze = null;
+      liqPending = false;
+      showLiq(liqPos, wasDenial);
+    }, 5000);
   }
 
   let borrowCount = 0;
@@ -2317,7 +2646,9 @@
   function borrow() {
     if (grounded > 0) return;
     if (borrowCount >= MAX_BORROW) { toast('📵 朋友不接電話了', '借了 ' + MAX_BORROW + ' 次，已讀不回。'); return; }
+    if (rescued) return;
     borrowCount++;
+    rescued = true;
     balance += STAKE;
     debt += STAKE;
     playClick();
@@ -2333,7 +2664,8 @@
     '這不是偷，這是家庭內部融資！'
   ];
   function steal() {
-    if (!started || grounded > 0) return;
+    if (!started || grounded > 0 || rescued) return;
+    rescued = true;
     const amt = (100 + Math.floor(Math.random() * 201)) * 100 * K; // 20萬–60萬
     balance += amt;
     stealCount++;
@@ -2380,6 +2712,7 @@
       '🔒 錢包會藏得更好：之後再拿，被抓機率只會更高'
     ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
     $('dadAlert').hidden = false;
+    pauseGame('dad');
     $('dadOk').focus();
 
     document.body.classList.remove('crash-flash');
@@ -2394,7 +2727,7 @@
     stats.caught++;
     refreshTradeUI();
   }
-  $('dadOk').addEventListener('click', function () { $('dadAlert').hidden = true; });
+  $('dadOk').addEventListener('click', function () { $('dadAlert').hidden = true; resumeGame('dad'); });
 
   btnLong.addEventListener('click', function () { openPosition(1); });
   btnShort.addEventListener('click', function () { openPosition(-1); });
@@ -2408,12 +2741,12 @@
   document.querySelectorAll('.vote-slot').forEach(function (slot) {
     slot.appendChild(document.getElementById('voteTpl').content.cloneNode(true));
   });
-  const GAME_URL = 'https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS';
+  const GAME_URL = 'https://mario-0729.github.io/mama2000/';
   function threadsUrl(v) {
     const eq = liveEquity();
     const text = v === 'up'
-      ? '今天我也是 BTC 戰士！👍\n淨值 ' + fmtShort(eq) + '（' + levelName(curRank()) + '）\n你也來試試：' + GAME_URL + '\n#BTC戰士好玩'
-      : '我沒這個命……👎\n淨值剩 ' + fmtShort(eq) + '\n不信你來：' + GAME_URL + '\n#BTC戰士沒這個命';
+      ? '今天我也是韭菜戰士！👍\n淨值 ' + fmtShort(eq) + '（' + levelName(curRank()) + '）\n你也來試試：' + GAME_URL + '\n#韭菜戰士好玩'
+      : '我沒這個命……👎\n淨值剩 ' + fmtShort(eq) + '\n不信你來：' + GAME_URL + '\n#韭菜戰士沒這個命';
     return 'https://www.threads.net/intent/post?text=' + encodeURIComponent(text);
   }
   // keep every share link already filled in, so the very first tap opens
@@ -2430,7 +2763,7 @@
   document.addEventListener('click', function (e) {
     const b = e.target.closest && e.target.closest('.vote-btn');
     if (!b) return;
-    toast(b.dataset.vote === 'up' ? '👍 今天我也是 BTC 戰士！' : '👎 我沒這個命……', '已開啟 Threads 投票貼文');
+    toast(b.dataset.vote === 'up' ? '👍 今天我也是韭菜戰士！' : '👎 我沒這個命……', '已開啟 Threads 投票貼文');
   }, true);
 
   /* ---------- 回家吃自己: settle this run and start over ---------- */
@@ -2443,7 +2776,7 @@
       '📈 這局最高淨值 ' + fmtShort(peak) + '・最高到過 ' + levelName(bestRank),
       '💥 爆倉 ' + stats.liqs + ' 次・👛 偷爸爸錢包 ' + stats.steals + ' 次',
       '🧾 欠朋友 ' + fmtShort(debt) + '・欠爸爸 ' + fmtShort(dadDebt)
-    ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    ].concat(sermon()).forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
     $('overModal').hidden = false;
     playScary();
   }
@@ -2453,7 +2786,10 @@
     spins = 0; shields = 0; doubleNext = false; wasBroke = false; borrowCount = 0;
     stakeMode = 0.05; lev = 25; rankIdx = null; bestRank = 3; cleared = false;
     trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
-    stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+    stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
+    resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0; rescued = false;
+    favorTicks = 0; rigTicks = 0; lossStreak = 0; chosenLeft = 2;
+    setTimeout(function () { story('start', 'calm'); }, 600);
     missionIdx = 0; missionRound = 0; missionProg = 0;
     meterState.bal.shown = null;
     $('overModal').hidden = true;
@@ -2462,6 +2798,24 @@
     refreshTradeUI(); renderMission(); playFanfare();
   }
   $('btnHome').addEventListener('click', goHome);
+  // 重新開始: always reachable from the history page, behind a warning
+  function askReset() {
+    const eq = Math.max(0, liveEquity());
+    $('resetInfo').textContent = '目前淨值 ' + fmtShort(eq) + (position ? '（持倉會直接作廢）' : '') + '，全部歸零、從 200 萬重來。成就紀錄會保留。';
+    $('resetModal').hidden = false;
+    pauseGame('reset');
+    $('resetNo').focus();
+  }
+  $('resetBtn').addEventListener('click', askReset);
+  $('resetBtn2').addEventListener('click', askReset);
+  $('resetNo').addEventListener('click', function () { $('resetModal').hidden = true; resumeGame('reset'); });
+  $('resetYes').addEventListener('click', function () {
+    $('resetModal').hidden = true;
+    $('histModal').hidden = true;
+    endDenial();
+    resetGame();
+    resumeGame('reset');
+  });
   $('overRestart').addEventListener('click', resetGame);
   $('overStay').addEventListener('click', function () { $('overModal').hidden = true; });
   $('clearBtn').addEventListener('click', function () { $('histModal').hidden = true; openClearPage(); });
@@ -2494,12 +2848,396 @@
         playClick();
         return;
       }
+      if (buddyLock && n !== 10) { toast('🤓 學霸：「說好只准 10 倍。」'); playClick(); return; }
       lev = n;
-      toast(lev >= 102 ? '🏎️ 102x：你不是在騎機車，是在開賽車' : '槓桿 ' + lev + 'x・跌 ' + (100 / lev).toFixed(1) + '% 就爆倉');
+      toast(lev >= 102 ? '🏎️ 102x：反向 ' + (lastClose() / lev).toFixed(2) + ' 円就歸零' : '槓桿 ' + lev + 'x・反向 ' + (lastClose() / lev).toFixed(2) + ' 円就爆倉');
       playClick();
       refreshTradeUI();
     });
   });
+
+  // 下注飛幣: chips arc from where the money leaves to where it lands;
+  // with no target they drop off the bottom of the screen (money gone)
+  function flyCoins(from, to, n) {
+    if (noMotion || !from) return;
+    const a = from.getBoundingClientRect();
+    const b = to ? to.getBoundingClientRect() : null;
+    if (!a.width || (to && !b.width)) return;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('span');
+      c.className = 'fly-coin'; c.textContent = '¥';
+      document.body.appendChild(c);
+      const sx = a.left + a.width / 2 + (Math.random() - 0.5) * a.width * 0.5;
+      const sy = a.top + a.height / 2 + (Math.random() - 0.5) * a.height * 0.4;
+      const ex = b ? b.left + b.width / 2 + (Math.random() - 0.5) * b.width * 0.35 : sx + (Math.random() - 0.5) * 140;
+      const ey = b ? b.top + b.height / 2 + (Math.random() - 0.5) * b.height * 0.3 : window.innerHeight + 40;
+      const mx = (sx + ex) / 2 + (Math.random() - 0.5) * 60;
+      const my = b ? Math.min(sy, ey) - 50 - Math.random() * 60 : sy - 30 - Math.random() * 40;
+      const anim = c.animate([
+        { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(.5)', opacity: 0 },
+        { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(1)', opacity: 1, offset: 0.08 },
+        { transform: 'translate(' + mx + 'px,' + my + 'px) scale(1.15) rotate(180deg)', opacity: 1, offset: 0.5 },
+        { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.8) rotate(360deg)', opacity: b ? 1 : 0.6 }
+      ], { duration: (b ? 620 : 900) + Math.random() * 160, delay: i * 45, easing: b ? 'cubic-bezier(.3,.7,.4,1)' : 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
+      anim.onfinish = function () {
+        c.remove();
+        if (!b) return;
+        if (i % 3 === 0) playTick();
+        to.classList.remove('coin-hit'); void to.offsetWidth; to.classList.add('coin-hit');
+      };
+    }
+  }
+
+  function buzz(p) {
+    try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {}
+  }
+
+  /* ---------- 顏藝頭像: an original chibi heroine whose face tracks the P&L ---------- */
+  function faceSvg(st) {
+    const hair = '#6b2f4a', skin = '#ffe7da', ink = '#3a1a2a', lip = '#b0405e';
+    const blush = '<ellipse cx="29" cy="68" rx="5.5" ry="3" fill="#ff9bb8" opacity=".65"/><ellipse cx="71" cy="68" rx="5.5" ry="3" fill="#ff9bb8" opacity=".65"/>';
+    const dot = function (x) { return '<ellipse cx="' + x + '" cy="58" rx="4.5" ry="6" fill="' + ink + '"/><circle cx="' + (x - 1.6) + '" cy="55.5" r="1.7" fill="#fff"/>'; };
+    let eyes = '', mouth = '', extra = '', front = '';
+    if (st === 'happy') {
+      eyes = '<path d="M33 60 Q38 52 43 60 M57 60 Q62 52 67 60" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      mouth = '<path d="M42 71 Q50 82 58 71 Z" fill="' + lip + '"/>' + blush;
+    } else if (st === 'rich') {
+      eyes = '<text x="38" y="64" font-size="17" font-weight="900" text-anchor="middle" fill="#ffb000" stroke="#9a5b00" stroke-width="1">¥</text><text x="62" y="64" font-size="17" font-weight="900" text-anchor="middle" fill="#ffb000" stroke="#9a5b00" stroke-width="1">¥</text>';
+      mouth = '<path d="M38 70 Q50 86 62 70 Z" fill="' + lip + '"/><path d="M41 71 L59 71" stroke="#fff" stroke-width="2.5"/>' + blush;
+      extra = '<path d="M14 40 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M86 72 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z" fill="#ffc83a"/>';
+    } else if (st === 'sweat') {
+      eyes = dot(38) + dot(62) + '<path d="M31 50 L43 46 M69 50 L57 46" stroke="' + hair + '" stroke-width="2.5" stroke-linecap="round"/>';
+      mouth = '<path d="M42 75 Q46 71 50 75 Q54 79 58 75" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      extra = '<path d="M83 40 C79 48 79 53 83 54 C87 53 87 48 83 40 Z" fill="#7cc4ff" stroke="#3a8fd8" stroke-width="1"/>';
+    } else if (st === 'blood') {
+      const eye = function (x) {
+        return '<circle cx="' + x + '" cy="58" r="8" fill="#fff" stroke="' + ink + '" stroke-width="1.5"/>' +
+          '<path d="M' + (x - 7) + ' 56 l4 1 M' + (x + 7) + ' 55 l-4 2 M' + (x - 6) + ' 62 l4 -1.5 M' + (x + 6) + ' 62 l-3.5 -2 M' + x + ' 50.5 l0.5 3.5" stroke="#e0102e" stroke-width="1.2"/>' +
+          '<circle cx="' + x + '" cy="58" r="1.8" fill="' + ink + '"/>' +
+          '<path d="M' + (x - 7) + ' 68 Q' + x + ' 71 ' + (x + 7) + ' 68" stroke="#7a4a8a" stroke-width="2" fill="none" opacity=".7"/>';
+      };
+      eyes = eye(38) + eye(62);
+      mouth = '<rect x="40" y="73" width="20" height="8" rx="2" fill="#fff" stroke="' + ink + '" stroke-width="1.5"/><path d="M45 73 v8 M50 73 v8 M55 73 v8 M40 77 h20" stroke="' + ink + '" stroke-width="1"/>';
+      front = '<path d="M30 26 v14 M36 23 v18 M42 22 v15 M58 22 v15 M64 23 v18 M70 26 v14" stroke="#4a1f6a" stroke-width="2" opacity=".55"/>';
+    } else if (st === 'cry') {
+      eyes = '<path d="M32 54 L42 58 L32 62 M68 54 L58 58 L68 62" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      mouth = '<ellipse cx="50" cy="77" rx="7.5" ry="6.5" fill="#7a2040"/><path d="M45 79 Q50 76 55 79" stroke="#ff8fa8" stroke-width="2" fill="none"/>';
+      extra = '<path d="M33 63 C31 72 30 80 31 92 L37 92 C37 80 37 72 36 63 Z M67 63 C69 72 70 80 69 92 L63 92 C63 80 63 72 64 63 Z" fill="#7cc4ff" opacity=".85"/>' +
+        '<circle cx="15" cy="33" r="10" fill="' + skin + '" stroke="#d9a890" stroke-width="1.5"/><circle cx="85" cy="33" r="10" fill="' + skin + '" stroke="#d9a890" stroke-width="1.5"/>';
+    } else if (st === 'zen') {
+      eyes = '<path d="M33 57 Q38 62 43 57 M57 57 Q62 62 67 57" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      mouth = '<path d="M45 73 Q50 76 55 73" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      extra = '<text x="82" y="30" font-size="10" fill="#8e7685" font-weight="900">…</text>';
+    } else {
+      eyes = dot(38) + dot(62);
+      mouth = '<path d="M44 73 Q50 78 56 73" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>' + blush;
+    }
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M14 60 C10 24 34 8 50 8 C68 8 90 22 86 60 L86 92 L72 84 L70 62 L30 62 L28 84 L14 92 Z" fill="' + hair + '"/>' +
+      '<ellipse cx="50" cy="57" rx="31" ry="30" fill="' + skin + '"/>' +
+      '<path d="M19 52 C18 27 34 16 50 16 C68 16 83 27 81 52 C74 41 66 35 58 33 C56 39 50 43 42 43 C46 39 47 36 46 33 C36 36 26 43 19 52 Z" fill="' + hair + '"/>' +
+      '<circle cx="74" cy="27" r="8" fill="#ffc83a" stroke="#d99000" stroke-width="2"/><text x="74" y="31" font-size="11" font-weight="900" text-anchor="middle" fill="#9a5b00">¥</text>' +
+      front + eyes + mouth + extra + '</svg>';
+  }
+  let curFace = '';
+  function faceState() {
+    if (liqPending) return 'blood';
+    if (started && !position && balance < STAKE) return 'cry';
+    if (!position) return 'calm';
+    if (denial) return 'zen';
+    const r = positionPnl(lastClose()) / position.margin;
+    return r > 0.5 ? 'rich' : r >= 0 ? 'happy' : r > -0.45 ? 'sweat' : 'blood';
+  }
+  function setFace(st) {
+    if (st === curFace) return;
+    curFace = st;
+    $('face').innerHTML = faceSvg(st);
+  }
+  let faceBigTimer = null;
+  function showFaceBig(st, line, ms, scare) {
+    if (storyOpen) return;
+    $('fbFace').innerHTML = faceSvg(st);
+    $('fbLine').textContent = line || '';
+    const el = $('faceBig');
+    el.classList.toggle('scare', !!scare);
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    clearTimeout(faceBigTimer);
+    faceBigTimer = setTimeout(function () { el.hidden = true; }, ms || 2600);
+  }
+
+  /* ---------- 主線「媽媽的 2000 萬」: one line per milestone ---------- */
+  const STORY = {
+    start: '媽媽在匯市賠掉的 2000 萬，我要親手賺回來。',
+    s400: '翻倍了！媽媽，你看到了嗎？我果然是天才！',
+    s800: '手停不下來……媽媽當年，也是這種感覺嗎？',
+    s1200: '再一點點就好。這次一定不會跟媽媽一樣。',
+    broke: '……結果，跟媽媽一模一樣。'
+  };
+  let storyDone = {};
+  function logEvent(text) {
+    eventLog.unshift({ t: started && startAt ? mmss(gameSecs()) : '', text: text });
+    if (eventLog.length > 60) eventLog.pop();
+  }
+  // a story line pauses the market until it is closed (button, tap outside, Esc, or 5 s)
+  const storyQueue = [];
+  let storyOpen = false, storyTimer = null, pausedAt = 0;
+  function story(key, face) {
+    if (storyDone[key] && key !== 'broke') return;
+    storyDone[key] = true;
+    logEvent('💭 ' + STORY[key]);
+    storyQueue.push({ face: face, line: '「' + STORY[key] + '」' });
+    if (!storyOpen && !liqOpen) nextStory();
+  }
+  // every blocking window holds its own lock; the market resumes only when all are released
+  const holds = {};
+  function pauseGame(why) {
+    holds[why] = true;
+    if (!timer) return;
+    clearInterval(timer); timer = null;
+    pausedAt = performance.now();
+  }
+  function resumeGame(why) {
+    delete holds[why];
+    if (Object.keys(holds).length) return;
+    if (!started || timer || !pausedAt) return;
+    startAt += performance.now() - pausedAt;
+    pausedAt = 0;
+    timer = setInterval(tick, 1200);
+  }
+  function nextStory() {
+    const it = storyQueue.shift();
+    storyOpen = true;
+    pauseGame('story');
+    clearTimeout(faceBigTimer);
+    $('fbFace').innerHTML = faceSvg(it.face);
+    $('fbLine').textContent = it.line;
+    const el = $('faceBig'), btn = $('fbClose');
+    el.classList.toggle('scare', it.face === 'blood' || it.face === 'cry');
+    el.classList.add('modal');
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    btn.hidden = false;
+    let left = 3;
+    btn.textContent = '✕ 關閉（' + left + '）';
+    try { btn.focus({ preventScroll: true }); } catch (e) {}
+    clearInterval(storyTimer);
+    storyTimer = setInterval(function () {
+      left--;
+      if (left <= 0) closeStory();
+      else btn.textContent = '✕ 關閉（' + left + '）';
+    }, 1000);
+  }
+  function closeStory() {
+    if (!storyOpen) return;
+    clearInterval(storyTimer);
+    const el = $('faceBig');
+    el.hidden = true; el.classList.remove('modal', 'scare');
+    $('fbClose').hidden = true;
+    storyOpen = false;
+    if (storyQueue.length) nextStory();
+    else resumeGame('story');
+  }
+  $('fbClose').addEventListener('click', closeStory);
+
+  /* ---------- 爆倉登場畫面: the market stops, the ground cracks, she slides in ---------- */
+  let liqOpen = false, liqTimer = null, liqAt = 0, liqPending = false;
+  function showLiq(pos, wasDenial) {
+    liqOpen = true; liqAt = performance.now();
+    pauseGame('liq');
+    if (storyOpen) { clearInterval(storyTimer); $('faceBig').hidden = true; $('faceBig').classList.remove('modal', 'scare'); $('fbClose').hidden = true; storyOpen = false; delete holds.story; }
+    const el = $('liqScreen');
+    $('lqFace').innerHTML = faceSvg('blood');
+    $('lqKicker').textContent = liqReason || (wasDenial ? '🙈 嘴硬到最後一刻' : '💀 第 ' + stats.liqs + ' 次爆倉');
+    liqReason = '';
+    $('lqAmt').textContent = '-' + fmtTwd(pos.margin);
+    $('lqSub').textContent = (pos.lev || LEVERAGE) + 'x ' + (pos.dir > 0 ? '做多' : '做空') + '・保證金歸零・淨值剩 ' + fmtShort(Math.max(0, liveEquity()));
+    el.querySelectorAll('.lq-debris').forEach(function (d) { d.remove(); });
+    if (!reduceMotion) {
+      for (let k = 0; k < 14; k++) {
+        const d = document.createElement('i');
+        d.className = 'lq-debris';
+        d.style.left = (Math.random() * 100) + '%';
+        d.style.animationDelay = (0.1 + Math.random() * 0.6) + 's';
+        d.style.transform = 'scale(' + (0.6 + Math.random()) + ')';
+        el.appendChild(d);
+      }
+    }
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    const btn = $('lqClose');
+    let left = 10;
+    btn.textContent = '✕ 關閉（' + left + '）';
+    try { btn.focus({ preventScroll: true }); } catch (e) {}
+    clearInterval(liqTimer);
+    liqTimer = setInterval(function () {
+      left--;
+      if (left <= 0) closeLiq();
+      else btn.textContent = '✕ 關閉（' + left + '）';
+    }, 1000);
+  }
+  function closeLiq() {
+    if (!liqOpen) return;
+    clearInterval(liqTimer);
+    $('liqScreen').hidden = true;
+    liqOpen = false;
+    if (storyQueue.length) nextStory();
+    resumeGame('liq');
+  }
+  $('lqClose').addEventListener('click', closeLiq);
+  // a stray tap from mashing 平倉 shouldn't skip the show: ignore taps in the first second
+  $('liqScreen').addEventListener('click', function (e) { if (e.target !== $('lqClose') && performance.now() - liqAt > 1000) closeLiq(); });
+  document.addEventListener('keydown', function (e) { if (liqOpen && e.key === 'Escape') closeLiq(); });
+  $('faceBig').addEventListener('click', function (e) { if (e.target === $('faceBig')) closeStory(); });
+  document.addEventListener('keydown', function (e) { if (storyOpen && e.key === 'Escape') closeStory(); });
+
+  /* ---------- 市場事件: gaps and pin bars on top of the news ---------- */
+  let liqReason = '';
+  function marketEvents(c, last) {
+    const r = Math.random();
+    if (r < 1 / 16) {
+      // 跳空: the whole candle opens away from the last close
+      const g = last.close * (0.012 + Math.random() * 0.012) * (Math.random() < 0.5 ? 1 : -1);
+      c.open += g; c.close += g; c.high += g; c.low += g;
+      toast(g > 0 ? '🕳️ 跳空開高！' : '🕳️ 跳空開低！');
+    } else if (r < 1 / 16 + 1 / 12 && !favorTicks && !honeymoon()) {
+      // 插針: a long wick that hunts the nearest liquidation line
+      const d = position ? -position.dir : (Math.random() < 0.5 ? 1 : -1);
+      const ext = c.close * (0.022 + Math.random() * 0.02);
+      if (d < 0) c.low = Math.min(c.low, Math.min(c.open, c.close) - ext);
+      else c.high = Math.max(c.high, Math.max(c.open, c.close) + ext);
+      c.pin = true;
+      toast(d < 0 ? '📌 插針！一根長下影' : '📌 插針！一根長上影');
+    }
+  }
+
+  /* ---------- 黑箱波段: 40% of entries get a silent wave against you ---------- */
+  let rigTicks = 0, rigTease = false;
+  // favor waves ride with you: 新手蜜月期 (first 75 s, 70%), 保底 (after 3 losses
+  // in a row, guaranteed) and 天選波段 (3 per run, 15% per entry after the honeymoon)
+  let favorTicks = 0, favorBoost = 2.6, lossStreak = 0, chosenLeft = 2;
+  const HONEYMOON = 75;
+  // the honeymoon only carries you to about 800萬, then the house starts taking it back
+  function honeymoon() { return started && gameSecs() < HONEYMOON && liveEquity() < START * 3; }
+  // 隱形橡皮筋: an ideal path reaches 2000萬 at 5 minutes; run ahead of it and the
+  // house cuts harder, fall far behind and the market quietly helps you back
+  function paceRatio() {
+    const target = START * Math.pow(GOAL / START, Math.min(1, gameSecs() / 300));
+    return Math.max(0, liveEquity()) / target;
+  }
+  function maybeRig() {
+    if (rigTicks > 0 || favorTicks > 0) return;
+    const pace = paceRatio();
+    if (pace > 1.2) {
+      if (Math.random() < 0.65) { rigTicks = 3 + Math.floor(Math.random() * 5); rigTease = Math.random() < 0.5; }
+      return;
+    }
+    if (lossStreak >= 4) { lossStreak = 0; favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
+    if (honeymoon()) { if (Math.random() < 0.4) { favorBoost = 1.3; favorTicks = 2 + Math.floor(Math.random() * 2); } return; }
+    if (pace < 0.6 && Math.random() < 0.4) { favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
+    if (chosenLeft > 0 && Math.random() < 0.08) { chosenLeft--; favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
+    if (Math.random() >= 0.4) return;
+    rigTicks = 3 + Math.floor(Math.random() * 5);
+    rigTease = Math.random() < 0.5;
+  }
+
+  /* ---------- 喊單部落客「發財姐」: her calls steer the next 5 candles, usually the wrong way ---------- */
+  let callTicks = 0, callDir = 1, callTrue = false, callWait = 16, callFollow = 0;
+  function stepGuru() {
+    if (callTicks > 0 || --callWait > 0) return;
+    callDir = Math.random() < 0.5 ? 1 : -1;
+    callTrue = Math.random() < 0.35;
+    callTicks = 5; callFollow = 0;
+    callWait = 20 + Math.floor(Math.random() * 14);
+    toast(callDir > 0 ? '📣 發財姐：「美元要噴了！全力做多🔥」' : '📣 發財姐：「美元要崩了！快放空💀」');
+  }
+  function endCall() {
+    const followed = callFollow > 0, faded = callFollow < 0;
+    callFollow = 0;
+    if (callTrue) {
+      toast('📣 發財姐：「跟上的都賺翻了吧？課程連結在留言👇」');
+    } else {
+      toast('📣 發財姐：「這是洗盤，懂的自然懂。」（已刪文）');
+      if (followed) { stats.followLoss = (stats.followLoss || 0) + 1; achieve('guruFollow'); }
+      if (faded) achieve('guruFade');
+    }
+  }
+
+  /* ---------- 投資對決: three classmates trade the same chart ---------- */
+  const RIVALS = [
+    { id: 'nerd', emo: '🤓', name: '學霸' },
+    { id: 'lazy', emo: '😴', name: '懶人' },
+    { id: 'guru', emo: '💅', name: '發財姐' }
+  ];
+  let rivals = { nerd: START, lazy: START, guru: START }, lazyDir = 1, rivalsDone = {}, duelRank = 0;
+  function resetDuel() { rivals = { nerd: START, lazy: START, guru: START }; lazyDir = 1; rivalsDone = {}; duelRank = 0; renderDuel(true); }
+  function stepRivals(pct) {
+    // 學霸 follows the trend with modest size; 懶人 flips a coin at 102x;
+    // 發財姐 trades her own calls and lives off course sales
+    rivals.nerd *= 1 + trend * pct * 0.8 + 0.006;
+    if (Math.random() < 0.15) lazyDir = -lazyDir;
+    rivals.lazy *= Math.max(0.05, 1 + lazyDir * pct * 15);
+    if (rivals.lazy < START * 0.15) { rivals.lazy = START; if (Math.random() < 0.5) toast('😴 懶人又跟家裡拿了 200 萬'); }
+    rivals.guru = rivals.guru * (1 + (callTicks > 0 ? callDir * pct * 8 : 0)) + START * 0.006;
+    RIVALS.forEach(function (r) {
+      rivals[r.id] = Math.min(GOAL * 1.5, Math.max(0, rivals[r.id]));
+      if (!rivalsDone[r.id] && rivals[r.id] >= GOAL) { rivalsDone[r.id] = true; toast('🏁 ' + r.emo + r.name + '先到 2000 萬了……'); }
+    });
+    renderDuel();
+  }
+  function renderDuel(silent) {
+    const st = [{ emo: '', name: '你', eq: Math.max(0, liveEquity()), me: true }].concat(RIVALS.map(function (r) {
+      return { emo: r.emo, name: r.name, eq: rivals[r.id] };
+    })).sort(function (a, b) { return b.eq - a.eq; });
+    let i = 0;
+    st.forEach(function (x, k) { if (x.me) i = k; });
+    $('duel').textContent = i === 0
+      ? '⚔️ 🥇 你領先 ' + st[1].emo + ' ' + fmtShort(st[0].eq - st[1].eq)
+      : '⚔️ 第 ' + (i + 1) + ' 名・' + st[0].emo + st[0].name + ' ' + fmtShort(st[0].eq);
+    if (!silent && started && duelRank && i + 1 !== duelRank) {
+      if (i + 1 < duelRank) { toast('⚔️ 超車！你超過了 ' + st[i + 1].emo + st[i + 1].name); buzz(30); if (i === 0) achieve('duelWin'); }
+      else toast('⚔️ 被 ' + st[i - 1].emo + st[i - 1].name + '超車了……');
+    }
+    duelRank = i + 1;
+  }
+
+  /* ---------- 好友救援: the classmate bails you out, on her terms ---------- */
+  let buddyLock = false, buddyLeft = 0, buddyCount = 0, rescued = false;
+  const buddyLines = [
+    '「借你 50 萬。下一單只准開 10 倍，我會盯著你。」',
+    '「又來？……最後兩次喔。只准 10 倍。」',
+    '「這是我的學費，你給我好好用。只准 10 倍。」'
+  ];
+  function buddy() {
+    if (buddyLeft <= 0 || grounded > 0 || rescued) return;
+    buddyLeft = 0;
+    rescued = true;
+    balance += START / 4;
+    buddyLock = true; lev = 10;
+    toast('🤓 學霸' + buddyLines[Math.min(buddyCount, buddyLines.length - 1)]);
+    buddyCount++;
+    playCoin();
+    refreshTradeUI();
+  }
+  function buddyDone(won) {
+    buddyLock = false;
+    toast(won ? '🤓 學霸：「……算你還有救。」' : '🤓 學霸：「我就知道。」');
+  }
+  const btnBuddy = $('btnBuddy');
+  btnBuddy.addEventListener('click', buddy);
+
+  /* ---------- 勸世結算: which retail traps you walked into ---------- */
+  function sermon() {
+    const items = [
+      [stats.maxRed || 0, 10, '🪤 凹單：最久套牢 ' + (stats.maxRed || 0) + ' 根才放手。市場謝謝你的耐心。'],
+      [stats.avgDowns || 0, 1, '🪤 攤平 ' + (stats.avgDowns || 0) + ' 次：你不是在攤平，是在接飛刀。'],
+      [stats.allIns || 0, 1, '🎰 梭哈 ' + (stats.allIns || 0) + ' 次：膽子很大，本金很小。'],
+      [stats.lev102 || 0, 1, '🏎️ 102 倍開了 ' + (stats.lev102 || 0) + ' 次：動 1 円就歸零，你還笑得出來？'],
+      [stats.liqs || 0, 1, '💥 爆倉 ' + (stats.liqs || 0) + ' 次：保證金只是學費的另一種說法。'],
+      [stats.followLoss || 0, 1, '📣 跟發財姐的單賠了 ' + (stats.followLoss || 0) + ' 次：她賺的是課程費，不是行情。'],
+      [stats.steals || 0, 1, '👛 偷爸爸錢包 ' + (stats.steals || 0) + ' 次：最可憐的永遠是爸爸。']
+    ].filter(function (x) { return x[0] >= x[1]; })
+      .sort(function (a, b) { return b[0] / b[1] - a[0] / a[1]; })
+      .slice(0, 3).map(function (x) { return x[2]; });
+    return items.length ? items : ['😇 這局居然沒踩什麼雷……一定是運氣。'];
+  }
 
   /* ---------- 黃金 K 線紅包: walk onto it to pick it up ---------- */
   function collectGold(i) {
@@ -2547,6 +3285,7 @@
     if (!started || spins <= 0) return;
     $('wheelModal').hidden = false;
     $('wheelResult').textContent = '不用花錢，轉動看看手氣……';
+    $('wheelClose').textContent = '先不要';
     $('wheelSpin').disabled = false;
     $('wheelSpin').focus();
   }
@@ -2575,12 +3314,15 @@
       spinning = false;
       $('wheelClose').disabled = false;
       applyPrize(PRIZES[k]);
+      // after the spin the close button reacts to the prize instead of "not now"
+      $('wheelClose').textContent = ['red10k', 'red5k', 'red3k', 'shield', 'double'].indexOf(PRIZES[k].key) >= 0 ? '收下！🤑' : '認了……😭';
       $('wheelSpin').disabled = spins <= 0;
       refreshTradeUI();
     }, dur);
   }
   function applyPrize(p) {
     let text = '';
+    if (p.key.indexOf('red') === 0) rescued = true;   // only cash counts as being rescued
     switch (p.key) {
       case 'red10k': balance += 10000 * K; text = '🧧 紅包 +20 萬！'; playFanfare(); spawnParticles('up'); break;
       case 'red3k': balance += 3000 * K; text = '🧧 小紅包 +6 萬～'; playCoin(); break;
@@ -2755,26 +3497,79 @@
     view.cam = { C: C, f: f, r: r, u: u, focal: (view.h / 2) / Math.tan(fov / 2) };
   }
 
-  // you: a glowing orb standing on the newest price
-  function walkerOrb() {
-    const q = toCam([view.s * S, walkerY(view.s) + 0.45, 0]);
-    if (q[2] < NEAR + 0.2) return;
-    const sp = scr(q);
-    const r = Math.max(6, 0.42 * view.cam.focal / q[2]);
-    ctx.save();
-    ctx.shadowColor = rgbStr(pal.accent, 0.95); ctx.shadowBlur = 24;
-    const g = ctx.createRadialGradient(sp[0] - r * .3, sp[1] - r * .35, r * .1, sp[0], sp[1], r);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(.55, rgbStr(mix(pal.accent, [255, 255, 255], .35))); g.addColorStop(1, rgbStr(pal.accent));
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(sp[0], sp[1], r, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+  // you: a bunch of 韭菜 standing on the newest price. Its height follows your net
+  // worth (200萬 = 2.0, 2000萬 ≈ 4.6); a realized loss chops the top off.
+  const leek = { h: 2.0, cut: null };
+  const LEEK_BLADES = [-0.32, -0.2, -0.09, 0, 0.1, 0.21, 0.33];
+  function leekTarget() { return Math.min(4.6, 0.8 + 1.2 * Math.sqrt(Math.max(0, liveEquity()) / START)); }
+  function cutLeek() {
+    const to = leekTarget();
+    if (leek.h - to < 0.04) return;
+    leek.cut = { from: leek.h, to: to, t0: performance.now() };
+    leek.h = to;
+    playSlash();
+  }
+  function walkerOrb(labelOnly) {
+    const x = view.s * S, y0 = walkerY(view.s);
+    const qb = toCam([x, y0, 0]), qt = toCam([x, y0 + leek.h, 0]);
+    if (qb[2] < NEAR + 0.2 || qt[2] < NEAR + 0.2) return;
+    const B = scr(qb), Tp = scr(qt);
+    const len = B[1] - Tp[1];
+    if (!labelOnly) {
+      // 2D fallback: blades fan out from a pale stem
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineWidth = Math.max(12, 1.1 * view.cam.focal / qb[2]);
+      LEEK_BLADES.forEach(function (a, i) {
+        ctx.strokeStyle = i % 2 ? '#2f9a3a' : '#46c04f';
+        ctx.beginPath();
+        ctx.moveTo(B[0], B[1]);
+        ctx.quadraticCurveTo(B[0] + a * len * 0.2, B[1] - len * 0.6, Tp[0] + a * len * 0.55, Tp[1] + Math.abs(a) * len * 0.35);
+        ctx.stroke();
+      });
+      ctx.fillStyle = '#f2f7e4';
+      ctx.beginPath(); ctx.ellipse(B[0], B[1] - len * 0.06, Math.max(16, 0.75 * view.cam.focal / qb[2]), Math.max(8, len * 0.12), 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if (!labelOnly) {
+      const fs = Math.max(12, Math.min(30, 0.4 * view.cam.focal / qb[2]));
+      const ty = B[1] - Math.max(len * 0.5, fs);
+      ctx.save();
+      ctx.font = '900 ' + fs + 'px "Noto Sans TC", sans-serif';
+      const tw = ctx.measureText('韭菜').width + fs * 0.8, th = fs * 1.4;
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2f9a3a'; ctx.lineWidth = Math.max(2, fs * 0.12);
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(B[0] - tw / 2, ty - th / 2, tw, th, th / 3.5); else ctx.rect(B[0] - tw / 2, ty - th / 2, tw, th);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1f6e28'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('韭菜', B[0], ty + 1);
+      ctx.restore();
+    }
+    const ly = Tp[1] - 14;
     if (position) {
       const pnl = positionPnl(lastClose());
-      if (denial) pill('你・😌 沒在看', sp[0], sp[1] - r - 14, '#8e7685', 'center', 13);
-      else pill('你・' + (position.dir > 0 ? '多▲ ' : '空▼ ') + fmtShortSigned(pnl), sp[0], sp[1] - r - 14, pnl >= 0 ? pal.up : pal.down, 'center', 13);
+      if (denial) pill('你・😌 沒在看', Tp[0], ly, '#8e7685', 'center', 13);
+      else pill('你・' + (position.dir > 0 ? '多▲ ' : '空▼ ') + fmtShortSigned(pnl), Tp[0], ly, pnl >= 0 ? pal.up : pal.down, 'center', 13);
     } else {
-      pill('你', sp[0], sp[1] - r - 12, pal.ink, 'center', 11);
+      pill('你', Tp[0], ly + 2, pal.ink, 'center', 11);
     }
+  }
+  // the white blade streak across the cut, drawn on the overlay for both renderers
+  function leekSlash(now) {
+    const c = leek.cut;
+    if (!c) return;
+    const t = (now - c.t0) / 1000;
+    if (t > 1.3) { leek.cut = null; return; }
+    if (t > 0.3) return;
+    const q = toCam([view.s * S, walkerY(view.s) + c.to, 0]);
+    if (q[2] < NEAR) return;
+    const p = scr(q), r = 2.6 * view.cam.focal / q[2], a = 1 - t / 0.3;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,' + a + ')';
+    ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 14;
+    ctx.lineWidth = 4 * a + 1; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p[0] - r, p[1] + r * 0.35); ctx.lineTo(p[0] + r, p[1] - r * 0.35); ctx.stroke();
+    ctx.restore();
   }
 
   // ---- projection with near-plane clipping ----
@@ -2956,6 +3751,288 @@
     ctx.restore();
   }
 
+  /* ---- WebGL world (Three.js, self-hosted in vendor/) ----
+     Same world and camera as the hand-rolled renderer, drawn with real
+     lighting, shadows and fog. The 2D canvas stays on top for labels,
+     the entry rail, the liquidation sheet and the mini-map. If WebGL or
+     the module is unavailable (e.g. inside a claude.ai Artifact), the
+     hand-rolled renderer keeps working. */
+  const g3 = { on: false, render: null };
+  function initGL() {
+    let probe = null;
+    try { const t = document.createElement('canvas'); probe = t.getContext('webgl2') || t.getContext('webgl'); } catch (e) {}
+    if (!probe) return;
+    import('./vendor/three.module.min.js').then(function (T) {
+      const cv = document.createElement('canvas');
+      cv.id = 'chart3d';
+      cv.setAttribute('aria-hidden', 'true');
+      canvas.parentNode.insertBefore(cv, canvas);
+      const renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = T.PCFSoftShadowMap;
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+
+      const scene = new T.Scene();
+      scene.fog = new T.Fog(0xffe4ee, 9, FAR);
+      const cam = new T.PerspectiveCamera(60, 1, NEAR, FAR + 30);
+      const col = new T.Color();
+      function setC(c, rgb) { return c.setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, T.SRGBColorSpace); }
+
+      // sky gradient
+      const skyCv = document.createElement('canvas'); skyCv.width = 2; skyCv.height = 256;
+      const sky = new T.CanvasTexture(skyCv); sky.colorSpace = T.SRGBColorSpace;
+      scene.background = sky;
+      let skyKey = '';
+
+      // lights
+      const hemi = new T.HemisphereLight(0xffffff, 0xffc6dc, 1.5);
+      scene.add(hemi);
+      const sun = new T.DirectionalLight(0xffffff, 2.4);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 0.5, far: 50 });
+      sun.shadow.bias = -0.0008;
+      scene.add(sun, sun.target);
+      const orbLight = new T.PointLight(0xff5fa0, 8, 9, 1.6);
+      scene.add(orbLight);
+
+      // ground far below, with a soft shadow catcher and a grid
+      const GY = -1.5;
+      const shadowFloor = new T.Mesh(new T.PlaneGeometry(120, 30), new T.ShadowMaterial({ opacity: 0.16 }));
+      shadowFloor.rotation.x = -Math.PI / 2; shadowFloor.position.y = GY; shadowFloor.receiveShadow = true;
+      scene.add(shadowFloor);
+      const gridPts = [];
+      for (let x = 0; x <= FAR + 22; x += 2) gridPts.push(x, 0, -7, x, 0, 7);
+      for (let z = -7; z <= 7; z += 1.75) gridPts.push(0, 0, z, FAR + 22, 0, z);
+      const gridGeo = new T.BufferGeometry();
+      gridGeo.setAttribute('position', new T.Float32BufferAttribute(gridPts, 3));
+      const gridMat = new T.LineBasicMaterial({ transparent: true, opacity: 0.3 });
+      const grid = new T.LineSegments(gridGeo, gridMat);
+      grid.position.y = GY;
+      scene.add(grid);
+
+      // road: one dynamic mesh, 3 quads (top + two sides) per segment
+      const RV = MAX * 18;
+      const roadGeo = new T.BufferGeometry();
+      const rPos = new Float32Array(RV * 3), rCol = new Float32Array(RV * 3);
+      roadGeo.setAttribute('position', new T.BufferAttribute(rPos, 3).setUsage(T.DynamicDrawUsage));
+      roadGeo.setAttribute('color', new T.BufferAttribute(rCol, 3).setUsage(T.DynamicDrawUsage));
+      const road = new T.Mesh(roadGeo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.05, side: T.DoubleSide }));
+      road.castShadow = true; road.receiveShadow = true; road.frustumCulled = false;
+      scene.add(road);
+      // dashed center line and white edges
+      const lineGeo = new T.BufferGeometry();
+      const lPos = new Float32Array(MAX * 6 * 3);
+      lineGeo.setAttribute('position', new T.BufferAttribute(lPos, 3).setUsage(T.DynamicDrawUsage));
+      const lines = new T.LineSegments(lineGeo, new T.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }));
+      lines.frustumCulled = false;
+      scene.add(lines);
+
+      // candle pillars
+      const boxGeo = new T.BoxGeometry(1, 1, 1);
+      const bodies = new T.InstancedMesh(boxGeo, new T.MeshStandardMaterial({ roughness: 0.35, metalness: 0.1 }), MAX * 2);
+      const wicks = new T.InstancedMesh(boxGeo, new T.MeshStandardMaterial({ roughness: 0.5 }), MAX * 2);
+      [bodies, wicks].forEach(function (m) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; scene.add(m); });
+      const glowMats = [0, 1].map(function () { return new T.MeshStandardMaterial({ roughness: 0.3, emissiveIntensity: 0.55 }); });
+      const glow = glowMats.map(function (m) { const g = new T.Mesh(boxGeo, m); g.castShadow = true; scene.add(g); return g; });
+      const M = new T.Matrix4(), Q = new T.Quaternion(), P = new T.Vector3(), SC = new T.Vector3();
+
+      // coins with a $ face
+      const coinCv = document.createElement('canvas'); coinCv.width = coinCv.height = 128;
+      (function (c) {
+        const gr = c.createRadialGradient(48, 44, 8, 64, 64, 64);
+        gr.addColorStop(0, '#fff6b0'); gr.addColorStop(.6, '#ffc83a'); gr.addColorStop(1, '#d99000');
+        c.fillStyle = gr; c.fillRect(0, 0, 128, 128);
+        c.fillStyle = '#9a5b00'; c.font = '900 84px "Baloo 2", sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 64, 70);
+      })(coinCv.getContext('2d'));
+      const coinTex = new T.CanvasTexture(coinCv); coinTex.colorSpace = T.SRGBColorSpace;
+      const coinFace = new T.MeshStandardMaterial({ map: coinTex, metalness: 0.5, roughness: 0.3, emissive: 0x6a4200, emissiveIntensity: 0.6 });
+      const coinEdge = new T.MeshStandardMaterial({ color: 0xd99000, metalness: 0.7, roughness: 0.3, emissive: 0x4a2c00 });
+      const coinGeo = new T.CylinderGeometry(0.36, 0.36, 0.08, 28);
+      const coins = [];
+
+      // you: a bunch of 韭菜 (blades pivot at the bottom so scaling y grows them)
+      const bladeGeo = new T.BoxGeometry(0.3, 1, 1.1); bladeGeo.translate(0, 0.5, 0);
+      const bladeMats = [new T.MeshStandardMaterial({ color: 0x46c04f, roughness: 0.55 }), new T.MeshStandardMaterial({ color: 0x2f9a3a, roughness: 0.55 })];
+      function makeBunch() {
+        const g = new T.Group();
+        LEEK_BLADES.forEach(function (a, i) {
+          const m = new T.Mesh(bladeGeo, bladeMats[i % 2]);
+          m.rotation.x = a * 0.75; m.rotation.z = (i % 3 - 1) * 0.12; m.position.x = (i % 2 ? -0.08 : 0.08);
+          m.castShadow = true;
+          g.add(m);
+        });
+        return g;
+      }
+      const orb = new T.Group();
+      const stem = new T.Mesh(new T.CylinderGeometry(0.62, 0.78, 0.45, 24), new T.MeshStandardMaterial({ color: 0xf2f7e4, roughness: 0.6 }));
+      stem.position.y = 0.22; stem.castShadow = true;
+      const blades = makeBunch(); blades.position.y = 0.3;
+      orb.add(stem, blades);
+      // 「韭菜」name tag on the bunch, always facing the player
+      const tagCv = document.createElement('canvas'); tagCv.width = 256; tagCv.height = 128;
+      (function (c) {
+        c.fillStyle = '#ffffff'; c.strokeStyle = '#2f9a3a'; c.lineWidth = 10;
+        c.beginPath();
+        if (c.roundRect) c.roundRect(8, 8, 240, 112, 30); else c.rect(8, 8, 240, 112);
+        c.fill(); c.stroke();
+        c.fillStyle = '#1f6e28'; c.font = '900 76px "Noto Sans TC", sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('韭菜', 128, 68);
+      })(tagCv.getContext('2d'));
+      const tagTex = new T.CanvasTexture(tagCv); tagTex.colorSpace = T.SRGBColorSpace;
+      const tag = new T.Sprite(new T.SpriteMaterial({ map: tagTex, depthTest: false }));
+      tag.scale.set(1.5, 0.75, 1); tag.renderOrder = 10;
+      orb.add(tag);
+      scene.add(orb);
+      const chopped = makeBunch();
+      chopped.visible = false;
+      scene.add(chopped);
+
+      function quad(o, a, b, c, d, rgb) {
+        const vs = [a, b, c, a, c, d];
+        for (let k = 0; k < 6; k++) {
+          rPos.set(vs[k], (o + k) * 3);
+          rCol[(o + k) * 3] = rgb.r; rCol[(o + k) * 3 + 1] = rgb.g; rCol[(o + k) * 3 + 2] = rgb.b;
+        }
+        return o + 6;
+      }
+      const cTop = new T.Color(), cSide = new T.Color();
+
+      g3.render = function () {
+        const n = candles.length;
+        const w = view.w, h = view.h;
+        const size = renderer.getSize(new T.Vector2());
+        if (size.x !== w || size.y !== h) renderer.setSize(w, h, false);
+
+        // palette
+        const key = pal.skyTop.join() + pal.skyBottom.join();
+        if (key !== skyKey) {
+          skyKey = key;
+          const c = skyCv.getContext('2d'), gr = c.createLinearGradient(0, 0, 0, 256);
+          gr.addColorStop(0, rgbStr(pal.skyTop)); gr.addColorStop(1, rgbStr(pal.skyBottom));
+          c.fillStyle = gr; c.fillRect(0, 0, 2, 256); sky.needsUpdate = true;
+        }
+        setC(scene.fog.color, pal.fog);
+        setC(gridMat.color, pal.grid);
+        orbLight.color.setRGB(0.55, 1, 0.55);
+
+        // camera: identical to the 2D projection so labels line up
+        const c = view.cam;
+        cam.aspect = w / h;
+        cam.fov = 2 * Math.atan((h / 2) / c.focal) * 180 / Math.PI;
+        cam.position.set(c.C[0], c.C[1], c.C[2]);
+        cam.up.set(0, 1, 0);
+        cam.lookAt(c.C[0] + c.f[0], c.C[1] + c.f[1], c.C[2] + c.f[2]);
+        cam.updateProjectionMatrix();
+
+        const sx = view.s * S, wy = walkerY(view.s);
+        sun.target.position.set(sx, wy, 0);
+        sun.position.set(sx - 5, wy + 12, 7);
+        shadowFloor.position.x = sx;
+        grid.position.x = Math.floor((Math.floor(view.s) * S - 14) / 2) * 2;
+
+        // road
+        const from = Math.max(0, Math.floor(view.s) - 8);
+        let o = 0, lo = 0;
+        const RD = 0.24;
+        for (let i = from; i < n - 1; i++) {
+          const xa = i * S, xb = (i + 1) * S, ya = closeY(i), yb = closeY(i + 1);
+          const base = candles[i + 1].close >= candles[i].close ? pal.up : pal.down;
+          setC(cTop, mix(base, [255, 255, 255], 0.12));
+          setC(cSide, mix(base, [0, 0, 0], 0.3));
+          o = quad(o, [xa, ya, -ROAD], [xa, ya, ROAD], [xb, yb, ROAD], [xb, yb, -ROAD], cTop);
+          o = quad(o, [xa, ya, ROAD], [xa, ya - RD, ROAD], [xb, yb - RD, ROAD], [xb, yb, ROAD], cSide);
+          o = quad(o, [xa, ya, -ROAD], [xb, yb, -ROAD], [xb, yb - RD, -ROAD], [xa, ya - RD, -ROAD], cSide);
+          // edges plus one dash in the middle of each segment
+          lPos.set([xa, ya + 0.012, -ROAD, xb, yb + 0.012, -ROAD, xa, ya + 0.012, ROAD, xb, yb + 0.012, ROAD,
+            xa + (xb - xa) * 0.25, ya + (yb - ya) * 0.25 + 0.012, 0, xa + (xb - xa) * 0.75, ya + (yb - ya) * 0.75 + 0.012, 0], lo * 3);
+          lo += 6;
+        }
+        roadGeo.setDrawRange(0, o);
+        roadGeo.attributes.position.needsUpdate = true;
+        roadGeo.attributes.color.needsUpdate = true;
+        roadGeo.computeVertexNormals();
+        lineGeo.setDrawRange(0, lo);
+        lineGeo.attributes.position.needsUpdate = true;
+
+        // pillars on both sides of the road; the newest pair glows
+        let bi = 0;
+        Q.identity();
+        function put(mesh, idx, x, y0, y1, z, hw, rgb) {
+          P.set(x, (y0 + y1) / 2, z); SC.set(hw * 2, Math.max(0.001, y1 - y0), hw * 2);
+          M.compose(P, Q, SC);
+          mesh.setMatrixAt(idx, M);
+          mesh.setColorAt(idx, setC(col, rgb));
+        }
+        glow[0].visible = glow[1].visible = false;
+        for (let i = from; i < n; i++) {
+          const cd = candles[i], newest = i === n - 1;
+          const e = newest ? popE() : 1;
+          const yo = yOf(cd.open);
+          const yc = yo + (yOf(cd.close) - yo) * e, yh = yo + (yOf(cd.high) - yo) * e, yl = yo + (yOf(cd.low) - yo) * e;
+          const rgb = cd.gold && !cd.goldTaken ? [255, 196, 46] : cd.close >= cd.open ? pal.up : pal.down;
+          let b0 = Math.min(yo, yc), b1 = Math.max(yo, yc);
+          if (b1 - b0 < 0.06) { b0 -= 0.03; b1 += 0.03; }
+          [PILLAR_Z, -PILLAR_Z].forEach(function (pz, side) {
+            put(wicks, bi, i * S, Math.min(yl, yh), Math.max(yl, yh), pz, WICK, rgb);
+            if (newest) {
+              const g = glow[side];
+              g.visible = true;
+              g.position.set(i * S, (b0 + b1) / 2, pz); g.scale.set(BODY * 2, b1 - b0, BODY * 2);
+              setC(glowMats[side].color, rgb); setC(glowMats[side].emissive, rgb);
+              put(bodies, bi, i * S, 0, 0.001, pz, 0.0005, rgb);   // hidden slot
+            } else {
+              put(bodies, bi, i * S, b0, b1, pz, BODY, rgb);
+            }
+            bi++;
+          });
+        }
+        bodies.count = wicks.count = bi;
+        bodies.instanceMatrix.needsUpdate = wicks.instanceMatrix.needsUpdate = true;
+        if (bodies.instanceColor) bodies.instanceColor.needsUpdate = true;
+        if (wicks.instanceColor) wicks.instanceColor.needsUpdate = true;
+
+        // coins
+        let ci = 0;
+        for (let i = from; i < n; i++) {
+          const cd = candles[i];
+          if (!cd.gold || cd.goldTaken) continue;
+          if (!coins[ci]) {
+            const m = new T.Mesh(coinGeo, [coinEdge, coinFace, coinFace]);
+            m.castShadow = true; scene.add(m); coins.push(m);
+          }
+          const m = coins[ci++];
+          const bob = reduceMotion ? 0 : Math.sin(view.t * 3 + i) * 0.12;
+          m.visible = true;
+          m.position.set(i * S, closeY(i) + 0.8 + bob, 0);
+          m.rotation.set(0, reduceMotion ? 0 : view.t * 2.4 + i, Math.PI / 2);
+        }
+        for (let k = ci; k < coins.length; k++) coins[k].visible = false;
+
+        // you
+        orb.position.set(sx, wy, 0);
+        blades.scale.set(1, Math.max(0.05, leek.h - 0.3), 1);
+        tag.position.set(-0.5, Math.max(0.7, leek.h * 0.5), 0);
+        orb.visible = orbLight.visible = !view.liqFreeze;
+        orbLight.position.set(sx, wy + leek.h + 0.4, 0);
+        // the chopped-off top tumbles down and away
+        const lc = leek.cut, ct = lc ? (performance.now() - lc.t0) / 1000 : 9;
+        chopped.visible = !!lc && ct < 1.2 && !view.liqFreeze;
+        if (chopped.visible) {
+          chopped.scale.set(1, Math.max(0.05, lc.from - lc.to), 1);
+          chopped.position.set(sx + ct * 0.9, wy + lc.to - 3.2 * ct * ct, 0.3 * ct);
+          chopped.rotation.set(0, 0, -ct * 2.4);
+        }
+
+        renderer.render(scene, cam);
+      };
+      g3.on = true;
+    }).catch(function () { g3.on = false; });
+  }
+
   function draw() {
     if (!view.w || !candles.length) return;
     if (!pal) refreshPalette();
@@ -2968,6 +4045,7 @@
     let hi = Math.max.apply(null, candles.map(function (c) { return c.high; }));
     let lo = Math.min.apply(null, candles.map(function (c) { return c.low; }));
     if (position) { hi = Math.max(hi, position.avgEntry); lo = Math.min(lo, position.avgEntry); }
+    if (view.liqFreeze) { const fz = view.liqFreeze; hi = Math.max(hi, fz.entry, fz.lp); lo = Math.min(lo, fz.entry, fz.lp); }
     const span = (hi - lo) || 1;
     hi += span * 0.05; lo -= span * 0.05;
     if (view.lo === null) { view.lo = lo; view.hi = hi; }
@@ -2990,9 +4068,19 @@
     view.kick = Math.max(0, view.kick - dt * 1.3);
     if (!view.dragging && now - view.dragEnd > 1800) view.dragYaw *= Math.max(0, 1 - dt * 1.5);
 
+    if (!leek.cut || now - leek.cut.t0 > 300) leek.h += (leekTarget() - leek.h) * Math.min(1, dt * 2.5);
     setupCamera();
     const w = view.w, h = view.h;
+    const xN = (n - 1) * S, yN = closeY(n - 1);
 
+    if (g3.on) {
+      g3.render();
+      ctx.clearRect(0, 0, w, h);
+      for (let j = 0; j < 5; j++) {
+        line3([xN + j * 1.4, yN, 0], [xN + (j + 1) * 1.4, yN, 0], rgbStr(pal.ink, 0.35 - j * 0.06), 2, [5, 6]);
+      }
+      if (!view.liqFreeze) walkerOrb(true);
+    } else {
     // sky
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, rgbStr(pal.skyTop)); g.addColorStop(1, rgbStr(pal.skyBottom));
@@ -3009,7 +4097,6 @@
     }
 
     // the unknown future: a fading dashed path into the fog
-    const xN = (n - 1) * S, yN = closeY(n - 1);
     for (let j = 0; j < 5; j++) {
       line3([xN + j * 1.4, yN, 0], [xN + (j + 1) * 1.4, yN, 0], rgbStr(pal.ink, 0.35 - j * 0.06), 2, [5, 6]);
     }
@@ -3023,9 +4110,10 @@
       items.push({ z: depth([i * S, yOf(candles[i].close), -PILLAR_Z]), f: pillar.bind(null, i, -PILLAR_Z) });
       if (candles[i].gold && !candles[i].goldTaken) items.push({ z: depth([i * S, closeY(i) + 0.8, 0]) - 0.01, f: coin.bind(null, i) });
     }
-    items.push({ z: depth([view.s * S, walkerY(view.s) + 0.45, 0]) - 0.02, f: walkerOrb });
+    if (!view.liqFreeze) items.push({ z: depth([view.s * S, walkerY(view.s) + 0.45, 0]) - 0.02, f: walkerOrb });
     items.sort(function (a, b) { return b.z - a.z; });
     items.forEach(function (it) { if (it.z > -3) it.f(); });
+    }
 
     // position: entry rail and the liquidation "lava" sheet
     if (position) {
@@ -3037,13 +4125,81 @@
         const pulse = denial ? 0.04 : reduceMotion ? 0.24 : 0.2 + 0.12 * Math.sin(view.t * 6);
         fillPoly([[view.s * S - 3, yl, -4], [xN + 9, yl, -4], [xN + 9, yl, 4], [view.s * S - 3, yl, 4]], rgbStr(pal.liq, pulse));
         line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 2.2);
-        if (!denial) labelAt([xN + 3.5, yl, 0], '💀 爆倉', pal.liq, 10);
+        if (!denial) labelAt([xN + 3.5, yl, 0], '💀 差 ' + Math.abs(lastClose() - lp).toFixed(2) + ' 円', pal.liq, 10);
       }
     }
+
+    // the killing candle, frozen: entry rail, the breached liquidation sheet, a big label
+    if (view.liqFreeze) {
+      const fz = view.liqFreeze, ye = yOf(fz.entry), yl = yOf(fz.lp);
+      const blink = reduceMotion ? 0.5 : 0.35 + 0.3 * Math.abs(Math.sin((now - fz.t0) / 120));
+      explosion(fz, now);
+      line3([view.s * S - 2, ye, 0], [xN + 7, ye, 0], rgbStr(pal.ink, 0.8), 2, [8, 6]);
+      labelAt([xN + 2.5, ye, 0], '均價 ' + fz.entry.toFixed(3), rgbStr(pal.ink, 0.85), 10);
+      fillPoly([[view.s * S - 3, yl, -4], [xN + 9, yl, -4], [xN + 9, yl, 4], [view.s * S - 3, yl, 4]], rgbStr(pal.liq, blink));
+      line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 4);
+      labelAt([xN + 3.5, yl, 0], '爆倉線 ' + fz.lp.toFixed(3), pal.liq, 11);
+      pill('💥 爆倉！', view.w / 2, view.h * 0.66, pal.liq, 'center', 22);
+    }
+
+    if (!view.liqFreeze) leekSlash(now);
 
     // HUD
     miniMap();
     // (drag hint removed: the message and indicator overlays use that space)
+  }
+
+  // 爆倉爆炸: fireball, shockwave, sparks and smoke where you were standing
+  function explosion(fz, now) {
+    const t = (now - fz.t0) / 1000;
+    const q = toCam([view.s * S, walkerY(view.s) + leek.h * 0.5, 0]);
+    if (t > 5 || q[2] < NEAR) return;
+    const o = scr(q), k = Math.max(0.6, view.h / 420), w = view.w, h = view.h;
+    ctx.save();
+    // smoke rises once the fire dies down
+    if (t > 0.35) {
+      const st = t - 0.35;
+      fz.smoke.forEach(function (p) {
+        const a = 0.38 * Math.max(0, 1 - st / 4.4);
+        ctx.fillStyle = 'rgba(55,35,45,' + a + ')';
+        ctx.beginPath(); ctx.arc(o[0] + p.dx * k * (1 + st * 0.3), o[1] - (p.dy + p.rise * st) * k, (p.r + 16 * st) * k, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    // shockwave ring
+    if (t < 0.8) {
+      const f = t / 0.8;
+      ctx.strokeStyle = 'rgba(255,225,160,' + (1 - f) + ')';
+      ctx.lineWidth = (12 * (1 - f) + 2) * k;
+      ctx.beginPath(); ctx.arc(o[0], o[1], f * Math.max(w, h) * 0.75, 0, Math.PI * 2); ctx.stroke();
+    }
+    // main fireball, then a smaller second blast
+    [[0, 0, 0, 1], [0.45, 34, -26, 0.6]].forEach(function (b) {
+      const bt = t - b[0];
+      if (bt < 0 || bt > 1.5) return;
+      const grow = Math.min(1, bt / 0.22), fade = bt < 0.22 ? 1 : Math.max(0, 1 - (bt - 0.22) / 1.28);
+      const R = (26 + 120 * grow) * k * b[3], x = o[0] + b[1] * k, y = o[1] + b[2] * k;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+      g.addColorStop(0, 'rgba(255,255,240,' + fade + ')');
+      g.addColorStop(0.3, 'rgba(255,224,102,' + fade + ')');
+      g.addColorStop(0.6, 'rgba(255,122,26,' + fade * 0.9 + ')');
+      g.addColorStop(1, 'rgba(255,40,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+    });
+    // sparks fly out and fall
+    fz.sparks.forEach(function (p) {
+      if (t > p.life) return;
+      const a = 1 - t / p.life, d = p.v * t * k, gy = 260 * t * t * k;
+      const x = o[0] + Math.cos(p.a) * d, y = o[1] + Math.sin(p.a) * d + gy;
+      const tx = x - Math.cos(p.a) * 14 * k, ty = y - Math.sin(p.a) * 14 * k - 520 * t * k * 0.03;
+      ctx.strokeStyle = 'rgba(255,' + Math.round(150 + 90 * a) + ',60,' + a + ')';
+      ctx.lineWidth = p.w * k;
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(x, y); ctx.stroke();
+    });
+    // white flash on the first frames
+    if (t < 0.12) { ctx.fillStyle = 'rgba(255,255,255,' + (1 - t / 0.12) * 0.8 + ')'; ctx.fillRect(0, 0, w, h); }
+    ctx.restore();
   }
 
   // called by tick() after a new candle arrives: take one step forward
@@ -3082,9 +4238,26 @@
     const mult = volTicksLeft > 0 ? volMult : 1;
     if (volTicksLeft > 0) volTicksLeft--;
 
+    stepGuru();
+    // runaway runs get cut mid-trade too, not only at the next entry
+    if (position && !rigTicks && !favorTicks && paceRatio() > 1.5 && Math.random() < 0.3) {
+      rigTicks = 3 + Math.floor(Math.random() * 3); rigTease = false;
+    }
+    let boost = 1;
+    trendLock = callTicks > 0;
+    if (trendLock) { trend = callTrue ? callDir : -callDir; boost = 2.2; }
+    if (favorTicks > 0 && position) {
+      trendLock = true; trend = position.dir; boost = favorBoost; favorTicks--;
+    } else if (rigTicks > 0 && position) {
+      // 黑箱波段: the house quietly trades against you (sometimes one sweet candle first)
+      trendLock = true;
+      if (rigTease) { trend = position.dir; boost = 1.6; rigTease = false; }
+      else { trend = -position.dir; boost = 2.6; rigTicks--; }
+    } else { rigTicks = 0; favorTicks = 0; }
     const last = candles[candles.length - 1];
-    const c = newCandle(last.close, mult, true);
+    const c = newCandle(last.close, mult, true, boost);
     if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
+    marketEvents(c, last);
     candles.push(c);
     let shifted = false;
     if (candles.length > MAX) { candles.shift(); shifted = true; }
@@ -3096,13 +4269,13 @@
 
     $('price').textContent = fmtUsd(c.close);
     const ch = $('change');
-    ch.textContent = (rising ? '▲ +' : '▼ ') + Math.round(diff).toLocaleString('en-US') + '（區間 ' + pct.toFixed(2) + '%）';
+    ch.textContent = (rising ? '▲ +' : '▼ ') + diff.toFixed(3) + ' 円（區間 ' + pct.toFixed(2) + '%）';
 
     document.body.classList.toggle('scary', !rising);
     refreshPalette();
     ch.style.color = rising ? cssVar('--up') : cssVar('--down');
     $('mood').textContent = rising ? '😊' : '😱';
-    $('title').textContent = rising ? '🌸 BTC 戰士 🌸' : '💀 BTC 戰士 💀';
+    $('title').textContent = rising ? '🌸 韭菜戰士 🌸' : '💀 韭菜戰士 💀';
 
     if (streakDir !== 0 && (rising ? 1 : -1) === streakDir) streakLen++;
     else { streakDir = rising ? 1 : -1; streakLen = 1; }
@@ -3115,7 +4288,9 @@
 
     if (position) {
       const pnl = positionPnl(c.close);
-      if (pnl <= -position.margin) {
+      const wick = position.dir > 0 ? c.low : c.high;
+      if (c.pin && (position.dir > 0 ? wick <= liqPrice() : wick >= liqPrice())) { liqReason = '📌 被插針插到爆倉'; liquidate(); }
+      else if (pnl <= -position.margin) {
         liquidate();
       } else {
         position.redTicks = pnl < 0 ? position.redTicks + 1 : 0;
@@ -3127,6 +4302,7 @@
         if (position.avgDown && position.redTicks >= 10) achieve('valueInvest');
         if (denial) { denialTicks++; if (denialTicks >= 10) achieve('aq'); }
         if (position.redTicks >= 10) achieve('diamond');
+        stats.maxRed = Math.max(stats.maxRed || 0, position.redTicks);
         position.held = (position.held || 0) + 1;
         missionEvent('hold', position.held, 'max');
       }
@@ -3150,6 +4326,13 @@
     }
 
     equityLog.push(Math.round(liveEquity()));
+    lbMaybeSubmit();
+    if (callTicks > 0) { callTicks--; if (position) callFollow += position.dir === callDir ? 1 : -1; if (callTicks === 0) endCall(); }
+    stepRivals(diff / last.close);
+    const eqNow = liveEquity();
+    if (eqNow >= 4000000) story('s400', 'rich');
+    if (eqNow >= 8000000) story('s800', 'sweat');
+    if (eqNow >= 12000000) story('s1200', 'blood');
     if (equityLog.length > 800) equityLog.splice(0, equityLog.length - 800);
     $('clock').textContent = mmss(gameSecs());
     if (fitChartFn) fitChartFn();
@@ -3166,9 +4349,10 @@
     if (!equityLog.length) equityLog.push(Math.round(liveEquity()));
     $('splash').hidden = true;
     $('change').textContent = '開盤！';
-    setTimeout(function () { toast('🎯 第一個任務', '下方黃色條是目前任務，完成就有獎勵。'); }, 1200);
+    if (!storyDone.start) setTimeout(function () { story('start', 'calm'); }, 500);
+    setTimeout(function () { toast('🎯 第一個任務', '下方黃色條是目前任務，完成就有獎勵。'); }, 4200);
     refreshTradeUI();
-    timer = setInterval(tick, 1500);
+    timer = setInterval(tick, 1200);
     setTimeout(tick, 400);
   }
   $('enterBtn').addEventListener('click', function () {
@@ -3178,9 +4362,11 @@
     begin();
   });
 
+  const SAVE_KEY = 'btc-warrior-save';
+  let saveLocal = function () {};
   function init(saved) {
     // a snapshot from an older version with a different money scale starts fresh
-    if (saved && saved.scale !== START) saved = null;
+    if (saved && (saved.scale !== START || saved.pair !== 'USDJPY')) saved = null;
     if (saved && saved.candles && saved.candles.length) {
       candles = saved.candles;
       balance = saved.balance; debt = saved.debt; position = saved.position;
@@ -3202,6 +4388,12 @@
       if (saved.rankIdx != null) rankIdx = saved.rankIdx;
       if (curRank() < LEV_UNLOCK[lev]) lev = 25;
       borrowCount = saved.borrowCount || 0;
+      if (saved.rivals) rivals = saved.rivals;
+      lazyDir = saved.lazyDir || 1; rivalsDone = saved.rivalsDone || {}; storyDone = saved.storyDone || {};
+      if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
+      buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
+      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; favorTicks = saved.rig[2] || 0; lossStreak = saved.rig[3] || 0; chosenLeft = saved.rig[4] == null ? 2 : saved.rig[4]; }
+      rescued = !!saved.rescued;
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
       seed();
@@ -3223,29 +4415,147 @@
     syncDock();
     fitChart();
 
-    resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission();
+    resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission(); renderDuel(true);
+    initGL();
     requestAnimationFrame(loop);
     if (saved && saved.started) begin();
 
-    if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
-      window.claude.hot.snapshot(function () {
+    function snapshot() {
         return {
           candles: candles, balance: balance, debt: debt, position: position, achieved: achieved,
           winStreak: winStreak, soundOn: soundOn, started: started,
           dadDebt: dadDebt, stealCount: stealCount, stolenAtRisk: stolenAtRisk, dadCheckIn: dadCheckIn, grounded: grounded,
           spins: spins, shields: shields, doubleNext: doubleNext, tickCount: tickCount, stakeMode: stakeMode, lev: lev,
           bestRank: bestRank, rankIdx: rankIdx, borrowCount: borrowCount, missionIdx: missionIdx, missionRound: missionRound, missionProg: missionProg, stats: stats, cleared: cleared,
-          trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START
+          trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START, pair: 'USDJPY',
+          rivals: rivals, lazyDir: lazyDir, rivalsDone: rivalsDone, storyDone: storyDone,
+          guru: { ticks: callTicks, dir: callDir, truth: callTrue, wait: callWait, follow: callFollow },
+          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease, favorTicks, lossStreak, chosenLeft], rescued: rescued
         };
-      });
     }
-    window.addEventListener('pagehide', function () { if (timer) clearInterval(timer); });
+    if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+      window.claude.hot.snapshot(snapshot);
+    } else {
+      // self-hosted: keep the run in this browser
+      saveLocal = function () { try { localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot())); } catch (e) {} };
+      setInterval(saveLocal, 3000);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) saveLocal(); });
+    }
+    window.addEventListener('pagehide', function () { saveLocal(); if (timer) clearInterval(timer); });
   }
+
+  /* ---------- 全網排行榜 (Supabase; hidden until LB_URL / LB_KEY are set) ----------
+     Table and submit function: see supabase.sql. Each browser is one
+     player (random id in localStorage); the board keeps its best net worth. */
+  const LB_URL = 'https://kjmgvykhndurutsqtgxk.supabase.co';
+  const LB_KEY = 'sb_publishable_d-BOCI0N9zPLIVSmeP56xw_Ewwccz_c';
+  const lbOn = !!(LB_URL && LB_KEY && window.fetch && !window.claude);
+  let lb = null, lbLastSent = 0;
+  function lbLoad() {
+    if (lb) return lb;
+    try { lb = JSON.parse(localStorage.getItem('btc-warrior-lb') || 'null'); } catch (e) {}
+    if (!lb || !lb.id) {
+      const id = window.crypto && crypto.randomUUID ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); });
+      lb = { id: id, name: '韭菜' + (1000 + Math.floor(Math.random() * 9000)), best: 0, sent: 0, cleared: false };
+    }
+    return lb;
+  }
+  function lbStore() { try { localStorage.setItem('btc-warrior-lb', JSON.stringify(lb)); } catch (e) {} }
+  function lbHeaders() {
+    const h = { apikey: LB_KEY, 'Content-Type': 'application/json' };
+    if (LB_KEY.indexOf('eyJ') === 0) h.Authorization = 'Bearer ' + LB_KEY;
+    return h;
+  }
+  function lbSend(keepalive) {
+    const me = lbLoad();
+    if (!lbOn || me.best <= START || (me.best <= me.sent && me.cleared === me.sentCleared && me.name === me.sentName)) return Promise.resolve();
+    lbLastSent = performance.now();
+    const body = { p_player: me.id, p_name: me.name, p_peak: Math.round(me.best), p_cleared: !!me.cleared };
+    return fetch(LB_URL + '/rest/v1/rpc/submit_score', { method: 'POST', headers: lbHeaders(), body: JSON.stringify(body), keepalive: !!keepalive })
+      .then(function (r) {
+        if (!r.ok) return;
+        me.sent = body.p_peak; me.sentCleared = body.p_cleared; me.sentName = body.p_name; lbStore();
+      })
+      .catch(function () {});
+  }
+  // called every candle: remember a new personal best, upload at most every 20 s
+  function lbMaybeSubmit() {
+    if (!lbOn) return;
+    const me = lbLoad(), eq = Math.round(liveEquity());
+    if (eq > me.best) { me.best = eq; lbStore(); }
+    if (cleared && !me.cleared) { me.cleared = true; lbStore(); }
+    if (performance.now() - lbLastSent > 20000) lbSend();
+  }
+  function lbRender() {
+    const me = lbLoad();
+    $('lbName').value = me.name;
+    $('lbMine').textContent = '我的最佳：' + (me.best ? fmtShort(me.best) : '還沒有');
+    const list = $('lbList');
+    list.textContent = '';
+    const wait = document.createElement('li'); wait.textContent = '讀取中…'; list.appendChild(wait);
+    fetch(LB_URL + '/rest/v1/scores?select=name,peak,cleared&order=peak.desc&limit=50', { headers: lbHeaders() })
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (rows) {
+        list.textContent = '';
+        if (!rows.length) { const li = document.createElement('li'); li.textContent = '還沒有人上榜，你就是第一名！'; list.appendChild(li); }
+        let mine = false;
+        rows.forEach(function (row, i) {
+          const li = document.createElement('li');
+          if (!mine && row.name === me.name && Number(row.peak) === Math.round(me.sent || me.best)) { li.className = 'me'; mine = true; }
+          const rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1;
+          const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (row.cleared ? '🏁 ' : '') + row.name;
+          const pk = document.createElement('span'); pk.className = 'pk'; pk.textContent = fmtShort(Number(row.peak));
+          li.append(rk, nm, pk);
+          list.appendChild(li);
+        });
+      })
+      .catch(function () { list.textContent = ''; const li = document.createElement('li'); li.textContent = '排行榜暫時連不上，等等再看。'; list.appendChild(li); });
+  }
+  if (lbOn) {
+    $('lbBtn').hidden = false;
+    $('lbBtn').addEventListener('click', function () {
+      $('lbModal').hidden = false;
+      lbSend().then(lbRender);
+      $('lbClose').focus();
+    });
+    $('lbClose').addEventListener('click', function () { $('lbModal').hidden = true; });
+    $('lbModal').addEventListener('click', function (e) { if (e.target === $('lbModal')) $('lbModal').hidden = true; });
+    $('lbSave').addEventListener('click', function () {
+      const nm = $('lbName').value.trim().slice(0, 12);
+      if (!nm) return;
+      lbLoad().name = nm; lbStore();
+      toast('✏️ 暱稱改成「' + nm + '」');
+      lbSend().then(lbRender);
+    });
+    window.addEventListener('pagehide', function () { lbSend(true); });
+  }
+
+  /* ---------- visit counter (self-hosted only; hidden if the service is down) ---------- */
+  (function () {
+    if (window.claude) return;
+    const el = $('visits');
+    let counted = false;
+    try { counted = sessionStorage.getItem('btcw-counted') === '1'; } catch (e) {}
+    fetch('https://abacus.jasoncameron.dev/' + (counted ? 'get' : 'hit') + '/btc-warrior/visits')
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (d) {
+        if (typeof d.value !== 'number') return;
+        try { sessionStorage.setItem('btcw-counted', '1'); } catch (e) {}
+        el.textContent = '👀 已有 ' + d.value.toLocaleString('en-US') + ' 位韭菜進場';
+        el.hidden = false;
+      })
+      .catch(function () {});
+  })();
 
   if (window.claude && window.claude.hot && window.claude.hot.ready) {
     window.claude.hot.ready(function (data) { init(data); });
+  } else if (window.claude && window.claude.hot) {
+    init(window.claude.hot.data);
   } else {
-    init(window.claude && window.claude.hot ? window.claude.hot.data : null);
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
+    init(saved);
   }
 })();
 </script>
