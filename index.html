@@ -2295,7 +2295,10 @@
     });
     // rescue options only when broke: no position and not enough for a bet
     const broke = started && !position && balance < STAKE;
-    if (broke && !wasBroke) {
+    // one rescue per bankruptcy: a new round opens on going broke, or on losing the rescue money too
+    const busted = broke && balance < 1000;
+    if ((broke && !wasBroke) || (rescued && busted)) {
+      rescued = false;
       spins = 1;
       buddyLeft = buddyCount < 3 ? 1 : 0;
       setTimeout(function () { story('broke', 'cry'); }, 900);
@@ -2327,6 +2330,11 @@
     }
     btnBorrow.disabled = grounded > 0;
     btnSteal.disabled = locked;
+    if (rescued) {
+      btnWheel.disabled = btnBuddy.disabled = btnBorrow.disabled = btnSteal.disabled = true;
+      btnWheel.classList.remove('ready');
+    }
+    document.querySelector('.rescue-head').textContent = rescued ? '🆘 這次已經被救過了，再賠光才能再求救' : '💸 沒錢了……要怎麼翻身？';
 
     const chips = $('chips');
     chips.textContent = '';
@@ -2574,7 +2582,9 @@
   function borrow() {
     if (grounded > 0) return;
     if (borrowCount >= MAX_BORROW) { toast('📵 朋友不接電話了', '借了 ' + MAX_BORROW + ' 次，已讀不回。'); return; }
+    if (rescued) return;
     borrowCount++;
+    rescued = true;
     balance += STAKE;
     debt += STAKE;
     playClick();
@@ -2590,7 +2600,8 @@
     '這不是偷，這是家庭內部融資！'
   ];
   function steal() {
-    if (!started || grounded > 0) return;
+    if (!started || grounded > 0 || rescued) return;
+    rescued = true;
     const amt = (100 + Math.floor(Math.random() * 201)) * 100 * K; // 20萬–60萬
     balance += amt;
     stealCount++;
@@ -2712,7 +2723,7 @@
     stakeMode = 0.05; lev = 25; rankIdx = null; bestRank = 3; cleared = false;
     trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
     stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
-    resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0;
+    resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0; rescued = false;
     setTimeout(function () { story('start', 'calm'); }, 600);
     missionIdx = 0; missionRound = 0; missionProg = 0;
     meterState.bal.shown = null;
@@ -3051,15 +3062,16 @@
   }
 
   /* ---------- 好友救援: the classmate bails you out, on her terms ---------- */
-  let buddyLock = false, buddyLeft = 0, buddyCount = 0;
+  let buddyLock = false, buddyLeft = 0, buddyCount = 0, rescued = false;
   const buddyLines = [
     '「借你 50 萬。下一單只准開 10 倍，我會盯著你。」',
     '「又來？……最後兩次喔。只准 10 倍。」',
     '「這是我的學費，你給我好好用。只准 10 倍。」'
   ];
   function buddy() {
-    if (buddyLeft <= 0 || grounded > 0) return;
+    if (buddyLeft <= 0 || grounded > 0 || rescued) return;
     buddyLeft = 0;
+    rescued = true;
     balance += START / 4;
     buddyLock = true; lev = 10;
     toast('🤓 學霸' + buddyLines[Math.min(buddyCount, buddyLines.length - 1)]);
@@ -3173,6 +3185,7 @@
   }
   function applyPrize(p) {
     let text = '';
+    if (p.key.indexOf('red') === 0) rescued = true;   // only cash counts as being rescued
     switch (p.key) {
       case 'red10k': balance += 10000 * K; text = '🧧 紅包 +20 萬！'; playFanfare(); spawnParticles('up'); break;
       case 'red3k': balance += 3000 * K; text = '🧧 小紅包 +6 萬～'; playCoin(); break;
@@ -4089,6 +4102,7 @@
       if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
       buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
       if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; }
+      rescued = !!saved.rescued;
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
       seed();
@@ -4125,7 +4139,7 @@
           trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START, pair: 'USDJPY',
           rivals: rivals, lazyDir: lazyDir, rivalsDone: rivalsDone, storyDone: storyDone,
           guru: { ticks: callTicks, dir: callDir, truth: callTrue, wait: callWait, follow: callFollow },
-          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease]
+          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease], rescued: rescued
         };
     }
     if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
