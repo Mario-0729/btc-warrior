@@ -1,6 +1,6 @@
 # 韭菜戰士：媽媽的 2000 萬 — 專案交接說明
 
-（2026/10 由「BTC 戰士」改名；網址與資料夾仍叫 btc-warrior，排行榜與存檔不受影響。）
+（2026/10 由「BTC 戰士」改名；GitHub 專案改名為 mama2000，網址跟著換。程式內部的存檔鍵、瀏覽數命名空間仍叫 btc-warrior，刻意不改以保留存檔、排行榜身分與瀏覽數。）
 
 一款仿《FX戰士久留美》（原作漫畫＋2026/10 開播動畫）風格的美元/日圓 K 線模擬交易網頁遊戲。上漲時畫面可愛，下跌時變恐怖。
 遊戲定位（使用者明確要求）：目的是惡意噁心玩家，「成就感」來自被噁心到；5 分鐘內達到最高爽感；太難、太複雜的系統都不要（不做停損停利設定、關卡技能卡、每日挑戰）。重點是玩家帶入感。
@@ -12,7 +12,7 @@
 - 修改前先備份，改完要用無頭瀏覽器（Playwright）實測，並檢查手機寬度 360px 的排版。
 
 ## 目前上線位置
-- GitHub Pages（主站）：https://mario-0729.github.io/btc-warrior/ （`GAME_URL` 已指向這裡）
+- GitHub Pages（主站）：https://mario-0729.github.io/mama2000/ （`GAME_URL` 與 og: 標籤已指向這裡；舊網址 /btc-warrior/ 在專案改名後失效，GitHub Pages 不會自動轉址）。網站從 main 分支發布。
 - 桌面圖示：`manifest.json`＋`apple-touch-icon.png`／`icon-192.png`／`icon-512.png`（女主角頭像），可「加入主畫面」，從桌面開啟是全螢幕、沒有網址列。
 - 分享預覽圖：`og.png`（1200×630），`index.html` 開頭的 og: 標籤用絕對網址指向它；換網址要一起改。
 - 舊的 claude.ai Artifact：https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS（已設為任何人可用連結開啟）
