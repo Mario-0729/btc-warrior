@@ -12,7 +12,7 @@
 - 修改前先備份，改完要用無頭瀏覽器（Playwright）實測，並檢查手機寬度 360px 的排版。
 
 ## 目前上線位置
-- GitHub Pages（主站）：https://mario-0729.github.io/mama2000/ （`GAME_URL` 與 og: 標籤已指向這裡；舊網址 /btc-warrior/ 在專案改名後失效，GitHub Pages 不會自動轉址）。網站從 main 分支發布。
+- GitHub Pages（主站）：https://mario-0729.github.io/mama2000/ （`GAME_URL` 與 og: 標籤已指向這裡；舊網址 /btc-warrior/ 在專案改名後失效，GitHub Pages 不會自動轉址）。網站從 `claude/takeover-game-project-k6cvpx` 分支發布（不是 main！改完要推到這個分支才會上線，main 也同步推）。
 - 桌面圖示：`manifest.json`＋`apple-touch-icon.png`／`icon-192.png`／`icon-512.png`（女主角頭像），可「加入主畫面」，從桌面開啟是全螢幕、沒有網址列。
 - 分享預覽圖：`og.png`（1200×630），`index.html` 開頭的 og: 標籤用絕對網址指向它；換網址要一起改。
 - 舊的 claude.ai Artifact：https://claude.ai/artifact/KST77twsVmJom7YqTx9pkS（已設為任何人可用連結開啟）
