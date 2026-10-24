@@ -574,6 +574,20 @@
     background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
   }
   #overRestart { background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff; }
+  #resetModal {
+    position: fixed; inset: 0; z-index: 25; display: grid; place-items: center;
+    padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px));
+    background: rgba(30, 5, 20, .75); backdrop-filter: blur(5px);
+  }
+  #resetModal[hidden] { display: none; }
+  #resetModal .wheel-card { border-color: #d11f3a; }
+  #resetYes { background: #d11f3a; color: #fff; }
+  #resetNo { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
+  #resetBtn {
+    appearance: none; cursor: pointer; border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+    font: 800 12px var(--display); background: #fff; color: #d11f3a; border: 2px solid #f0b3c0;
+  }
+  #resetBtn:focus-visible, #resetYes:focus-visible, #resetNo:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   #overStay { background: transparent; border: 2px solid #e8c7d6; color: #8a5a73; }
   #btnHome {
     flex: 1 1 0; appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
@@ -1135,6 +1149,17 @@
   </div>
 </div>
 
+<div id="resetModal" hidden>
+  <div class="wheel-card" role="alertdialog" aria-labelledby="resetTitle">
+    <div class="wheel-title" id="resetTitle">⚠️ 確定要重新開始？</div>
+    <div class="wheel-result" id="resetInfo"></div>
+    <div class="wheel-btns">
+      <button id="resetYes" type="button">確定重來</button>
+      <button id="resetNo" type="button">先不要</button>
+    </div>
+  </div>
+</div>
+
 <div id="rankModal" hidden>
   <div class="hist-card" role="dialog" aria-labelledby="rankTitle">
     <div class="hist-top">
@@ -1154,6 +1179,7 @@
     <div class="hist-top">
       <div class="wheel-title" id="histTitle">📜 投資紀錄</div>
       <button id="clearBtn" class="clear-btn" type="button" hidden>🏁 通關成就</button>
+      <button id="resetBtn" type="button">🔄 重新開始</button>
       <button id="histClose" type="button" aria-label="關閉">✕</button>
     </div>
     <div class="vote-slot"></div>
@@ -2743,6 +2769,22 @@
     refreshTradeUI(); renderMission(); playFanfare();
   }
   $('btnHome').addEventListener('click', goHome);
+  // 重新開始: always reachable from the history page, behind a warning
+  $('resetBtn').addEventListener('click', function () {
+    const eq = Math.max(0, liveEquity());
+    $('resetInfo').textContent = '目前淨值 ' + fmtShort(eq) + (position ? '（持倉會直接作廢）' : '') + '，全部歸零、從 200 萬重來。成就紀錄會保留。';
+    $('resetModal').hidden = false;
+    pauseGame('reset');
+    $('resetNo').focus();
+  });
+  $('resetNo').addEventListener('click', function () { $('resetModal').hidden = true; resumeGame('reset'); });
+  $('resetYes').addEventListener('click', function () {
+    $('resetModal').hidden = true;
+    $('histModal').hidden = true;
+    endDenial();
+    resetGame();
+    resumeGame('reset');
+  });
   $('overRestart').addEventListener('click', resetGame);
   $('overStay').addEventListener('click', function () { $('overModal').hidden = true; });
   $('clearBtn').addEventListener('click', function () { $('histModal').hidden = true; openClearPage(); });
