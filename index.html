@@ -1328,7 +1328,7 @@
   const START = 2000000;
   const K = START / 100000;
   const STAKE = START * 0.05;        // below this with no position = broke
-  const BIG_P = 0.35;                // chance of a big move on any candle
+  const BIG_P = 0.45;                // chance of a big move on any candle
   let trend = 1;                     // trends persist, so the indicator means something
   const GOAL = 20000000;
 
@@ -1643,13 +1643,17 @@
     { text: '📰 快訊：財務省疑似進場干預匯市', mult: 2.8 },
     { text: '📰 快訊：聯準會主席「一切看數據」', mult: 2.0 },
     { text: '📰 快訊：某央行意外升息', mult: 2.3 },
-    { text: '📰 快訊：深夜流動性突然消失', mult: 2.2 }
+    { text: '📰 快訊：深夜流動性突然消失', mult: 2.2 },
+    { text: '📰 快訊：日本 CPI 遠超預期', mult: 2.4 },
+    { text: '📰 快訊：美債殖利率暴衝', mult: 2.5 },
+    { text: '📰 快訊：大型避險基金傳出爆倉', mult: 2.7 },
+    { text: '📰 快訊：首相暗示提前大選', mult: 2.1 }
   ];
   const newsBanner = $('newsBanner');
   function maybeTriggerNews() {
-    if (volTicksLeft > 0 || Math.random() > 1 / 22) return;
+    if (volTicksLeft > 0 || Math.random() > 1 / 10) return;
     const ev = pick(newsPool);
-    volMult = ev.mult; volTicksLeft = 5;
+    volMult = ev.mult; volTicksLeft = 4;
     toast(ev.text.replace('📰 快訊：', '📰 '), '接下來幾根波動變大');
   }
 
@@ -1659,15 +1663,15 @@
   function newCandle(prevClose, mult, live, boost) {
     mult = mult || 1;
     const u = prevClose / 68000;
-    if (live && !trendLock && Math.random() < 0.12) trend = -trend;
+    if (live && !trendLock && Math.random() < 0.22) trend = -trend;
     const drift = live ? trend * 180 * (boost || 1) * u : 0;
     const open = prevClose;
-    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3000 * mult * u : 0;
-    const close = open + (Math.random() - 0.5) * 900 * mult * u + drift + big;
+    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3800 * mult * u : 0;
+    const close = open + (Math.random() - 0.5) * 1300 * mult * u + drift + big;
     return {
       open: open, close: close,
-      high: Math.max(open, close) + Math.random() * 300 * mult * u,
-      low: Math.min(open, close) - Math.random() * 300 * mult * u
+      high: Math.max(open, close) + Math.random() * 550 * mult * u,
+      low: Math.min(open, close) - Math.random() * 550 * mult * u
     };
   }
   function seed() {
@@ -2524,6 +2528,7 @@
     if (shields > 0) {
       endDenial();
       shields--;
+      liqReason = '';
       const back = Math.round(position.margin / 2);
       balance += back;
       recordTrade(position, lastClose(), back - position.margin, 'saved');
@@ -2899,7 +2904,8 @@
     if (storyOpen) { clearInterval(storyTimer); $('faceBig').hidden = true; $('faceBig').classList.remove('modal', 'scare'); $('fbClose').hidden = true; storyOpen = false; }
     const el = $('liqScreen');
     $('lqFace').innerHTML = faceSvg('blood');
-    $('lqKicker').textContent = wasDenial ? '🙈 嘴硬到最後一刻' : '💀 第 ' + stats.liqs + ' 次爆倉';
+    $('lqKicker').textContent = liqReason || (wasDenial ? '🙈 嘴硬到最後一刻' : '💀 第 ' + stats.liqs + ' 次爆倉');
+    liqReason = '';
     $('lqAmt').textContent = '-' + fmtTwd(pos.margin);
     $('lqSub').textContent = (pos.lev || LEVERAGE) + 'x ' + (pos.dir > 0 ? '做多' : '做空') + '・保證金歸零・淨值剩 ' + fmtShort(Math.max(0, liveEquity()));
     el.querySelectorAll('.lq-debris').forEach(function (d) { d.remove(); });
@@ -2939,6 +2945,26 @@
   document.addEventListener('keydown', function (e) { if (liqOpen && e.key === 'Escape') closeLiq(); });
   $('faceBig').addEventListener('click', function (e) { if (e.target === $('faceBig')) closeStory(); });
   document.addEventListener('keydown', function (e) { if (storyOpen && e.key === 'Escape') closeStory(); });
+
+  /* ---------- 市場事件: gaps and pin bars on top of the news ---------- */
+  let liqReason = '';
+  function marketEvents(c, last) {
+    const r = Math.random();
+    if (r < 1 / 16) {
+      // 跳空: the whole candle opens away from the last close
+      const g = last.close * (0.012 + Math.random() * 0.012) * (Math.random() < 0.5 ? 1 : -1);
+      c.open += g; c.close += g; c.high += g; c.low += g;
+      toast(g > 0 ? '🕳️ 跳空開高！' : '🕳️ 跳空開低！');
+    } else if (r < 1 / 16 + 1 / 12) {
+      // 插針: a long wick that hunts the nearest liquidation line
+      const d = position ? -position.dir : (Math.random() < 0.5 ? 1 : -1);
+      const ext = c.close * (0.022 + Math.random() * 0.02);
+      if (d < 0) c.low = Math.min(c.low, Math.min(c.open, c.close) - ext);
+      else c.high = Math.max(c.high, Math.max(c.open, c.close) + ext);
+      c.pin = true;
+      toast(d < 0 ? '📌 插針！一根長下影' : '📌 插針！一根長上影');
+    }
+  }
 
   /* ---------- 黑箱波段: 40% of entries get a silent wave against you ---------- */
   let rigTicks = 0, rigTease = false;
@@ -3895,6 +3921,7 @@
     const last = candles[candles.length - 1];
     const c = newCandle(last.close, mult, true, boost);
     if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
+    marketEvents(c, last);
     candles.push(c);
     let shifted = false;
     if (candles.length > MAX) { candles.shift(); shifted = true; }
@@ -3925,7 +3952,9 @@
 
     if (position) {
       const pnl = positionPnl(c.close);
-      if (pnl <= -position.margin) {
+      const wick = position.dir > 0 ? c.low : c.high;
+      if (c.pin && (position.dir > 0 ? wick <= liqPrice() : wick >= liqPrice())) { liqReason = '📌 被插針插到爆倉'; liquidate(); }
+      else if (pnl <= -position.margin) {
         liquidate();
       } else {
         position.redTicks = pnl < 0 ? position.redTicks + 1 : 0;
