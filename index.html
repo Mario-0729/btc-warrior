@@ -2278,7 +2278,7 @@
     $('dadDebt').textContent = fmtTwd(dadDebt);
     const amt = stakeAmt();
     const canAfford = amt >= 1000 && balance >= amt;
-    const locked = !started || grounded > 0;
+    const locked = !started || grounded > 0 || liqPending;
     btnLong.textContent = '做多 ' + stakeLabel();
     btnShort.textContent = '做空 ' + stakeLabel();
     document.querySelectorAll('[data-stake]').forEach(function (b) {
@@ -2459,7 +2459,7 @@
 
   function openPosition(dir) {
     const amt = stakeAmt();
-    if (!started || grounded > 0 || amt < 1000 || balance < amt) return;
+    if (!started || grounded > 0 || liqPending || amt < 1000 || balance < amt) return;
     if (position && position.dir !== dir) return;
     const p = lastClose();
     const losing = position && positionPnl(p) < 0;
@@ -2545,19 +2545,28 @@
     endDenial();
     recordTrade(position, lastClose(), -position.margin, 'liq');
     const liqPeak = position.peak, wasBuddy = position.buddy, liqPos = position;
+    const freeze = { lp: liqPrice(), entry: position.avgEntry, dir: position.dir, px: lastClose(), t0: performance.now() };
     position = null;
     winStreak = 0;
-    playScream();
-    view.shakeT = 0.8; view.kick = 1;
+    // 定格: stop the market on the killing candle so the player sees what happened,
+    // then roll the cut-in screen
+    liqPending = true; liqOpen = true;
+    pauseGame();
+    view.liqFreeze = freeze;
+    triggerCrash('💥 爆倉了！！');
     spawnParticles('crash');
     setMsg('……保證金，沒了。什麼都來不及按。');
     achieve('firstLiq');
     if ((liqPeak || 0) > 0) achieve('smallWinBigLoss');
     stats.liqs++;
     buzz([90, 60, 240]);
-    showLiq(liqPos, wasDenial);
     if (wasBuddy) buddyDone(false);
     refreshTradeUI();
+    setTimeout(function () {
+      view.liqFreeze = null;
+      liqPending = false;
+      showLiq(liqPos, wasDenial);
+    }, 1800);
   }
 
   let borrowCount = 0;
@@ -2805,6 +2814,7 @@
   }
   let curFace = '';
   function faceState() {
+    if (liqPending) return 'blood';
     if (started && !position && balance < STAKE) return 'cry';
     if (!position) return 'calm';
     if (denial) return 'zen';
@@ -2897,7 +2907,7 @@
   $('fbClose').addEventListener('click', closeStory);
 
   /* ---------- 爆倉登場畫面: the market stops, the ground cracks, she slides in ---------- */
-  let liqOpen = false, liqTimer = null, liqAt = 0;
+  let liqOpen = false, liqTimer = null, liqAt = 0, liqPending = false;
   function showLiq(pos, wasDenial) {
     liqOpen = true; liqAt = performance.now();
     pauseGame();
@@ -3788,6 +3798,7 @@
     let hi = Math.max.apply(null, candles.map(function (c) { return c.high; }));
     let lo = Math.min.apply(null, candles.map(function (c) { return c.low; }));
     if (position) { hi = Math.max(hi, position.avgEntry); lo = Math.min(lo, position.avgEntry); }
+    if (view.liqFreeze) { const fz = view.liqFreeze; hi = Math.max(hi, fz.entry, fz.lp); lo = Math.min(lo, fz.entry, fz.lp); }
     const span = (hi - lo) || 1;
     hi += span * 0.05; lo -= span * 0.05;
     if (view.lo === null) { view.lo = lo; view.hi = hi; }
@@ -3868,6 +3879,18 @@
         line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 2.2);
         if (!denial) labelAt([xN + 3.5, yl, 0], '💀 差 ' + Math.abs(lastClose() - lp).toFixed(2) + ' 円', pal.liq, 10);
       }
+    }
+
+    // the killing candle, frozen: entry rail, the breached liquidation sheet, a big label
+    if (view.liqFreeze) {
+      const fz = view.liqFreeze, ye = yOf(fz.entry), yl = yOf(fz.lp);
+      const blink = reduceMotion ? 0.5 : 0.35 + 0.3 * Math.abs(Math.sin((now - fz.t0) / 120));
+      line3([view.s * S - 2, ye, 0], [xN + 7, ye, 0], rgbStr(pal.ink, 0.8), 2, [8, 6]);
+      labelAt([xN + 2.5, ye, 0], '均價 ' + fz.entry.toFixed(3), rgbStr(pal.ink, 0.85), 10);
+      fillPoly([[view.s * S - 3, yl, -4], [xN + 9, yl, -4], [xN + 9, yl, 4], [view.s * S - 3, yl, 4]], rgbStr(pal.liq, blink));
+      line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 4);
+      labelAt([xN + 3.5, yl, 0], '爆倉線 ' + fz.lp.toFixed(3), pal.liq, 11);
+      pill('💥 爆倉！', view.w / 2, view.h * 0.66, pal.liq, 'center', 22);
     }
 
     // HUD
