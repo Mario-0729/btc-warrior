@@ -851,6 +851,80 @@
   #fbClose:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   @keyframes fbIn { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
   @keyframes fbShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 2px); } 75% { transform: translate(4px, -2px); } }
+  /* 爆倉登場畫面: a fighting-game style character cut-in */
+  #liqScreen {
+    position: fixed; inset: 0; z-index: 40; overflow: hidden; background: #12000a;
+    animation: lqShake .55s ease-out;
+  }
+  #liqScreen[hidden] { display: none; }
+  #liqScreen::after {
+    content: ''; position: absolute; inset: 0; background: #fff; pointer-events: none;
+    animation: lqFlash .45s ease-out forwards;
+  }
+  .lq-rays {
+    position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax;
+    background: repeating-conic-gradient(from 0deg, rgba(209,31,58,.85) 0deg 7deg, rgba(60,0,15,.0) 7deg 15deg);
+    animation: lqSpin 14s linear infinite;
+  }
+  .lq-cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .lq-cracks path {
+    fill: none; stroke: #fff; stroke-width: .5; stroke-linejoin: bevel; vector-effect: non-scaling-stroke;
+    stroke-dasharray: 400; stroke-dashoffset: 400; animation: lqCrack .5s .1s ease-out forwards;
+    filter: drop-shadow(0 0 3px rgba(255,60,80,.9));
+  }
+  .lq-cracks path { stroke-width: 3px; }
+  .lq-debris { position: absolute; top: -40px; width: 18px; height: 14px; background: #5a0a1c; border: 2px solid #ff6b81; animation: lqFall 1.6s ease-in forwards; }
+  .lq-band {
+    position: absolute; left: -15%; right: -15%; top: 50%; height: 34%;
+    background: linear-gradient(100deg, #8a0020, #d11f3a 45%, #3a0010);
+    border-top: 6px solid #fff; border-bottom: 6px solid #ffd23a;
+    transform: skewY(-9deg); animation: lqBand .35s .12s cubic-bezier(.2,.9,.3,1.2) both;
+    box-shadow: 0 0 40px rgba(0,0,0,.6);
+  }
+  .lq-face {
+    position: absolute; left: -6%; top: 14%; width: min(72vw, 400px); aspect-ratio: 1;
+    border-radius: 50%; overflow: hidden; background: #fff; border: 8px solid #ffd23a;
+    box-shadow: 10px 10px 0 #000; animation: lqFace .45s .22s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  .lq-face svg { width: 100%; height: 100%; display: block; }
+  .lq-text {
+    position: absolute; right: 5%; left: 5%; top: 52%; text-align: right; transform: skewY(-9deg);
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  }
+  .lq-kicker {
+    font: 900 14px var(--body); color: #3a0010; background: #ffd23a; padding: 3px 12px; letter-spacing: .12em;
+    animation: lqPop .3s .4s both;
+  }
+  .lq-title {
+    font: italic 900 clamp(46px, 15vw, 110px)/1 var(--body); color: #fff; letter-spacing: .02em;
+    -webkit-text-stroke: 3px #3a0010; paint-order: stroke fill; text-shadow: 6px 6px 0 #000;
+    animation: lqSlam .4s .45s cubic-bezier(.3,1.6,.5,1) both;
+  }
+  .lq-amt {
+    font: italic 900 clamp(28px, 9vw, 60px)/1.1 var(--display); color: #ffd23a;
+    -webkit-text-stroke: 2px #3a0010; paint-order: stroke fill; text-shadow: 4px 4px 0 #000;
+    font-variant-numeric: tabular-nums; animation: lqPop .3s .7s both;
+  }
+  .lq-sub { font: 800 14px var(--body); color: #fff; text-shadow: 2px 2px 0 #000; animation: lqPop .3s .85s both; }
+  #lqClose {
+    position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    appearance: none; cursor: pointer; border: 3px solid #fff; border-radius: 999px; padding: 11px 26px;
+    font: 900 16px var(--display); background: #000; color: #fff; animation: lqPop .3s 1s both;
+  }
+  #lqClose:focus-visible { outline: 3px solid #ffd23a; outline-offset: 3px; }
+  @keyframes lqShake { 0%, 100% { transform: none; } 10% { transform: translate(-14px, 8px) rotate(-1deg); } 25% { transform: translate(12px, -10px) rotate(1deg); } 40% { transform: translate(-9px, 6px); } 60% { transform: translate(6px, -4px); } 80% { transform: translate(-3px, 2px); } }
+  @keyframes lqFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes lqSpin { to { transform: rotate(360deg); } }
+  @keyframes lqCrack { to { stroke-dashoffset: 0; } }
+  @keyframes lqFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(115vh) rotate(540deg); opacity: .8; } }
+  @keyframes lqBand { 0% { transform: skewY(-9deg) translateX(110%); } 100% { transform: skewY(-9deg) translateX(0); } }
+  @keyframes lqFace { 0% { transform: translateX(-120%) rotate(-25deg); } 100% { transform: none; } }
+  @keyframes lqSlam { 0% { transform: scale(3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes lqPop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    #liqScreen, #liqScreen::after, .lq-rays, .lq-cracks path, .lq-debris, .lq-band, .lq-face, .lq-kicker, .lq-title, .lq-amt, .lq-sub, #lqClose { animation: none; }
+    #liqScreen::after { opacity: 0; } .lq-cracks path { stroke-dashoffset: 0; } .lq-debris { display: none; }
+  }
   .hud-duel {
     font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
     background: rgba(255,255,255,.8); color: var(--ink); backdrop-filter: blur(4px);
@@ -964,6 +1038,26 @@
 <div id="crashFlash"></div>
 <div id="crashText"></div>
 <div id="bigWin" aria-hidden="true"></div>
+<div id="liqScreen" hidden role="alertdialog" aria-labelledby="lqTitle">
+  <div class="lq-rays"></div>
+  <svg class="lq-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M52 0 L48 14 L55 22 L46 35 L53 47 L44 60 L50 72 L42 86 L47 100"/>
+    <path d="M48 14 L30 18 L22 30 L6 33 L0 41"/>
+    <path d="M53 47 L70 44 L80 54 L94 52 L100 58"/>
+    <path d="M44 60 L28 66 L18 80 L4 84"/>
+    <path d="M55 22 L72 16 L86 20 L100 12"/>
+    <path d="M50 72 L66 78 L74 92 L88 100"/>
+  </svg>
+  <div class="lq-band"></div>
+  <div class="lq-face" id="lqFace"></div>
+  <div class="lq-text">
+    <div class="lq-kicker" id="lqKicker">💀 爆倉</div>
+    <div class="lq-title" id="lqTitle">強制平倉</div>
+    <div class="lq-amt" id="lqAmt"></div>
+    <div class="lq-sub" id="lqSub"></div>
+  </div>
+  <button id="lqClose" type="button">✕ 關閉（5）</button>
+</div>
 <div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（5）</button></div></div>
 <div id="particles"></div>
 <div id="newsBanner" role="status"></div>
@@ -2440,20 +2534,22 @@
       refreshTradeUI();
       return;
     }
+    const wasDenial = denial;
     if (denial) { achieve('aqDeath'); toast('🙈 嘴硬到最後一刻……'); }
     endDenial();
     recordTrade(position, lastClose(), -position.margin, 'liq');
-    const liqPeak = position.peak, wasBuddy = position.buddy;
+    const liqPeak = position.peak, wasBuddy = position.buddy, liqPos = position;
     position = null;
     winStreak = 0;
-    triggerCrash('強制平倉！！');
+    playScream();
+    view.shakeT = 0.8; view.kick = 1;
     spawnParticles('crash');
     setMsg('……保證金，沒了。什麼都來不及按。');
     achieve('firstLiq');
     if ((liqPeak || 0) > 0) achieve('smallWinBigLoss');
     stats.liqs++;
-    showFaceBig('blood', '', 1500, true);
     buzz([90, 60, 240]);
+    showLiq(liqPos, wasDenial);
     if (wasBuddy) buddyDone(false);
     refreshTradeUI();
   }
@@ -2747,7 +2843,7 @@
     storyDone[key] = true;
     logEvent('💭 ' + STORY[key]);
     storyQueue.push({ face: face, line: '「' + STORY[key] + '」' });
-    if (!storyOpen) nextStory();
+    if (!storyOpen && !liqOpen) nextStory();
   }
   function pauseGame() {
     if (!timer) return;
@@ -2793,6 +2889,53 @@
     else resumeGame();
   }
   $('fbClose').addEventListener('click', closeStory);
+
+  /* ---------- 爆倉登場畫面: the market stops, the ground cracks, she slides in ---------- */
+  let liqOpen = false, liqTimer = null, liqAt = 0;
+  function showLiq(pos, wasDenial) {
+    liqOpen = true; liqAt = performance.now();
+    pauseGame();
+    if (storyOpen) { clearInterval(storyTimer); $('faceBig').hidden = true; $('faceBig').classList.remove('modal', 'scare'); $('fbClose').hidden = true; storyOpen = false; }
+    const el = $('liqScreen');
+    $('lqFace').innerHTML = faceSvg('blood');
+    $('lqKicker').textContent = wasDenial ? '🙈 嘴硬到最後一刻' : '💀 第 ' + stats.liqs + ' 次爆倉';
+    $('lqAmt').textContent = '-' + fmtTwd(pos.margin);
+    $('lqSub').textContent = (pos.lev || LEVERAGE) + 'x ' + (pos.dir > 0 ? '做多' : '做空') + '・保證金歸零・淨值剩 ' + fmtShort(Math.max(0, liveEquity()));
+    el.querySelectorAll('.lq-debris').forEach(function (d) { d.remove(); });
+    if (!reduceMotion) {
+      for (let k = 0; k < 14; k++) {
+        const d = document.createElement('i');
+        d.className = 'lq-debris';
+        d.style.left = (Math.random() * 100) + '%';
+        d.style.animationDelay = (0.1 + Math.random() * 0.6) + 's';
+        d.style.transform = 'scale(' + (0.6 + Math.random()) + ')';
+        el.appendChild(d);
+      }
+    }
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    const btn = $('lqClose');
+    let left = 5;
+    btn.textContent = '✕ 關閉（' + left + '）';
+    try { btn.focus({ preventScroll: true }); } catch (e) {}
+    clearInterval(liqTimer);
+    liqTimer = setInterval(function () {
+      left--;
+      if (left <= 0) closeLiq();
+      else btn.textContent = '✕ 關閉（' + left + '）';
+    }, 1000);
+  }
+  function closeLiq() {
+    if (!liqOpen) return;
+    clearInterval(liqTimer);
+    $('liqScreen').hidden = true;
+    liqOpen = false;
+    if (storyQueue.length) nextStory();
+    else resumeGame();
+  }
+  $('lqClose').addEventListener('click', closeLiq);
+  // a stray tap from mashing 平倉 shouldn't skip the show: ignore taps in the first second
+  $('liqScreen').addEventListener('click', function (e) { if (e.target !== $('lqClose') && performance.now() - liqAt > 1000) closeLiq(); });
+  document.addEventListener('keydown', function (e) { if (liqOpen && e.key === 'Escape') closeLiq(); });
   $('faceBig').addEventListener('click', function (e) { if (e.target === $('faceBig')) closeStory(); });
   document.addEventListener('keydown', function (e) { if (storyOpen && e.key === 'Escape') closeStory(); });
 
