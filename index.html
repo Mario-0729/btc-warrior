@@ -1818,11 +1818,11 @@
   // mid-term goals: reaching a rank for the first time pays a reward and
   // unlocks higher leverage
   const RANK_REWARDS = {
-    4: { text: '解鎖 50x 槓桿＋獲利翻倍', give: function () { doubleNext = true; } },
-    5: { text: '解鎖 102x 久留美模式＋免死金牌', give: function () { shields++; } },
+    4: { text: '解鎖 102x 久留美模式＋獲利翻倍', give: function () { doubleNext = true; } },
+    5: { text: '免死金牌', give: function () { shields++; } },
     6: { text: '免死金牌 ×2＋紅包 100 萬', give: function () { shields += 2; balance += START / 2; } }
   };
-  const LEV_UNLOCK = { 10: 0, 25: 0, 50: 4, 102: 5 };
+  const LEV_UNLOCK = { 10: 0, 25: 0, 50: 3, 102: 4 };
   // 等級 follows your net worth both ways: lose money and you drop, and
   // the leverage it unlocked locks again (沒錢就回家吃自己). A level-up
   // gift is paid only the first time you reach a level (bestRank).
@@ -1851,7 +1851,7 @@
     }
     rankIdx = idx;
     // a dropped level takes its leverage with it (an open position keeps its own)
-    if (!position && curRank() < LEV_UNLOCK[lev]) lev = curRank() >= 4 ? 50 : 25;
+    if (!position && curRank() < LEV_UNLOCK[lev]) lev = curRank() >= 3 ? 50 : 25;
     $('rankName').textContent = levelName(idx);
     const next = RANKS[idx + 1];
     if (next) {
@@ -2034,9 +2034,9 @@
     '負債中：只剩救援區能翻身',
     '幾乎見底：下一單請三思',
     '本金腰斬：還有機會翻盤',
-    '起始等級：可用 10x、25x 槓桿',
-    '可用 50x 槓桿・升級禮：獲利翻倍',
-    '可用 102x 久留美模式・升級禮：免死金牌',
+    '起始等級：可用 10x、25x、50x 槓桿',
+    '可用 102x 久留美模式・升級禮：獲利翻倍',
+    '升級禮：免死金牌',
     '可用全部槓桿・升級禮：免死金牌 ×2＋紅包 100 萬'
   ];
   function rankThresholdText(i) {
@@ -2507,6 +2507,7 @@
     balance += position.margin + pnl;
     recordTrade(closedPos, lastClose(), pnl, pnl > 0 ? 'win' : 'loss');
     position = null;
+    lossStreak = pnl > 0 ? 0 : lossStreak + 1;
     if (pnl > 0) {
       winStreak++;
       playCoin();
@@ -2569,6 +2570,7 @@
     stats.liqs++;
     buzz([90, 60, 240]);
     if (wasBuddy) buddyDone(false);
+    lossStreak++;
     refreshTradeUI();
     setTimeout(function () {
       view.liqFreeze = null;
@@ -2724,6 +2726,7 @@
     trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
     stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
     resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0; rescued = false;
+    favorTicks = 0; rigTicks = 0; lossStreak = 0; chosenLeft = 3;
     setTimeout(function () { story('start', 'calm'); }, 600);
     missionIdx = 0; missionRound = 0; missionProg = 0;
     meterState.bal.shown = null;
@@ -2982,7 +2985,7 @@
       const g = last.close * (0.012 + Math.random() * 0.012) * (Math.random() < 0.5 ? 1 : -1);
       c.open += g; c.close += g; c.high += g; c.low += g;
       toast(g > 0 ? '🕳️ 跳空開高！' : '🕳️ 跳空開低！');
-    } else if (r < 1 / 16 + 1 / 12) {
+    } else if (r < 1 / 16 + 1 / 12 && !favorTicks && !honeymoon()) {
       // 插針: a long wick that hunts the nearest liquidation line
       const d = position ? -position.dir : (Math.random() < 0.5 ? 1 : -1);
       const ext = c.close * (0.022 + Math.random() * 0.02);
@@ -2995,8 +2998,18 @@
 
   /* ---------- 黑箱波段: 40% of entries get a silent wave against you ---------- */
   let rigTicks = 0, rigTease = false;
+  // favor waves ride with you: 新手蜜月期 (first 75 s, 70%), 保底 (after 3 losses
+  // in a row, guaranteed) and 天選波段 (3 per run, 15% per entry after the honeymoon)
+  let favorTicks = 0, favorBoost = 2.6, lossStreak = 0, chosenLeft = 3;
+  const HONEYMOON = 75;
+  // the honeymoon only carries you to about 800萬, then the house starts taking it back
+  function honeymoon() { return started && gameSecs() < HONEYMOON && liveEquity() < START * 4; }
   function maybeRig() {
-    if (rigTicks > 0 || Math.random() >= 0.4) return;
+    if (rigTicks > 0 || favorTicks > 0) return;
+    if (lossStreak >= 3) { lossStreak = 0; favorBoost = 2.2; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
+    if (honeymoon()) { if (Math.random() < 0.7) { favorBoost = 1.6; favorTicks = 2 + Math.floor(Math.random() * 3); } return; }
+    if (chosenLeft > 0 && Math.random() < 0.15) { chosenLeft--; favorBoost = 2.6; favorTicks = 4 + Math.floor(Math.random() * 3); return; }
+    if (Math.random() >= 0.4) return;
     rigTicks = 3 + Math.floor(Math.random() * 5);
     rigTease = Math.random() < 0.5;
   }
@@ -3957,12 +3970,14 @@
     let boost = 1;
     trendLock = callTicks > 0;
     if (trendLock) { trend = callTrue ? callDir : -callDir; boost = 2.2; }
-    if (rigTicks > 0 && position) {
+    if (favorTicks > 0 && position) {
+      trendLock = true; trend = position.dir; boost = favorBoost; favorTicks--;
+    } else if (rigTicks > 0 && position) {
       // 黑箱波段: the house quietly trades against you (sometimes one sweet candle first)
       trendLock = true;
       if (rigTease) { trend = position.dir; boost = 1.6; rigTease = false; }
       else { trend = -position.dir; boost = 2.6; rigTicks--; }
-    } else rigTicks = 0;
+    } else { rigTicks = 0; favorTicks = 0; }
     const last = candles[candles.length - 1];
     const c = newCandle(last.close, mult, true, boost);
     if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
@@ -4101,7 +4116,7 @@
       lazyDir = saved.lazyDir || 1; rivalsDone = saved.rivalsDone || {}; storyDone = saved.storyDone || {};
       if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
       buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
-      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; }
+      if (saved.rig) { rigTicks = saved.rig[0] || 0; rigTease = !!saved.rig[1]; favorTicks = saved.rig[2] || 0; lossStreak = saved.rig[3] || 0; chosenLeft = saved.rig[4] == null ? 3 : saved.rig[4]; }
       rescued = !!saved.rescued;
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
@@ -4139,7 +4154,7 @@
           trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START, pair: 'USDJPY',
           rivals: rivals, lazyDir: lazyDir, rivalsDone: rivalsDone, storyDone: storyDone,
           guru: { ticks: callTicks, dir: callDir, truth: callTrue, wait: callWait, follow: callFollow },
-          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease], rescued: rescued
+          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount, rig: [rigTicks, rigTease, favorTicks, lossStreak, chosenLeft], rescued: rescued
         };
     }
     if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
