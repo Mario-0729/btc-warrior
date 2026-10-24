@@ -795,7 +795,8 @@
     position: relative; flex: 1 1 auto; min-height: 220px; overflow: hidden;
     background: linear-gradient(180deg, #ffcde4, #fff3e4);
   }
-  .stage #chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage #chart, .stage #chart3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage #chart3d { pointer-events: none; }
   body.scary .stage { box-shadow: inset 0 0 0 3px rgba(225,20,40,.9); animation: stagePulse 1.2s ease-in-out infinite; }
   @keyframes stagePulse { 0%,100% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.95); } 50% { box-shadow: inset 0 0 0 3px rgba(225,20,40,.3); } }
   body.crash-flash .stage { animation: crashShake .6s ease-out; }
@@ -912,6 +913,7 @@
     </ol>
     <button id="enterBtn" type="button">🔊 我已了解風險，開聲音進入戰場</button>
     <p class="splash-foot">右下角的小按鈕可以隨時靜音。iPhone 沒聲音時，請把音量調大。</p>
+    <p class="splash-foot" id="visits" hidden></p>
   </div>
 </div>
 
@@ -2773,11 +2775,12 @@
   }
 
   // you: a glowing orb standing on the newest price
-  function walkerOrb() {
+  function walkerOrb(labelOnly) {
     const q = toCam([view.s * S, walkerY(view.s) + 0.45, 0]);
     if (q[2] < NEAR + 0.2) return;
     const sp = scr(q);
     const r = Math.max(6, 0.42 * view.cam.focal / q[2]);
+    if (!labelOnly) {
     ctx.save();
     ctx.shadowColor = rgbStr(pal.accent, 0.95); ctx.shadowBlur = 24;
     const g = ctx.createRadialGradient(sp[0] - r * .3, sp[1] - r * .35, r * .1, sp[0], sp[1], r);
@@ -2785,6 +2788,7 @@
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(sp[0], sp[1], r, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+    }
     if (position) {
       const pnl = positionPnl(lastClose());
       if (denial) pill('你・😌 沒在看', sp[0], sp[1] - r - 14, '#8e7685', 'center', 13);
@@ -2973,6 +2977,248 @@
     ctx.restore();
   }
 
+  /* ---- WebGL world (Three.js, self-hosted in vendor/) ----
+     Same world and camera as the hand-rolled renderer, drawn with real
+     lighting, shadows and fog. The 2D canvas stays on top for labels,
+     the entry rail, the liquidation sheet and the mini-map. If WebGL or
+     the module is unavailable (e.g. inside a claude.ai Artifact), the
+     hand-rolled renderer keeps working. */
+  const g3 = { on: false, render: null };
+  function initGL() {
+    let probe = null;
+    try { const t = document.createElement('canvas'); probe = t.getContext('webgl2') || t.getContext('webgl'); } catch (e) {}
+    if (!probe) return;
+    import('./vendor/three.module.min.js').then(function (T) {
+      const cv = document.createElement('canvas');
+      cv.id = 'chart3d';
+      cv.setAttribute('aria-hidden', 'true');
+      canvas.parentNode.insertBefore(cv, canvas);
+      const renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = T.PCFSoftShadowMap;
+      renderer.toneMapping = T.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+
+      const scene = new T.Scene();
+      scene.fog = new T.Fog(0xffe4ee, 9, FAR);
+      const cam = new T.PerspectiveCamera(60, 1, NEAR, FAR + 30);
+      const col = new T.Color();
+      function setC(c, rgb) { return c.setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, T.SRGBColorSpace); }
+
+      // sky gradient
+      const skyCv = document.createElement('canvas'); skyCv.width = 2; skyCv.height = 256;
+      const sky = new T.CanvasTexture(skyCv); sky.colorSpace = T.SRGBColorSpace;
+      scene.background = sky;
+      let skyKey = '';
+
+      // lights
+      const hemi = new T.HemisphereLight(0xffffff, 0xffc6dc, 1.5);
+      scene.add(hemi);
+      const sun = new T.DirectionalLight(0xffffff, 2.4);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 0.5, far: 50 });
+      sun.shadow.bias = -0.0008;
+      scene.add(sun, sun.target);
+      const orbLight = new T.PointLight(0xff5fa0, 8, 9, 1.6);
+      scene.add(orbLight);
+
+      // ground far below, with a soft shadow catcher and a grid
+      const GY = -1.5;
+      const shadowFloor = new T.Mesh(new T.PlaneGeometry(120, 30), new T.ShadowMaterial({ opacity: 0.16 }));
+      shadowFloor.rotation.x = -Math.PI / 2; shadowFloor.position.y = GY; shadowFloor.receiveShadow = true;
+      scene.add(shadowFloor);
+      const gridPts = [];
+      for (let x = 0; x <= FAR + 22; x += 2) gridPts.push(x, 0, -7, x, 0, 7);
+      for (let z = -7; z <= 7; z += 1.75) gridPts.push(0, 0, z, FAR + 22, 0, z);
+      const gridGeo = new T.BufferGeometry();
+      gridGeo.setAttribute('position', new T.Float32BufferAttribute(gridPts, 3));
+      const gridMat = new T.LineBasicMaterial({ transparent: true, opacity: 0.3 });
+      const grid = new T.LineSegments(gridGeo, gridMat);
+      grid.position.y = GY;
+      scene.add(grid);
+
+      // road: one dynamic mesh, 3 quads (top + two sides) per segment
+      const RV = MAX * 18;
+      const roadGeo = new T.BufferGeometry();
+      const rPos = new Float32Array(RV * 3), rCol = new Float32Array(RV * 3);
+      roadGeo.setAttribute('position', new T.BufferAttribute(rPos, 3).setUsage(T.DynamicDrawUsage));
+      roadGeo.setAttribute('color', new T.BufferAttribute(rCol, 3).setUsage(T.DynamicDrawUsage));
+      const road = new T.Mesh(roadGeo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.05, side: T.DoubleSide }));
+      road.castShadow = true; road.receiveShadow = true; road.frustumCulled = false;
+      scene.add(road);
+      // dashed center line and white edges
+      const lineGeo = new T.BufferGeometry();
+      const lPos = new Float32Array(MAX * 6 * 3);
+      lineGeo.setAttribute('position', new T.BufferAttribute(lPos, 3).setUsage(T.DynamicDrawUsage));
+      const lines = new T.LineSegments(lineGeo, new T.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }));
+      lines.frustumCulled = false;
+      scene.add(lines);
+
+      // candle pillars
+      const boxGeo = new T.BoxGeometry(1, 1, 1);
+      const bodies = new T.InstancedMesh(boxGeo, new T.MeshStandardMaterial({ roughness: 0.35, metalness: 0.1 }), MAX * 2);
+      const wicks = new T.InstancedMesh(boxGeo, new T.MeshStandardMaterial({ roughness: 0.5 }), MAX * 2);
+      [bodies, wicks].forEach(function (m) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; scene.add(m); });
+      const glowMats = [0, 1].map(function () { return new T.MeshStandardMaterial({ roughness: 0.3, emissiveIntensity: 0.55 }); });
+      const glow = glowMats.map(function (m) { const g = new T.Mesh(boxGeo, m); g.castShadow = true; scene.add(g); return g; });
+      const M = new T.Matrix4(), Q = new T.Quaternion(), P = new T.Vector3(), SC = new T.Vector3();
+
+      // coins with a $ face
+      const coinCv = document.createElement('canvas'); coinCv.width = coinCv.height = 128;
+      (function (c) {
+        const gr = c.createRadialGradient(48, 44, 8, 64, 64, 64);
+        gr.addColorStop(0, '#fff6b0'); gr.addColorStop(.6, '#ffc83a'); gr.addColorStop(1, '#d99000');
+        c.fillStyle = gr; c.fillRect(0, 0, 128, 128);
+        c.fillStyle = '#9a5b00'; c.font = '900 84px "Baloo 2", sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('$', 64, 70);
+      })(coinCv.getContext('2d'));
+      const coinTex = new T.CanvasTexture(coinCv); coinTex.colorSpace = T.SRGBColorSpace;
+      const coinFace = new T.MeshStandardMaterial({ map: coinTex, metalness: 0.5, roughness: 0.3, emissive: 0x6a4200, emissiveIntensity: 0.6 });
+      const coinEdge = new T.MeshStandardMaterial({ color: 0xd99000, metalness: 0.7, roughness: 0.3, emissive: 0x4a2c00 });
+      const coinGeo = new T.CylinderGeometry(0.36, 0.36, 0.08, 28);
+      const coins = [];
+
+      // you
+      const orbMat = new T.MeshStandardMaterial({ color: 0xffffff, emissiveIntensity: 0.55, roughness: 0.25 });
+      const orb = new T.Mesh(new T.SphereGeometry(0.42, 32, 20), orbMat);
+      orb.castShadow = true;
+      scene.add(orb);
+
+      function quad(o, a, b, c, d, rgb) {
+        const vs = [a, b, c, a, c, d];
+        for (let k = 0; k < 6; k++) {
+          rPos.set(vs[k], (o + k) * 3);
+          rCol[(o + k) * 3] = rgb.r; rCol[(o + k) * 3 + 1] = rgb.g; rCol[(o + k) * 3 + 2] = rgb.b;
+        }
+        return o + 6;
+      }
+      const cTop = new T.Color(), cSide = new T.Color();
+
+      g3.render = function () {
+        const n = candles.length;
+        const w = view.w, h = view.h;
+        const size = renderer.getSize(new T.Vector2());
+        if (size.x !== w || size.y !== h) renderer.setSize(w, h, false);
+
+        // palette
+        const key = pal.skyTop.join() + pal.skyBottom.join();
+        if (key !== skyKey) {
+          skyKey = key;
+          const c = skyCv.getContext('2d'), gr = c.createLinearGradient(0, 0, 0, 256);
+          gr.addColorStop(0, rgbStr(pal.skyTop)); gr.addColorStop(1, rgbStr(pal.skyBottom));
+          c.fillStyle = gr; c.fillRect(0, 0, 2, 256); sky.needsUpdate = true;
+        }
+        setC(scene.fog.color, pal.fog);
+        setC(gridMat.color, pal.grid);
+        setC(orbMat.color, pal.accent);
+        setC(orbMat.emissive, mix(pal.accent, [255, 255, 255], 0.2));
+        setC(orbLight.color, pal.accent);
+
+        // camera: identical to the 2D projection so labels line up
+        const c = view.cam;
+        cam.aspect = w / h;
+        cam.fov = 2 * Math.atan((h / 2) / c.focal) * 180 / Math.PI;
+        cam.position.set(c.C[0], c.C[1], c.C[2]);
+        cam.up.set(0, 1, 0);
+        cam.lookAt(c.C[0] + c.f[0], c.C[1] + c.f[1], c.C[2] + c.f[2]);
+        cam.updateProjectionMatrix();
+
+        const sx = view.s * S, wy = walkerY(view.s);
+        sun.target.position.set(sx, wy, 0);
+        sun.position.set(sx - 5, wy + 12, 7);
+        shadowFloor.position.x = sx;
+        grid.position.x = Math.floor((Math.floor(view.s) * S - 14) / 2) * 2;
+
+        // road
+        const from = Math.max(0, Math.floor(view.s) - 8);
+        let o = 0, lo = 0;
+        const RD = 0.24;
+        for (let i = from; i < n - 1; i++) {
+          const xa = i * S, xb = (i + 1) * S, ya = closeY(i), yb = closeY(i + 1);
+          const base = candles[i + 1].close >= candles[i].close ? pal.up : pal.down;
+          setC(cTop, mix(base, [255, 255, 255], 0.12));
+          setC(cSide, mix(base, [0, 0, 0], 0.3));
+          o = quad(o, [xa, ya, -ROAD], [xa, ya, ROAD], [xb, yb, ROAD], [xb, yb, -ROAD], cTop);
+          o = quad(o, [xa, ya, ROAD], [xa, ya - RD, ROAD], [xb, yb - RD, ROAD], [xb, yb, ROAD], cSide);
+          o = quad(o, [xa, ya, -ROAD], [xb, yb, -ROAD], [xb, yb - RD, -ROAD], [xa, ya - RD, -ROAD], cSide);
+          // edges plus one dash in the middle of each segment
+          lPos.set([xa, ya + 0.012, -ROAD, xb, yb + 0.012, -ROAD, xa, ya + 0.012, ROAD, xb, yb + 0.012, ROAD,
+            xa + (xb - xa) * 0.25, ya + (yb - ya) * 0.25 + 0.012, 0, xa + (xb - xa) * 0.75, ya + (yb - ya) * 0.75 + 0.012, 0], lo * 3);
+          lo += 6;
+        }
+        roadGeo.setDrawRange(0, o);
+        roadGeo.attributes.position.needsUpdate = true;
+        roadGeo.attributes.color.needsUpdate = true;
+        roadGeo.computeVertexNormals();
+        lineGeo.setDrawRange(0, lo);
+        lineGeo.attributes.position.needsUpdate = true;
+
+        // pillars on both sides of the road; the newest pair glows
+        let bi = 0;
+        Q.identity();
+        function put(mesh, idx, x, y0, y1, z, hw, rgb) {
+          P.set(x, (y0 + y1) / 2, z); SC.set(hw * 2, Math.max(0.001, y1 - y0), hw * 2);
+          M.compose(P, Q, SC);
+          mesh.setMatrixAt(idx, M);
+          mesh.setColorAt(idx, setC(col, rgb));
+        }
+        glow[0].visible = glow[1].visible = false;
+        for (let i = from; i < n; i++) {
+          const cd = candles[i], newest = i === n - 1;
+          const e = newest ? popE() : 1;
+          const yo = yOf(cd.open);
+          const yc = yo + (yOf(cd.close) - yo) * e, yh = yo + (yOf(cd.high) - yo) * e, yl = yo + (yOf(cd.low) - yo) * e;
+          const rgb = cd.gold && !cd.goldTaken ? [255, 196, 46] : cd.close >= cd.open ? pal.up : pal.down;
+          let b0 = Math.min(yo, yc), b1 = Math.max(yo, yc);
+          if (b1 - b0 < 0.06) { b0 -= 0.03; b1 += 0.03; }
+          [PILLAR_Z, -PILLAR_Z].forEach(function (pz, side) {
+            put(wicks, bi, i * S, Math.min(yl, yh), Math.max(yl, yh), pz, WICK, rgb);
+            if (newest) {
+              const g = glow[side];
+              g.visible = true;
+              g.position.set(i * S, (b0 + b1) / 2, pz); g.scale.set(BODY * 2, b1 - b0, BODY * 2);
+              setC(glowMats[side].color, rgb); setC(glowMats[side].emissive, rgb);
+              put(bodies, bi, i * S, 0, 0.001, pz, 0.0005, rgb);   // hidden slot
+            } else {
+              put(bodies, bi, i * S, b0, b1, pz, BODY, rgb);
+            }
+            bi++;
+          });
+        }
+        bodies.count = wicks.count = bi;
+        bodies.instanceMatrix.needsUpdate = wicks.instanceMatrix.needsUpdate = true;
+        if (bodies.instanceColor) bodies.instanceColor.needsUpdate = true;
+        if (wicks.instanceColor) wicks.instanceColor.needsUpdate = true;
+
+        // coins
+        let ci = 0;
+        for (let i = from; i < n; i++) {
+          const cd = candles[i];
+          if (!cd.gold || cd.goldTaken) continue;
+          if (!coins[ci]) {
+            const m = new T.Mesh(coinGeo, [coinEdge, coinFace, coinFace]);
+            m.castShadow = true; scene.add(m); coins.push(m);
+          }
+          const m = coins[ci++];
+          const bob = reduceMotion ? 0 : Math.sin(view.t * 3 + i) * 0.12;
+          m.visible = true;
+          m.position.set(i * S, closeY(i) + 0.8 + bob, 0);
+          m.rotation.set(0, reduceMotion ? 0 : view.t * 2.4 + i, Math.PI / 2);
+        }
+        for (let k = ci; k < coins.length; k++) coins[k].visible = false;
+
+        // you
+        orb.position.set(sx, wy + 0.45, 0);
+        orbLight.position.set(sx, wy + 1.1, 0);
+
+        renderer.render(scene, cam);
+      };
+      g3.on = true;
+    }).catch(function () { g3.on = false; });
+  }
+
   function draw() {
     if (!view.w || !candles.length) return;
     if (!pal) refreshPalette();
@@ -3009,7 +3255,16 @@
 
     setupCamera();
     const w = view.w, h = view.h;
+    const xN = (n - 1) * S, yN = closeY(n - 1);
 
+    if (g3.on) {
+      g3.render();
+      ctx.clearRect(0, 0, w, h);
+      for (let j = 0; j < 5; j++) {
+        line3([xN + j * 1.4, yN, 0], [xN + (j + 1) * 1.4, yN, 0], rgbStr(pal.ink, 0.35 - j * 0.06), 2, [5, 6]);
+      }
+      walkerOrb(true);
+    } else {
     // sky
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, rgbStr(pal.skyTop)); g.addColorStop(1, rgbStr(pal.skyBottom));
@@ -3026,7 +3281,6 @@
     }
 
     // the unknown future: a fading dashed path into the fog
-    const xN = (n - 1) * S, yN = closeY(n - 1);
     for (let j = 0; j < 5; j++) {
       line3([xN + j * 1.4, yN, 0], [xN + (j + 1) * 1.4, yN, 0], rgbStr(pal.ink, 0.35 - j * 0.06), 2, [5, 6]);
     }
@@ -3043,6 +3297,7 @@
     items.push({ z: depth([view.s * S, walkerY(view.s) + 0.45, 0]) - 0.02, f: walkerOrb });
     items.sort(function (a, b) { return b.z - a.z; });
     items.forEach(function (it) { if (it.z > -3) it.f(); });
+    }
 
     // position: entry rail and the liquidation "lava" sheet
     if (position) {
@@ -3195,6 +3450,8 @@
     begin();
   });
 
+  const SAVE_KEY = 'btc-warrior-save';
+  let saveLocal = function () {};
   function init(saved) {
     // a snapshot from an older version with a different money scale starts fresh
     if (saved && saved.scale !== START) saved = null;
@@ -3241,11 +3498,11 @@
     fitChart();
 
     resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission();
+    initGL();
     requestAnimationFrame(loop);
     if (saved && saved.started) begin();
 
-    if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
-      window.claude.hot.snapshot(function () {
+    function snapshot() {
         return {
           candles: candles, balance: balance, debt: debt, position: position, achieved: achieved,
           winStreak: winStreak, soundOn: soundOn, started: started,
@@ -3254,15 +3511,43 @@
           bestRank: bestRank, rankIdx: rankIdx, borrowCount: borrowCount, missionIdx: missionIdx, missionRound: missionRound, missionProg: missionProg, stats: stats, cleared: cleared,
           trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START
         };
-      });
     }
-    window.addEventListener('pagehide', function () { if (timer) clearInterval(timer); });
+    if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+      window.claude.hot.snapshot(snapshot);
+    } else {
+      // self-hosted: keep the run in this browser
+      saveLocal = function () { try { localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot())); } catch (e) {} };
+      setInterval(saveLocal, 3000);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) saveLocal(); });
+    }
+    window.addEventListener('pagehide', function () { saveLocal(); if (timer) clearInterval(timer); });
   }
+
+  /* ---------- visit counter (self-hosted only; hidden if the service is down) ---------- */
+  (function () {
+    if (window.claude) return;
+    const el = $('visits');
+    let counted = false;
+    try { counted = sessionStorage.getItem('btcw-counted') === '1'; } catch (e) {}
+    fetch('https://abacus.jasoncameron.dev/' + (counted ? 'get' : 'hit') + '/btc-warrior/visits')
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (d) {
+        if (typeof d.value !== 'number') return;
+        try { sessionStorage.setItem('btcw-counted', '1'); } catch (e) {}
+        el.textContent = '👀 已有 ' + d.value.toLocaleString('en-US') + ' 位戰士進場';
+        el.hidden = false;
+      })
+      .catch(function () {});
+  })();
 
   if (window.claude && window.claude.hot && window.claude.hot.ready) {
     window.claude.hot.ready(function (data) { init(data); });
+  } else if (window.claude && window.claude.hot) {
+    init(window.claude.hot.data);
   } else {
-    init(window.claude && window.claude.hot ? window.claude.hot.data : null);
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
+    init(saved);
   }
 })();
 </script>
