@@ -3013,13 +3013,13 @@
   function maybeRig() {
     if (rigTicks > 0 || favorTicks > 0) return;
     const pace = paceRatio();
-    if (pace > 1.3) {
+    if (pace > 1.2) {
       if (Math.random() < 0.65) { rigTicks = 3 + Math.floor(Math.random() * 5); rigTease = Math.random() < 0.5; }
       return;
     }
     if (lossStreak >= 4) { lossStreak = 0; favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
     if (honeymoon()) { if (Math.random() < 0.4) { favorBoost = 1.3; favorTicks = 2 + Math.floor(Math.random() * 2); } return; }
-    if (pace < 0.6 && Math.random() < 0.3) { favorBoost = 1.8; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
+    if (pace < 0.6 && Math.random() < 0.4) { favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 2); return; }
     if (chosenLeft > 0 && Math.random() < 0.08) { chosenLeft--; favorBoost = 2.0; favorTicks = 3 + Math.floor(Math.random() * 3); return; }
     if (Math.random() >= 0.4) return;
     rigTicks = 3 + Math.floor(Math.random() * 5);
@@ -3979,6 +3979,10 @@
     if (volTicksLeft > 0) volTicksLeft--;
 
     stepGuru();
+    // runaway runs get cut mid-trade too, not only at the next entry
+    if (position && !rigTicks && !favorTicks && paceRatio() > 1.5 && Math.random() < 0.3) {
+      rigTicks = 3 + Math.floor(Math.random() * 3); rigTease = false;
+    }
     let boost = 1;
     trendLock = callTicks > 0;
     if (trendLock) { trend = callTrue ? callDir : -callDir; boost = 2.2; }
