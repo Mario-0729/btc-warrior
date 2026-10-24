@@ -950,6 +950,16 @@
     #liqScreen, #liqScreen::after, .lq-rays, .lq-cracks path, .lq-debris, .lq-band, .lq-face, .lq-kicker, .lq-title, .lq-amt, .lq-sub, #lqClose { animation: none; }
     #liqScreen::after { opacity: 0; } .lq-cracks path { stroke-dashoffset: 0; } .lq-debris { display: none; }
   }
+  /* 下注飛幣 */
+  .fly-coin {
+    position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none;
+    width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff6b0, #ffc83a 55%, #d99000);
+    border: 2px solid #9a5b00; box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    color: #7a4300; font: 900 14px/22px "Baloo 2", sans-serif; text-align: center;
+  }
+  .meter.coin-hit { animation: coinHit .25s ease-out; }
+  @keyframes coinHit { 50% { transform: scale(1.07); } }
   .hud-duel {
     font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
     background: rgba(255,255,255,.8); color: var(--ink); backdrop-filter: blur(4px);
@@ -2520,6 +2530,7 @@
       position.margin = m;
     }
     playClick();
+    flyCoins(dir > 0 ? btnLong : btnShort, $('invMeter'), stakeMode === 'all' ? 14 : stakeMode >= 0.3 ? 9 : stakeMode >= 0.1 ? 6 : 4);
     achieve('firstTrade');
     if (losing) { achieve('lossAversion'); position.avgDown = true; stats.avgDowns = (stats.avgDowns || 0) + 1; }
     if (stakeMode === 'all') { achieve('allIn'); stats.allIns = (stats.allIns || 0) + 1; }
@@ -2549,6 +2560,7 @@
     if (pnl > 0) {
       winStreak++;
       playCoin();
+      flyCoins($('pnlMeter'), $('balMeter'), pnl >= 10000 * K ? 16 : 8);
       spawnParticles('up');
       setMsg('獲利了結 ' + fmtSigned(pnl) + '！我果然是天才！');
       toast((winStreak >= 2 ? '🔥 ' + winStreak + ' 連勝！' : '💰 ') + '獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
@@ -2562,6 +2574,7 @@
     } else {
       winStreak = 0;
       playScary();
+      flyCoins($('invMeter'), null, 6);
       setMsg('停損了 ' + fmtSigned(pnl) + '……好痛……但還活著。');
       if ((closedPos.peak || 0) > 0) { toast('📉 小賺大賠 ' + fmtShortSigned(pnl)); achieve('smallWinBigLoss'); }
       else toast('🩸 停損 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・停損要膽識' : ''));
@@ -2834,6 +2847,38 @@
       refreshTradeUI();
     });
   });
+
+  // 下注飛幣: chips arc from where the money leaves to where it lands;
+  // with no target they drop off the bottom of the screen (money gone)
+  function flyCoins(from, to, n) {
+    if (noMotion || !from) return;
+    const a = from.getBoundingClientRect();
+    const b = to ? to.getBoundingClientRect() : null;
+    if (!a.width || (to && !b.width)) return;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('span');
+      c.className = 'fly-coin'; c.textContent = '¥';
+      document.body.appendChild(c);
+      const sx = a.left + a.width / 2 + (Math.random() - 0.5) * a.width * 0.5;
+      const sy = a.top + a.height / 2 + (Math.random() - 0.5) * a.height * 0.4;
+      const ex = b ? b.left + b.width / 2 + (Math.random() - 0.5) * b.width * 0.35 : sx + (Math.random() - 0.5) * 140;
+      const ey = b ? b.top + b.height / 2 + (Math.random() - 0.5) * b.height * 0.3 : window.innerHeight + 40;
+      const mx = (sx + ex) / 2 + (Math.random() - 0.5) * 60;
+      const my = b ? Math.min(sy, ey) - 50 - Math.random() * 60 : sy - 30 - Math.random() * 40;
+      const anim = c.animate([
+        { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(.5)', opacity: 0 },
+        { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(1)', opacity: 1, offset: 0.08 },
+        { transform: 'translate(' + mx + 'px,' + my + 'px) scale(1.15) rotate(180deg)', opacity: 1, offset: 0.5 },
+        { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.8) rotate(360deg)', opacity: b ? 1 : 0.6 }
+      ], { duration: (b ? 620 : 900) + Math.random() * 160, delay: i * 45, easing: b ? 'cubic-bezier(.3,.7,.4,1)' : 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
+      anim.onfinish = function () {
+        c.remove();
+        if (!b) return;
+        if (i % 3 === 0) playTick();
+        to.classList.remove('coin-hit'); void to.offsetWidth; to.classList.add('coin-hit');
+      };
+    }
+  }
 
   function buzz(p) {
     try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {}
