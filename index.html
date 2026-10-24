@@ -1081,7 +1081,7 @@
     <div class="lq-amt" id="lqAmt"></div>
     <div class="lq-sub" id="lqSub"></div>
   </div>
-  <button id="lqClose" type="button">✕ 關閉（5）</button>
+  <button id="lqClose" type="button">✕ 關閉（10）</button>
 </div>
 <div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div><button id="fbClose" type="button" hidden>✕ 關閉（3）</button></div></div>
 <div id="particles"></div>
@@ -3010,7 +3010,7 @@
     }
     el.hidden = true; void el.offsetWidth; el.hidden = false;
     const btn = $('lqClose');
-    let left = 5;
+    let left = 10;
     btn.textContent = '✕ 關閉（' + left + '）';
     try { btn.focus({ preventScroll: true }); } catch (e) {}
     clearInterval(liqTimer);
