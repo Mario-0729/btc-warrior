@@ -3120,6 +3120,7 @@
     if (!started || spins <= 0) return;
     $('wheelModal').hidden = false;
     $('wheelResult').textContent = '不用花錢，轉動看看手氣……';
+    $('wheelClose').textContent = '先不要';
     $('wheelSpin').disabled = false;
     $('wheelSpin').focus();
   }
@@ -3148,6 +3149,8 @@
       spinning = false;
       $('wheelClose').disabled = false;
       applyPrize(PRIZES[k]);
+      // after the spin the close button reacts to the prize instead of "not now"
+      $('wheelClose').textContent = ['red10k', 'red5k', 'red3k', 'shield', 'double'].indexOf(PRIZES[k].key) >= 0 ? '收下！🤑' : '認了……😭';
       $('wheelSpin').disabled = spins <= 0;
       refreshTradeUI();
     }, dur);
