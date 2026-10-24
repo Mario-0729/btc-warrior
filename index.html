@@ -816,6 +816,47 @@
     display: grid; place-items: center;
   }
   #muteBtn { top: calc(10px + env(safe-area-inset-top, 0px)); }
+  /* 顏藝頭像 + 特寫 */
+  #face {
+    position: absolute; z-index: 2; left: max(8px, env(safe-area-inset-left, 0px)); bottom: 8px;
+    width: 60px; height: 60px; border-radius: 50%; overflow: hidden; pointer-events: none;
+    background: rgba(255,255,255,.85); border: 3px solid var(--panel-border);
+  }
+  #face svg, #faceBig svg { width: 100%; height: 100%; display: block; }
+  body.scary #face { border-color: rgba(225,20,40,.9); }
+  #faceBig {
+    position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; pointer-events: none;
+    padding: 16px;
+  }
+  #faceBig[hidden] { display: none; }
+  .fb-card { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: fbIn .35s cubic-bezier(.2,1.6,.4,1); }
+  .fb-face {
+    width: min(180px, 46vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+    background: #fff; border: 5px solid #ff5fa0; box-shadow: 0 16px 40px -10px rgba(0,0,0,.45);
+  }
+  #faceBig.scare .fb-face { border-color: #d11f3a; animation: fbShake .12s linear infinite; }
+  .fb-line {
+    max-width: min(420px, calc(100vw - 32px)); text-align: center; font-weight: 900; font-size: 16px; line-height: 1.45;
+    color: #fff; background: rgba(50, 15, 35, .88); padding: 9px 16px; border-radius: 16px;
+  }
+  .fb-line:empty { display: none; }
+  @keyframes fbIn { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes fbShake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 2px); } 75% { transform: translate(4px, -2px); } }
+  .hud-duel {
+    font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+    background: rgba(255,255,255,.8); color: var(--ink); backdrop-filter: blur(4px);
+  }
+  .rescue .side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .rescue .side-actions #btnWheel { grid-column: 1 / -1; }
+  #btnBuddy {
+    appearance: none; cursor: pointer; border-radius: 14px; padding: 9px 6px;
+    font-family: var(--display); font-weight: 700; font-size: 13px;
+    background: #eaf4ff; color: #2a5a8a; border: 2px solid #9cc6f0;
+  }
+  #btnBuddy:disabled { opacity: .45; cursor: not-allowed; }
+  #btnBuddy:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  .rescue .side-actions button { width: auto; min-width: 0; }
+  @media (prefers-reduced-motion: reduce) { .fb-card, #faceBig.scare .fb-face { animation: none; } }
   #lbBtn {
     position: absolute; z-index: 2; top: 10px; right: calc(102px + env(safe-area-inset-right, 0px));
     width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 16px; display: grid; place-items: center;
@@ -914,6 +955,7 @@
 <div id="crashFlash"></div>
 <div id="crashText"></div>
 <div id="bigWin" aria-hidden="true"></div>
+<div id="faceBig" hidden aria-live="polite"><div class="fb-card"><div class="fb-face" id="fbFace"></div><div class="fb-line" id="fbLine"></div></div></div>
 <div id="particles"></div>
 <div id="newsBanner" role="status"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -924,7 +966,7 @@
     <div class="splash-badge">⚠️ 投資風險警語</div>
     <h2>「2000 萬而已，我一定能輕鬆賺回來！」<br>……進場前，請先讀完這份很長的警語</h2>
     <ol class="warn-list">
-      <li>本頁所有價格都是隨機模擬，跟真實比特幣行情無關。</li>
+      <li>本頁的美元/日圓匯率全是隨機模擬，跟真實行情無關。</li>
       <li>槓桿會同時放大獲利和虧損，本遊戲最高 102 倍（久留美模式）。</li>
       <li>保證金賠光時會被強制平倉，系統不會先問你。</li>
       <li>「沒賣就不算賠」是帳面虧損最常見的藉口。</li>
@@ -957,6 +999,8 @@
       <div class="wheel-title" id="endTitle">🏁 通關！2000 萬回來了</div>
       <button id="endX" class="xbtn" type="button" aria-label="關閉">✕</button>
     </div>
+    <div class="wheel-result" id="endLine"></div>
+    <ul class="dad-penalty end-stats" id="endSermon"></ul>
     <img id="shareImg" class="share-img" alt="通關戰績圖">
     <p class="share-hint" id="shareHint">戰績圖產生中……</p>
     <div class="vote-slot"></div>
@@ -1058,7 +1102,9 @@
     <div class="hud-tl">
       <button id="rank" type="button" aria-label="查看我的等級與福利"><span id="rankName">Lv.1 ⚔️ 新手 FX 戰士</span><span class="rank-bar" aria-hidden="true"><span id="rankBarFill"></span></span></button>
       <div class="hud-price"><b id="price">--</b><span id="change">等待進場…</span></div>
+      <div class="hud-duel" id="duel">⚔️ 投資對決</div>
     </div>
+    <div id="face" aria-hidden="true"></div>
     <button id="histBtn" type="button" aria-label="投資紀錄">📜</button>
     <button id="lbBtn" type="button" aria-label="全網排行榜" hidden>🏆</button>
     <div id="msg"></div>
@@ -1115,8 +1161,8 @@
       </div>
       <div class="substats">
         <span>持倉 <span id="posBadge">空手</span></span>
-        <span id="debtStat" hidden>欠朋友 <b id="debt">NT$0</b></span>
-        <span id="dadDebtStat" hidden>欠爸爸 <b id="dadDebt">NT$0</b></span>
+        <span id="debtStat" hidden>欠朋友 <b id="debt">¥0</b></span>
+        <span id="dadDebtStat" hidden>欠爸爸 <b id="dadDebt">¥0</b></span>
       </div>
       <div class="chips" id="chips"></div>
       <div class="opts">
@@ -1145,6 +1191,7 @@
         <div class="rescue-head">💸 沒錢了……要怎麼翻身？</div>
         <div class="side-actions">
           <button id="btnWheel" type="button">🎡 救命轉盤・轉動</button>
+          <button id="btnBuddy" type="button">🤓 找學霸救命</button>
           <button id="btnSteal" type="button">👛 偷爸爸錢包</button>
           <button id="btnBorrow" type="button">🙏 借 10萬</button>
           <button id="btnHome" type="button">🏠 回家吃自己</button>
@@ -1201,10 +1248,11 @@
   let lastCrashAt = 0;
 
   function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
-  function fmtUsd(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
-  function fmtTwd(n) { return 'NT$' + Math.round(n).toLocaleString('en-US'); }
+  // USD/JPY quote, the pair the show trades: 150.123 円
+  function fmtUsd(n) { return '¥' + n.toFixed(3); }
+  function fmtTwd(n) { return '¥' + Math.round(n).toLocaleString('en-US'); }
   function fmtSigned(n) { return (n >= 0 ? '+' : '-') + fmtTwd(Math.abs(n)); }
-  // compact Taiwanese money: 2,000,000 → 200萬, 35,000 → 3.5萬
+  // compact money: 2,000,000 → 200萬, 35,000 → 3.5萬
   function fmtShort(n) {
     const a = Math.abs(n), sg = n < 0 ? '-' : '';
     if (a >= 1e8) return sg + (a / 1e8).toFixed(2).replace(/\.?0+$/, '') + '億';
@@ -1486,12 +1534,12 @@
   /* ================= market ================= */
   let volMult = 1, volTicksLeft = 0;
   const newsPool = [
-    { text: '📰 快訊：某央行意外升息', mult: 2.4 },
-    { text: '📰 快訊：巨鯨帳戶大額異動', mult: 2.6 },
-    { text: '📰 快訊：交易所傳出系統故障', mult: 2.2 },
-    { text: '📰 快訊：散戶信心大爆發', mult: 2.3 },
-    { text: '📰 快訊：監理機關即將發表談話', mult: 2.0 },
-    { text: '📰 快訊：知名網紅宣布全倉梭哈', mult: 2.5 }
+    { text: '📰 快訊：日銀總裁突然發言', mult: 2.4 },
+    { text: '📰 快訊：美國非農就業數據公布', mult: 2.6 },
+    { text: '📰 快訊：財務省疑似進場干預匯市', mult: 2.8 },
+    { text: '📰 快訊：聯準會主席「一切看數據」', mult: 2.0 },
+    { text: '📰 快訊：某央行意外升息', mult: 2.3 },
+    { text: '📰 快訊：深夜流動性突然消失', mult: 2.2 }
   ];
   const newsBanner = $('newsBanner');
   function maybeTriggerNews() {
@@ -1501,22 +1549,26 @@
     toast(ev.text.replace('📰 快訊：', '📰 '), '接下來幾根波動變大');
   }
 
-  function newCandle(prevClose, mult, live) {
+  // moves are a share of the price (tuned so one candle is about 1%,
+  // i.e. 102x is a coin toss: 動 1 円多就歸零, like episode 1)
+  let trendLock = false;
+  function newCandle(prevClose, mult, live, boost) {
     mult = mult || 1;
-    if (live && Math.random() < 0.12) trend = -trend;
-    const drift = live ? trend * 180 : 0;
+    const u = prevClose / 68000;
+    if (live && !trendLock && Math.random() < 0.12) trend = -trend;
+    const drift = live ? trend * 180 * (boost || 1) * u : 0;
     const open = prevClose;
-    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3000 * mult : 0;
-    const close = open + (Math.random() - 0.5) * 900 * mult + drift + big;
+    const big = Math.random() < BIG_P ? (Math.random() - 0.5) * 3000 * mult * u : 0;
+    const close = open + (Math.random() - 0.5) * 900 * mult * u + drift + big;
     return {
       open: open, close: close,
-      high: Math.max(open, close) + Math.random() * 300 * mult,
-      low: Math.min(open, close) - Math.random() * 300 * mult
+      high: Math.max(open, close) + Math.random() * 300 * mult * u,
+      low: Math.min(open, close) - Math.random() * 300 * mult * u
     };
   }
   function seed() {
     candles = [];
-    let p = 68000;
+    let p = 149 + Math.random() * 3;
     for (let i = 0; i < MAX; i++) { const c = newCandle(p); candles.push(c); p = c.close; }
   }
   function lastClose() { return candles[candles.length - 1].close; }
@@ -1576,7 +1628,7 @@
     firstTrade: ['歡迎來到戰場', '第一筆單送出去了，回不去了。'],
     lossAversion: ['損失厭惡', '帳面虧損還加碼，這叫攤平還是越陷越深？'],
     allIn: ['梭哈', '一把全押，膽子比本金還大。'],
-    kurumi: ['久留美模式', '開了 102 倍槓桿，價格動 1% 就是天堂或地獄。'],
+    kurumi: ['久留美模式', '開了 102 倍槓桿，匯率動 1 円多就是天堂或地獄。'],
     gold: ['撿到紅包', '走在 K 線上，撿到黃金 K 線紅包。'],
     wheel: ['轉盤初體驗', '第一次轉命運轉盤。小心，會上癮。'],
     saved: ['免死金牌', '爆倉的瞬間，金牌救回一半保證金。'],
@@ -1592,7 +1644,10 @@
     aq: ['阿 Q', '嘴硬模式撐過 10 根 K 線：沒賣就不算賠。'],
     heirloom: ['傳家寶', '套牢 30 根 K 線，這單可以傳給下一代了。'],
     valueInvest: ['價值投資', '越跌越買，你說這叫價值投資。'],
-    aqDeath: ['嘴硬到最後一刻', '在不看的時候被強制平倉。']
+    aqDeath: ['嘴硬到最後一刻', '在不看的時候被強制平倉。'],
+    guruFollow: ['韭菜', '跟著發財姐的單衝，結果她刪文了。'],
+    guruFade: ['反指標大師', '反著發財姐做，賺到了。'],
+    duelWin: ['班上第一', '投資對決中超越所有同學。']
   };
   let achieved = {};
   function achieve(key) {
@@ -1725,7 +1780,7 @@
     $('goalLeft').textContent = eq >= GOAL ? '🎉 已達成！' : '還差 ' + fmtShort(GOAL - eq) + '・最高紀錄 ' + fmtShort(bestEquity);
     if (!cleared && started && eq >= GOAL) showEnding();
   }
-  let stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+  let stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
   // settlement: an achievement page with a shareable PNG of the run
   let shareBlob = null, downloadsApi = null, clearImg = null;
   (function () {
@@ -1809,6 +1864,7 @@
     return cv;
   }
   function openClearPage() {
+    fillEnd();
     $('endModal').hidden = false;
     if (clearImg) {
       $('shareImg').src = clearImg;
@@ -1818,9 +1874,16 @@
       buildClearImage();
     }
   }
+  function fillEnd() {
+    const first = RIVALS.every(function (r) { return !rivalsDone[r.id]; });
+    $('endLine').textContent = (first ? '全班第一個到！' : '') + '「2000 萬，回來了。……可是媽媽當年，也是在這裡停不下來的。」';
+    const ul = $('endSermon'); ul.textContent = '';
+    sermon().forEach(function (t) { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+  }
   function showEnding() {
     cleared = true;
     bigWinText('通關！', '2000 萬回來了');
+    fillEnd();
     $('endModal').hidden = false;
     buildClearImage();
   }
@@ -2096,6 +2159,7 @@
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
     spawnParticles('up'); setTimeout(function () { spawnParticles('up'); }, 300); setTimeout(function () { spawnParticles('up'); }, 600);
     playFanfare(); setTimeout(playCoin, 450);
+    buzz([40, 30, 40, 30, 80]);
   }
 
   function refreshTradeUI() {
@@ -2119,12 +2183,14 @@
       b.classList.toggle('on', n === shownLev);
       b.classList.toggle('locked', isLocked);
       b.textContent = (isLocked ? '🔒' : '') + n + 'x';
-      b.disabled = !!position;
+      b.disabled = !!position || (buddyLock && n !== 10);
     });
     // rescue options only when broke: no position and not enough for a bet
     const broke = started && !position && balance < STAKE;
     if (broke && !wasBroke) {
       spins = 1;
+      buddyLeft = buddyCount < 3 ? 1 : 0;
+      setTimeout(function () { story('broke', 'cry'); }, 900);
       setTimeout(function () { toast('💸 破產救濟', '救命轉盤可以轉動了。也可以……打爸爸錢包的主意。'); }, 300);
     }
     wasBroke = broke;
@@ -2133,6 +2199,8 @@
     btnBorrow.disabled = borrowCount >= MAX_BORROW || grounded > 0;
     const showClear = !!(clearImg || cleared);
     $('clearBtn').hidden = !showClear; $('clearBtn2').hidden = !showClear;
+    btnBuddy.textContent = buddyLeft > 0 ? '🤓 找學霸救命' : buddyCount >= 3 ? '🤓 學霸已讀不回' : '🤓 學霸救過了';
+    btnBuddy.disabled = buddyLeft <= 0 || locked;
     btnWheel.textContent = spins > 0 ? '🎡 救命轉盤・轉動' : '🎡 轉盤已轉過';
     btnWheel.disabled = !started || spins <= 0;
     btnWheel.classList.toggle('ready', started && spins > 0);
@@ -2162,6 +2230,9 @@
     if (shields > 0) addChip('🛡️ 免死金牌 ×' + shields, false);
     if (doubleNext) addChip('✨ 下次獲利翻倍', false);
     if (position && (position.lev || LEVERAGE) >= 102) addChip('🔥 久留美模式 102x', true);
+    if (buddyLock) addChip('🤓 學霸盯著你：只准 10x', false);
+    if (callTicks > 0) addChip('📣 發財姐喊' + (callDir > 0 ? '多' : '空') + '・剩 ' + callTicks + ' 根', false);
+    setFace(faceState());
 
     updateLivePnl();
     updateRank();
@@ -2286,7 +2357,8 @@
     const losing = position && positionPnl(p) < 0;
     balance -= amt;
     if (!position) {
-      position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: lev };
+      position = { dir: dir, avgEntry: p, margin: amt, redTicks: 0, lev: buddyLock ? 10 : lev, buddy: buddyLock };
+      if (position.lev >= 102) stats.lev102 = (stats.lev102 || 0) + 1;
     } else {
       const m = position.margin + amt;
       position.avgEntry = (position.avgEntry * position.margin + p * amt) / m;
@@ -2294,8 +2366,8 @@
     }
     playClick();
     achieve('firstTrade');
-    if (losing) { achieve('lossAversion'); position.avgDown = true; }
-    if (stakeMode === 'all') achieve('allIn');
+    if (losing) { achieve('lossAversion'); position.avgDown = true; stats.avgDowns = (stats.avgDowns || 0) + 1; }
+    if (stakeMode === 'all') { achieve('allIn'); stats.allIns = (stats.allIns || 0) + 1; }
     if (position.lev >= 102) achieve('kurumi');
     missionEvent('open', 1);
     setMsg(losing
@@ -2323,7 +2395,7 @@
       playCoin();
       spawnParticles('up');
       setMsg('獲利了結 ' + fmtSigned(pnl) + '！我果然是天才！');
-      toast('💰 獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
+      toast((winStreak >= 2 ? '🔥 ' + winStreak + ' 連勝！' : '💰 ') + '獲利 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・見好就收，但「好」是多好？' : ''));
       if (winStreak >= 3) achieve('overconfidence');
       if (pnl >= 10000 * K) bigWin(pnl);
       stats.wins++;
@@ -2338,6 +2410,7 @@
       if ((closedPos.peak || 0) > 0) { toast('📉 小賺大賠 ' + fmtShortSigned(pnl)); achieve('smallWinBigLoss'); }
       else toast('🩸 停損 ' + fmtShortSigned(pnl) + (Math.random() < 0.4 ? '・停損要膽識' : ''));
     }
+    if (closedPos.buddy) buddyDone(pnl > 0);
     refreshTradeUI();
     draw();
   }
@@ -2360,7 +2433,7 @@
     if (denial) { achieve('aqDeath'); toast('🙈 嘴硬到最後一刻……'); }
     endDenial();
     recordTrade(position, lastClose(), -position.margin, 'liq');
-    const liqPeak = position.peak;
+    const liqPeak = position.peak, wasBuddy = position.buddy;
     position = null;
     winStreak = 0;
     triggerCrash('強制平倉！！');
@@ -2369,6 +2442,9 @@
     achieve('firstLiq');
     if ((liqPeak || 0) > 0) achieve('smallWinBigLoss');
     stats.liqs++;
+    showFaceBig('blood', '', 1500, true);
+    buzz([90, 60, 240]);
+    if (wasBuddy) buddyDone(false);
     refreshTradeUI();
   }
 
@@ -2503,7 +2579,7 @@
       '📈 這局最高淨值 ' + fmtShort(peak) + '・最高到過 ' + levelName(bestRank),
       '💥 爆倉 ' + stats.liqs + ' 次・👛 偷爸爸錢包 ' + stats.steals + ' 次',
       '🧾 欠朋友 ' + fmtShort(debt) + '・欠爸爸 ' + fmtShort(dadDebt)
-    ].forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    ].concat(sermon()).forEach(function (t) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
     $('overModal').hidden = false;
     playScary();
   }
@@ -2513,7 +2589,9 @@
     spins = 0; shields = 0; doubleNext = false; wasBroke = false; borrowCount = 0;
     stakeMode = 0.05; lev = 25; rankIdx = null; bestRank = 3; cleared = false;
     trades = []; equityLog = [Math.round(START)]; startAt = performance.now();
-    stats = { liqs: 0, steals: 0, caught: 0, wins: 0 };
+    stats = { liqs: 0, steals: 0, caught: 0, wins: 0, avgDowns: 0, allIns: 0, lev102: 0, maxRed: 0, followLoss: 0 };
+    resetDuel(); storyDone = {}; buddyLock = false; buddyLeft = 0; buddyCount = 0;
+    setTimeout(function () { story('start', 'calm'); }, 600);
     missionIdx = 0; missionRound = 0; missionProg = 0;
     meterState.bal.shown = null;
     $('overModal').hidden = true;
@@ -2554,12 +2632,208 @@
         playClick();
         return;
       }
+      if (buddyLock && n !== 10) { toast('🤓 學霸：「說好只准 10 倍。」'); playClick(); return; }
       lev = n;
-      toast(lev >= 102 ? '🏎️ 102x：你不是在騎機車，是在開賽車' : '槓桿 ' + lev + 'x・跌 ' + (100 / lev).toFixed(1) + '% 就爆倉');
+      toast(lev >= 102 ? '🏎️ 102x：反向 ' + (lastClose() / lev).toFixed(2) + ' 円就歸零' : '槓桿 ' + lev + 'x・反向 ' + (lastClose() / lev).toFixed(2) + ' 円就爆倉');
       playClick();
       refreshTradeUI();
     });
   });
+
+  function buzz(p) {
+    try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {}
+  }
+
+  /* ---------- 顏藝頭像: an original chibi heroine whose face tracks the P&L ---------- */
+  function faceSvg(st) {
+    const hair = '#6b2f4a', skin = '#ffe7da', ink = '#3a1a2a', lip = '#b0405e';
+    const blush = '<ellipse cx="29" cy="68" rx="5.5" ry="3" fill="#ff9bb8" opacity=".65"/><ellipse cx="71" cy="68" rx="5.5" ry="3" fill="#ff9bb8" opacity=".65"/>';
+    const dot = function (x) { return '<ellipse cx="' + x + '" cy="58" rx="4.5" ry="6" fill="' + ink + '"/><circle cx="' + (x - 1.6) + '" cy="55.5" r="1.7" fill="#fff"/>'; };
+    let eyes = '', mouth = '', extra = '', front = '';
+    if (st === 'happy') {
+      eyes = '<path d="M33 60 Q38 52 43 60 M57 60 Q62 52 67 60" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      mouth = '<path d="M42 71 Q50 82 58 71 Z" fill="' + lip + '"/>' + blush;
+    } else if (st === 'rich') {
+      eyes = '<text x="38" y="64" font-size="17" font-weight="900" text-anchor="middle" fill="#ffb000" stroke="#9a5b00" stroke-width="1">¥</text><text x="62" y="64" font-size="17" font-weight="900" text-anchor="middle" fill="#ffb000" stroke="#9a5b00" stroke-width="1">¥</text>';
+      mouth = '<path d="M38 70 Q50 86 62 70 Z" fill="' + lip + '"/><path d="M41 71 L59 71" stroke="#fff" stroke-width="2.5"/>' + blush;
+      extra = '<path d="M14 40 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M86 72 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z" fill="#ffc83a"/>';
+    } else if (st === 'sweat') {
+      eyes = dot(38) + dot(62) + '<path d="M31 50 L43 46 M69 50 L57 46" stroke="' + hair + '" stroke-width="2.5" stroke-linecap="round"/>';
+      mouth = '<path d="M42 75 Q46 71 50 75 Q54 79 58 75" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      extra = '<path d="M83 40 C79 48 79 53 83 54 C87 53 87 48 83 40 Z" fill="#7cc4ff" stroke="#3a8fd8" stroke-width="1"/>';
+    } else if (st === 'blood') {
+      const eye = function (x) {
+        return '<circle cx="' + x + '" cy="58" r="8" fill="#fff" stroke="' + ink + '" stroke-width="1.5"/>' +
+          '<path d="M' + (x - 7) + ' 56 l4 1 M' + (x + 7) + ' 55 l-4 2 M' + (x - 6) + ' 62 l4 -1.5 M' + (x + 6) + ' 62 l-3.5 -2 M' + x + ' 50.5 l0.5 3.5" stroke="#e0102e" stroke-width="1.2"/>' +
+          '<circle cx="' + x + '" cy="58" r="1.8" fill="' + ink + '"/>' +
+          '<path d="M' + (x - 7) + ' 68 Q' + x + ' 71 ' + (x + 7) + ' 68" stroke="#7a4a8a" stroke-width="2" fill="none" opacity=".7"/>';
+      };
+      eyes = eye(38) + eye(62);
+      mouth = '<rect x="40" y="73" width="20" height="8" rx="2" fill="#fff" stroke="' + ink + '" stroke-width="1.5"/><path d="M45 73 v8 M50 73 v8 M55 73 v8 M40 77 h20" stroke="' + ink + '" stroke-width="1"/>';
+      front = '<path d="M30 26 v14 M36 23 v18 M42 22 v15 M58 22 v15 M64 23 v18 M70 26 v14" stroke="#4a1f6a" stroke-width="2" opacity=".55"/>';
+    } else if (st === 'cry') {
+      eyes = '<path d="M32 54 L42 58 L32 62 M68 54 L58 58 L68 62" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      mouth = '<ellipse cx="50" cy="77" rx="7.5" ry="6.5" fill="#7a2040"/><path d="M45 79 Q50 76 55 79" stroke="#ff8fa8" stroke-width="2" fill="none"/>';
+      extra = '<path d="M33 63 C31 72 30 80 31 92 L37 92 C37 80 37 72 36 63 Z M67 63 C69 72 70 80 69 92 L63 92 C63 80 63 72 64 63 Z" fill="#7cc4ff" opacity=".85"/>' +
+        '<circle cx="15" cy="33" r="10" fill="' + skin + '" stroke="#d9a890" stroke-width="1.5"/><circle cx="85" cy="33" r="10" fill="' + skin + '" stroke="#d9a890" stroke-width="1.5"/>';
+    } else if (st === 'zen') {
+      eyes = '<path d="M33 57 Q38 62 43 57 M57 57 Q62 62 67 57" stroke="' + ink + '" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      mouth = '<path d="M45 73 Q50 76 55 73" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      extra = '<text x="82" y="30" font-size="10" fill="#8e7685" font-weight="900">…</text>';
+    } else {
+      eyes = dot(38) + dot(62);
+      mouth = '<path d="M44 73 Q50 78 56 73" stroke="' + lip + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>' + blush;
+    }
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M14 60 C10 24 34 8 50 8 C68 8 90 22 86 60 L86 92 L72 84 L70 62 L30 62 L28 84 L14 92 Z" fill="' + hair + '"/>' +
+      '<ellipse cx="50" cy="57" rx="31" ry="30" fill="' + skin + '"/>' +
+      '<path d="M19 52 C18 27 34 16 50 16 C68 16 83 27 81 52 C74 41 66 35 58 33 C56 39 50 43 42 43 C46 39 47 36 46 33 C36 36 26 43 19 52 Z" fill="' + hair + '"/>' +
+      '<circle cx="74" cy="27" r="8" fill="#ffc83a" stroke="#d99000" stroke-width="2"/><text x="74" y="31" font-size="11" font-weight="900" text-anchor="middle" fill="#9a5b00">¥</text>' +
+      front + eyes + mouth + extra + '</svg>';
+  }
+  let curFace = '';
+  function faceState() {
+    if (started && !position && balance < STAKE) return 'cry';
+    if (!position) return 'calm';
+    if (denial) return 'zen';
+    const r = positionPnl(lastClose()) / position.margin;
+    return r > 0.5 ? 'rich' : r >= 0 ? 'happy' : r > -0.45 ? 'sweat' : 'blood';
+  }
+  function setFace(st) {
+    if (st === curFace) return;
+    curFace = st;
+    $('face').innerHTML = faceSvg(st);
+  }
+  let faceBigTimer = null;
+  function showFaceBig(st, line, ms, scare) {
+    $('fbFace').innerHTML = faceSvg(st);
+    $('fbLine').textContent = line || '';
+    const el = $('faceBig');
+    el.classList.toggle('scare', !!scare);
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    clearTimeout(faceBigTimer);
+    faceBigTimer = setTimeout(function () { el.hidden = true; }, ms || 2600);
+  }
+
+  /* ---------- 主線「媽媽的 2000 萬」: one line per milestone ---------- */
+  const STORY = {
+    start: '媽媽在匯市賠掉的 2000 萬，我要親手賺回來。',
+    s400: '翻倍了！媽媽，你看到了嗎？我果然是天才！',
+    s800: '手停不下來……媽媽當年，也是這種感覺嗎？',
+    s1200: '再一點點就好。這次一定不會跟媽媽一樣。',
+    broke: '……結果，跟媽媽一模一樣。'
+  };
+  let storyDone = {};
+  function logEvent(text) {
+    eventLog.unshift({ t: started && startAt ? mmss(gameSecs()) : '', text: text });
+    if (eventLog.length > 60) eventLog.pop();
+  }
+  function story(key, face) {
+    if (storyDone[key] && key !== 'broke') return;
+    storyDone[key] = true;
+    showFaceBig(face, '「' + STORY[key] + '」', 3000, face === 'blood' || face === 'cry');
+    logEvent('💭 ' + STORY[key]);
+  }
+
+  /* ---------- 喊單部落客「發財姐」: her calls steer the next 5 candles, usually the wrong way ---------- */
+  let callTicks = 0, callDir = 1, callTrue = false, callWait = 16, callFollow = 0;
+  function stepGuru() {
+    if (callTicks > 0 || --callWait > 0) return;
+    callDir = Math.random() < 0.5 ? 1 : -1;
+    callTrue = Math.random() < 0.35;
+    callTicks = 5; callFollow = 0;
+    callWait = 20 + Math.floor(Math.random() * 14);
+    toast(callDir > 0 ? '📣 發財姐：「美元要噴了！全力做多🔥」' : '📣 發財姐：「美元要崩了！快放空💀」');
+  }
+  function endCall() {
+    const followed = callFollow > 0, faded = callFollow < 0;
+    callFollow = 0;
+    if (callTrue) {
+      toast('📣 發財姐：「跟上的都賺翻了吧？課程連結在留言👇」');
+    } else {
+      toast('📣 發財姐：「這是洗盤，懂的自然懂。」（已刪文）');
+      if (followed) { stats.followLoss = (stats.followLoss || 0) + 1; achieve('guruFollow'); }
+      if (faded) achieve('guruFade');
+    }
+  }
+
+  /* ---------- 投資對決: three classmates trade the same chart ---------- */
+  const RIVALS = [
+    { id: 'nerd', emo: '🤓', name: '學霸' },
+    { id: 'lazy', emo: '😴', name: '懶人' },
+    { id: 'guru', emo: '💅', name: '發財姐' }
+  ];
+  let rivals = { nerd: START, lazy: START, guru: START }, lazyDir = 1, rivalsDone = {}, duelRank = 0;
+  function resetDuel() { rivals = { nerd: START, lazy: START, guru: START }; lazyDir = 1; rivalsDone = {}; duelRank = 0; renderDuel(true); }
+  function stepRivals(pct) {
+    // 學霸 follows the trend with modest size; 懶人 flips a coin at 102x;
+    // 發財姐 trades her own calls and lives off course sales
+    rivals.nerd *= 1 + trend * pct * 2.5 + 0.002;
+    if (Math.random() < 0.15) lazyDir = -lazyDir;
+    rivals.lazy *= Math.max(0.05, 1 + lazyDir * pct * 15);
+    if (rivals.lazy < START * 0.15) { rivals.lazy = START; if (Math.random() < 0.5) toast('😴 懶人又跟家裡拿了 200 萬'); }
+    rivals.guru = rivals.guru * (1 + (callTicks > 0 ? callDir * pct * 8 : 0)) + START * 0.006;
+    RIVALS.forEach(function (r) {
+      rivals[r.id] = Math.max(0, rivals[r.id]);
+      if (!rivalsDone[r.id] && rivals[r.id] >= GOAL) { rivalsDone[r.id] = true; toast('🏁 ' + r.emo + r.name + '先到 2000 萬了……'); }
+    });
+    renderDuel();
+  }
+  function renderDuel(silent) {
+    const st = [{ emo: '', name: '你', eq: Math.max(0, liveEquity()), me: true }].concat(RIVALS.map(function (r) {
+      return { emo: r.emo, name: r.name, eq: rivals[r.id] };
+    })).sort(function (a, b) { return b.eq - a.eq; });
+    let i = 0;
+    st.forEach(function (x, k) { if (x.me) i = k; });
+    $('duel').textContent = i === 0
+      ? '⚔️ 🥇 你領先 ' + st[1].emo + ' ' + fmtShort(st[0].eq - st[1].eq)
+      : '⚔️ 第 ' + (i + 1) + ' 名・' + st[0].emo + st[0].name + ' ' + fmtShort(st[0].eq);
+    if (!silent && started && duelRank && i + 1 !== duelRank) {
+      if (i + 1 < duelRank) { toast('⚔️ 超車！你超過了 ' + st[i + 1].emo + st[i + 1].name); buzz(30); if (i === 0) achieve('duelWin'); }
+      else toast('⚔️ 被 ' + st[i - 1].emo + st[i - 1].name + '超車了……');
+    }
+    duelRank = i + 1;
+  }
+
+  /* ---------- 好友救援: the classmate bails you out, on her terms ---------- */
+  let buddyLock = false, buddyLeft = 0, buddyCount = 0;
+  const buddyLines = [
+    '「借你 50 萬。下一單只准開 10 倍，我會盯著你。」',
+    '「又來？……最後兩次喔。只准 10 倍。」',
+    '「這是我的學費，你給我好好用。只准 10 倍。」'
+  ];
+  function buddy() {
+    if (buddyLeft <= 0 || grounded > 0) return;
+    buddyLeft = 0;
+    balance += START / 4;
+    buddyLock = true; lev = 10;
+    toast('🤓 學霸' + buddyLines[Math.min(buddyCount, buddyLines.length - 1)]);
+    buddyCount++;
+    playCoin();
+    refreshTradeUI();
+  }
+  function buddyDone(won) {
+    buddyLock = false;
+    toast(won ? '🤓 學霸：「……算你還有救。」' : '🤓 學霸：「我就知道。」');
+  }
+  const btnBuddy = $('btnBuddy');
+  btnBuddy.addEventListener('click', buddy);
+
+  /* ---------- 勸世結算: which retail traps you walked into ---------- */
+  function sermon() {
+    const items = [
+      [stats.maxRed || 0, 10, '🪤 凹單：最久套牢 ' + (stats.maxRed || 0) + ' 根才放手。市場謝謝你的耐心。'],
+      [stats.avgDowns || 0, 1, '🪤 攤平 ' + (stats.avgDowns || 0) + ' 次：你不是在攤平，是在接飛刀。'],
+      [stats.allIns || 0, 1, '🎰 梭哈 ' + (stats.allIns || 0) + ' 次：膽子很大，本金很小。'],
+      [stats.lev102 || 0, 1, '🏎️ 102 倍開了 ' + (stats.lev102 || 0) + ' 次：動 1 円就歸零，你還笑得出來？'],
+      [stats.liqs || 0, 1, '💥 爆倉 ' + (stats.liqs || 0) + ' 次：保證金只是學費的另一種說法。'],
+      [stats.followLoss || 0, 1, '📣 跟發財姐的單賠了 ' + (stats.followLoss || 0) + ' 次：她賺的是課程費，不是行情。'],
+      [stats.steals || 0, 1, '👛 偷爸爸錢包 ' + (stats.steals || 0) + ' 次：最可憐的永遠是爸爸。']
+    ].filter(function (x) { return x[0] >= x[1]; })
+      .sort(function (a, b) { return b[0] / b[1] - a[0] / a[1]; })
+      .slice(0, 3).map(function (x) { return x[2]; });
+    return items.length ? items : ['😇 這局居然沒踩什麼雷……一定是運氣。'];
+  }
 
   /* ---------- 黃金 K 線紅包: walk onto it to pick it up ---------- */
   function collectGold(i) {
@@ -3350,7 +3624,7 @@
         const pulse = denial ? 0.04 : reduceMotion ? 0.24 : 0.2 + 0.12 * Math.sin(view.t * 6);
         fillPoly([[view.s * S - 3, yl, -4], [xN + 9, yl, -4], [xN + 9, yl, 4], [view.s * S - 3, yl, 4]], rgbStr(pal.liq, pulse));
         line3([view.s * S - 3, yl, 0], [xN + 9, yl, 0], rgbStr(pal.liq), 2.2);
-        if (!denial) labelAt([xN + 3.5, yl, 0], '💀 爆倉', pal.liq, 10);
+        if (!denial) labelAt([xN + 3.5, yl, 0], '💀 差 ' + Math.abs(lastClose() - lp).toFixed(2) + ' 円', pal.liq, 10);
       }
     }
 
@@ -3395,8 +3669,11 @@
     const mult = volTicksLeft > 0 ? volMult : 1;
     if (volTicksLeft > 0) volTicksLeft--;
 
+    stepGuru();
+    trendLock = callTicks > 0;
+    if (trendLock) trend = callTrue ? callDir : -callDir;
     const last = candles[candles.length - 1];
-    const c = newCandle(last.close, mult, true);
+    const c = newCandle(last.close, mult, true, trendLock ? 2.2 : 1);
     if (Math.random() < 1 / 12) c.gold = true;   // 黃金 K 線：走到它上面就能撿紅包
     candles.push(c);
     let shifted = false;
@@ -3409,7 +3686,7 @@
 
     $('price').textContent = fmtUsd(c.close);
     const ch = $('change');
-    ch.textContent = (rising ? '▲ +' : '▼ ') + Math.round(diff).toLocaleString('en-US') + '（區間 ' + pct.toFixed(2) + '%）';
+    ch.textContent = (rising ? '▲ +' : '▼ ') + diff.toFixed(3) + ' 円（區間 ' + pct.toFixed(2) + '%）';
 
     document.body.classList.toggle('scary', !rising);
     refreshPalette();
@@ -3440,6 +3717,7 @@
         if (position.avgDown && position.redTicks >= 10) achieve('valueInvest');
         if (denial) { denialTicks++; if (denialTicks >= 10) achieve('aq'); }
         if (position.redTicks >= 10) achieve('diamond');
+        stats.maxRed = Math.max(stats.maxRed || 0, position.redTicks);
         position.held = (position.held || 0) + 1;
         missionEvent('hold', position.held, 'max');
       }
@@ -3464,6 +3742,12 @@
 
     equityLog.push(Math.round(liveEquity()));
     lbMaybeSubmit();
+    if (callTicks > 0) { callTicks--; if (position) callFollow += position.dir === callDir ? 1 : -1; if (callTicks === 0) endCall(); }
+    stepRivals(diff / last.close);
+    const eqNow = liveEquity();
+    if (eqNow >= 4000000) story('s400', 'rich');
+    if (eqNow >= 8000000) story('s800', 'sweat');
+    if (eqNow >= 12000000) story('s1200', 'blood');
     if (equityLog.length > 800) equityLog.splice(0, equityLog.length - 800);
     $('clock').textContent = mmss(gameSecs());
     if (fitChartFn) fitChartFn();
@@ -3480,9 +3764,10 @@
     if (!equityLog.length) equityLog.push(Math.round(liveEquity()));
     $('splash').hidden = true;
     $('change').textContent = '開盤！';
-    setTimeout(function () { toast('🎯 第一個任務', '下方黃色條是目前任務，完成就有獎勵。'); }, 1200);
+    if (!storyDone.start) setTimeout(function () { story('start', 'calm'); }, 500);
+    setTimeout(function () { toast('🎯 第一個任務', '下方黃色條是目前任務，完成就有獎勵。'); }, 4200);
     refreshTradeUI();
-    timer = setInterval(tick, 1500);
+    timer = setInterval(tick, 1200);
     setTimeout(tick, 400);
   }
   $('enterBtn').addEventListener('click', function () {
@@ -3496,7 +3781,7 @@
   let saveLocal = function () {};
   function init(saved) {
     // a snapshot from an older version with a different money scale starts fresh
-    if (saved && saved.scale !== START) saved = null;
+    if (saved && (saved.scale !== START || saved.pair !== 'USDJPY')) saved = null;
     if (saved && saved.candles && saved.candles.length) {
       candles = saved.candles;
       balance = saved.balance; debt = saved.debt; position = saved.position;
@@ -3518,6 +3803,10 @@
       if (saved.rankIdx != null) rankIdx = saved.rankIdx;
       if (curRank() < LEV_UNLOCK[lev]) lev = 25;
       borrowCount = saved.borrowCount || 0;
+      if (saved.rivals) rivals = saved.rivals;
+      lazyDir = saved.lazyDir || 1; rivalsDone = saved.rivalsDone || {}; storyDone = saved.storyDone || {};
+      if (saved.guru) { callTicks = saved.guru.ticks; callDir = saved.guru.dir; callTrue = saved.guru.truth; callWait = saved.guru.wait; callFollow = saved.guru.follow; }
+      buddyLock = !!saved.buddyLock; buddyLeft = saved.buddyLeft || 0; buddyCount = saved.buddyCount || 0;
       soundOn = saved.soundOn !== false; setMuteUI();
     } else {
       seed();
@@ -3539,7 +3828,7 @@
     syncDock();
     fitChart();
 
-    resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission();
+    resize(); refreshPalette(); updateIndicator(); refreshTradeUI(); renderMission(); renderDuel(true);
     initGL();
     requestAnimationFrame(loop);
     if (saved && saved.started) begin();
@@ -3551,7 +3840,10 @@
           dadDebt: dadDebt, stealCount: stealCount, stolenAtRisk: stolenAtRisk, dadCheckIn: dadCheckIn, grounded: grounded,
           spins: spins, shields: shields, doubleNext: doubleNext, tickCount: tickCount, stakeMode: stakeMode, lev: lev,
           bestRank: bestRank, rankIdx: rankIdx, borrowCount: borrowCount, missionIdx: missionIdx, missionRound: missionRound, missionProg: missionProg, stats: stats, cleared: cleared,
-          trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START
+          trades: trades, equityLog: equityLog, elapsed: gameSecs(), trend: trend, scale: START, pair: 'USDJPY',
+          rivals: rivals, lazyDir: lazyDir, rivalsDone: rivalsDone, storyDone: storyDone,
+          guru: { ticks: callTicks, dir: callDir, truth: callTrue, wait: callWait, follow: callFollow },
+          buddyLock: buddyLock, buddyLeft: buddyLeft, buddyCount: buddyCount
         };
     }
     if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
