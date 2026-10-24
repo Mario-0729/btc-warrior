@@ -578,7 +578,7 @@
   }
   .clear-btn:focus-visible, #btnHome:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
   .hist-top .clear-btn { margin-left: auto; }
-  #histModal, #rankModal {
+  #histModal, #rankModal, #lbModal {
     position: fixed; inset: 0; z-index: 22; overflow-y: auto;
     padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
     background: rgba(30, 5, 20, .6); backdrop-filter: blur(5px);
@@ -816,6 +816,30 @@
     display: grid; place-items: center;
   }
   #muteBtn { top: calc(10px + env(safe-area-inset-top, 0px)); }
+  #lbBtn {
+    position: absolute; z-index: 2; top: 10px; right: calc(102px + env(safe-area-inset-right, 0px));
+    width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 16px; display: grid; place-items: center;
+    appearance: none; cursor: pointer; border: 2px solid var(--panel-border); background: var(--panel); color: var(--ink);
+  }
+  #lbBtn:focus-visible, #lbClose:focus-visible, #lbSave:focus-visible { outline: 3px solid var(--accent2); outline-offset: 2px; }
+  .lb-me { display: flex; gap: 8px; align-items: center; }
+  .lb-me input {
+    flex: 1 1 auto; min-width: 0; font: 700 14px var(--body); color: #5c2f49; padding: 8px 12px;
+    border: 2px solid #e8c7d6; border-radius: 999px; background: #fff;
+  }
+  .lb-me button {
+    appearance: none; cursor: pointer; border: 0; border-radius: 999px; padding: 8px 14px; flex: 0 0 auto; white-space: nowrap;
+    font: 800 13px var(--display); background: linear-gradient(135deg, #ffb648, #ff5fa0); color: #fff;
+  }
+  .lb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .lb-list li {
+    display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #f0d6e2; border-radius: 12px; padding: 7px 10px; font-size: 13px;
+  }
+  .lb-list li.me { border: 2px solid #ff5fa0; background: #fff0f6; }
+  .lb-list .rk { font: 800 15px var(--display); color: #c47f00; text-align: center; }
+  .lb-list .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-list .pk { font: 800 15px var(--display); color: #d42a6e; font-variant-numeric: tabular-nums; }
   #dock {
     position: relative; left: auto; right: auto; bottom: auto; flex: 0 0 auto; z-index: 6;
     box-shadow: 0 -8px 24px -12px rgba(0,0,0,.25);
@@ -995,6 +1019,22 @@
   </div>
 </div>
 
+<div id="lbModal" hidden>
+  <div class="hist-card" role="dialog" aria-labelledby="lbTitle">
+    <div class="hist-top">
+      <div class="wheel-title" id="lbTitle">🏆 全網排行榜</div>
+      <button id="lbClose" class="xbtn" type="button" aria-label="關閉">✕</button>
+    </div>
+    <div class="lb-me">
+      <input id="lbName" maxlength="12" aria-label="我的暱稱" autocomplete="off">
+      <button id="lbSave" type="button">改名</button>
+    </div>
+    <div class="hist-sub" id="lbMine"></div>
+    <ol class="lb-list" id="lbList"></ol>
+    <p class="hist-empty">比單局最高淨值，賺過 200 萬起始資金、破紀錄就自動上榜。🏁＝達成 2000 萬。</p>
+  </div>
+</div>
+
 <div id="wheelModal" hidden>
   <div class="wheel-card" role="dialog" aria-labelledby="wheelTitle">
     <div class="wheel-title" id="wheelTitle">🎡 命運轉盤</div>
@@ -1020,6 +1060,7 @@
       <div class="hud-price"><b id="price">--</b><span id="change">等待進場…</span></div>
     </div>
     <button id="histBtn" type="button" aria-label="投資紀錄">📜</button>
+    <button id="lbBtn" type="button" aria-label="全網排行榜" hidden>🏆</button>
     <div id="msg"></div>
     <div id="ticker" role="status" aria-live="polite"></div>
     <div id="indicator">
@@ -3422,6 +3463,7 @@
     }
 
     equityLog.push(Math.round(liveEquity()));
+    lbMaybeSubmit();
     if (equityLog.length > 800) equityLog.splice(0, equityLog.length - 800);
     $('clock').textContent = mmss(gameSecs());
     if (fitChartFn) fitChartFn();
@@ -3521,6 +3563,93 @@
       document.addEventListener('visibilitychange', function () { if (document.hidden) saveLocal(); });
     }
     window.addEventListener('pagehide', function () { saveLocal(); if (timer) clearInterval(timer); });
+  }
+
+  /* ---------- 全網排行榜 (Supabase; hidden until LB_URL / LB_KEY are set) ----------
+     Table and submit function: see supabase.sql. Each browser is one
+     player (random id in localStorage); the board keeps its best net worth. */
+  const LB_URL = '';
+  const LB_KEY = '';
+  const lbOn = !!(LB_URL && LB_KEY && window.fetch && !window.claude);
+  let lb = null, lbLastSent = 0;
+  function lbLoad() {
+    if (lb) return lb;
+    try { lb = JSON.parse(localStorage.getItem('btc-warrior-lb') || 'null'); } catch (e) {}
+    if (!lb || !lb.id) {
+      const id = window.crypto && crypto.randomUUID ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); });
+      lb = { id: id, name: '戰士' + (1000 + Math.floor(Math.random() * 9000)), best: 0, sent: 0, cleared: false };
+    }
+    return lb;
+  }
+  function lbStore() { try { localStorage.setItem('btc-warrior-lb', JSON.stringify(lb)); } catch (e) {} }
+  function lbHeaders() {
+    const h = { apikey: LB_KEY, 'Content-Type': 'application/json' };
+    if (LB_KEY.indexOf('eyJ') === 0) h.Authorization = 'Bearer ' + LB_KEY;
+    return h;
+  }
+  function lbSend(keepalive) {
+    const me = lbLoad();
+    if (!lbOn || me.best <= START || (me.best <= me.sent && me.cleared === me.sentCleared && me.name === me.sentName)) return Promise.resolve();
+    lbLastSent = performance.now();
+    const body = { p_player: me.id, p_name: me.name, p_peak: Math.round(me.best), p_cleared: !!me.cleared };
+    return fetch(LB_URL + '/rest/v1/rpc/submit_score', { method: 'POST', headers: lbHeaders(), body: JSON.stringify(body), keepalive: !!keepalive })
+      .then(function (r) {
+        if (!r.ok) return;
+        me.sent = body.p_peak; me.sentCleared = body.p_cleared; me.sentName = body.p_name; lbStore();
+      })
+      .catch(function () {});
+  }
+  // called every candle: remember a new personal best, upload at most every 20 s
+  function lbMaybeSubmit() {
+    if (!lbOn) return;
+    const me = lbLoad(), eq = Math.round(liveEquity());
+    if (eq > me.best) { me.best = eq; lbStore(); }
+    if (cleared && !me.cleared) { me.cleared = true; lbStore(); }
+    if (performance.now() - lbLastSent > 20000) lbSend();
+  }
+  function lbRender() {
+    const me = lbLoad();
+    $('lbName').value = me.name;
+    $('lbMine').textContent = '我的最佳：' + (me.best ? fmtShort(me.best) : '還沒有');
+    const list = $('lbList');
+    list.textContent = '';
+    const wait = document.createElement('li'); wait.textContent = '讀取中…'; list.appendChild(wait);
+    fetch(LB_URL + '/rest/v1/scores?select=name,peak,cleared&order=peak.desc&limit=50', { headers: lbHeaders() })
+      .then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (rows) {
+        list.textContent = '';
+        if (!rows.length) { const li = document.createElement('li'); li.textContent = '還沒有人上榜，你就是第一名！'; list.appendChild(li); }
+        let mine = false;
+        rows.forEach(function (row, i) {
+          const li = document.createElement('li');
+          if (!mine && row.name === me.name && Number(row.peak) === Math.round(me.sent || me.best)) { li.className = 'me'; mine = true; }
+          const rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1;
+          const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (row.cleared ? '🏁 ' : '') + row.name;
+          const pk = document.createElement('span'); pk.className = 'pk'; pk.textContent = fmtShort(Number(row.peak));
+          li.append(rk, nm, pk);
+          list.appendChild(li);
+        });
+      })
+      .catch(function () { list.textContent = ''; const li = document.createElement('li'); li.textContent = '排行榜暫時連不上，等等再看。'; list.appendChild(li); });
+  }
+  if (lbOn) {
+    $('lbBtn').hidden = false;
+    $('lbBtn').addEventListener('click', function () {
+      $('lbModal').hidden = false;
+      lbSend().then(lbRender);
+      $('lbClose').focus();
+    });
+    $('lbClose').addEventListener('click', function () { $('lbModal').hidden = true; });
+    $('lbModal').addEventListener('click', function (e) { if (e.target === $('lbModal')) $('lbModal').hidden = true; });
+    $('lbSave').addEventListener('click', function () {
+      const nm = $('lbName').value.trim().slice(0, 12);
+      if (!nm) return;
+      lbLoad().name = nm; lbStore();
+      toast('✏️ 暱稱改成「' + nm + '」');
+      lbSend().then(lbRender);
+    });
+    window.addEventListener('pagehide', function () { lbSend(true); });
   }
 
   /* ---------- visit counter (self-hosted only; hidden if the service is down) ---------- */
